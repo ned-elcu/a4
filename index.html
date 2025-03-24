@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>ROFORT</title>
+  <link rel="icon" type="image/png" href="icon.png" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap">
+  <style>
+    .courier {
+      font-family: 'Courier New';
+      font-size: 16px;
+    }    
+      
+    /* Reset & Basic Styling */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    html, body {
+      width: 100%;
+      background: black;
+      color: white;
+      font-family: 'Bebas Neue', sans-serif;
+      text-align: center;
+      font-size: 1.3em;
+      overflow-x: hidden;
+    }
+
+    /* Animation Keyframes */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes neonGlow {
+      0% {
+        text-shadow: 0 0 5px rgba(223, 197, 136, 0.8),
+                     0 0 10px rgba(223, 197, 136, 0.8),
+                     0 0 15px rgba(223, 197, 136, 0.8);
+        opacity: 0.8;
+      }
+      100% {
+        text-shadow: 0 0 20px rgba(223, 197, 136, 0.8),
+                     0 0 30px rgba(223, 197, 136, 0.8),
+                     0 0 40px rgba(223, 197, 136, 0.8);
+        opacity: 1;
+      }
+    }
+    @keyframes backgroundPulse {
+      0% { filter: brightness(1); }
+      50% { filter: brightness(1.1); }
+      100% { filter: brightness(1); }
+    }
+    @keyframes float {
+      0% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+      100% { transform: translateY(0); }
+    }
+
+    /* Overlay Canvas for Star Effect */
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 10000;
+      pointer-events: none;
+      background: transparent;
+    }
+
+    /* Top Bar Styling */
+    .top-bar {
+      width: 100%;
+      height: 70px;
+      background: black;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 11000;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+      padding: 0 15px;
+      gap: 15px;
+    }
+    .top-bar img {
+      width: 50px;
+      height: 50px;
+    }
+    .blog-button,
+    .music-button {
+      background-color: rgba(223, 197, 136, 0.8);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      cursor: pointer;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 20px;
+      border-radius: 5px;
+      transition: 0.3s;
+    }
+    .blog-button:hover,
+    .music-button:hover {
+      background-color: coral;
+      transform: scale(1.05);
+    }
+
+    /* Hero Section with Parallax & Background Pulse */
+    .hero {
+      background: url('background.png') no-repeat center center/cover;
+      padding: 104px 26px;
+      position: relative;
+      margin-top: 75px;
+      width: 100%;
+      background-position: center top;
+      transition: background-position 0.3s ease-out;
+      overflow: visible;
+      animation: fadeIn 1s ease-out, backgroundPulse 10s ease-in-out infinite;
+    }
+    .overlay {
+      background: rgba(14, 17, 19, 0.8);
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+    .container {
+      position: relative;
+      max-width: 900px;
+      margin: auto;
+      padding: 0 15px;
+      animation: fadeIn 1s ease-out;
+    }
+    .title {
+      font-size: 3.64em;
+      font-weight: bold;
+      text-transform: uppercase;
+      text-shadow: 0 0 10px rgba(223, 197, 136, 0.8),
+                   0 0 20px rgba(223, 197, 136, 0.8),
+                   0 0 30px rgba(223, 197, 136, 0.8);
+      animation: neonGlow 1.5s infinite alternate ease-in-out;
+    }
+    .subtitle {
+      font-size: 2.08em;
+      margin-top: 10px;
+      font-weight: 300;
+      text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
+    }
+    .button {
+      display: inline-block;
+      padding: 15.6px 45.5px;
+      margin-top: 26px;
+      font-size: 1.69em;
+      color: white;
+      background: linear-gradient(45deg, rgba(223, 197, 136, 0.8), rgba(223, 197, 136, 0.8));
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: bold;
+      text-transform: uppercase;
+      transition: 0.3s;
+      box-shadow: 0 4px 15px rgba(223, 197, 136, 0.5);
+      animation: float 3s ease-in-out infinite;
+    }
+    .button:hover {
+      background: linear-gradient(45deg, rgba(223, 197, 136, 0.8), black);
+      box-shadow: 0 4px 15px rgba(223, 197, 136, 0.9);
+    }
+
+    /* Stats Section */
+    .stats {
+      margin-top: 39px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 26px 0;
+      background: black;
+      width: 100%;
+      animation: fadeIn 1s ease-out;
+    }
+    .logo {
+      width: 90%;
+      max-width: 364px;
+      height: auto;
+      margin-bottom: 13px;
+    }
+    .stat-container {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-bottom: 13px;
+      width: 100%;
+    }
+    .stat {
+      font-size: 1.5em;
+      font-weight: bold;
+      text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
+    }
+    .art3 {
+      width: 90%;
+      max-width: 900px;
+      height: auto;
+      margin-top: 26px;
+      animation: fadeIn 1s ease-out;
+    }
+
+    /* Story Section Styling */
+    .story {
+      max-width: 800px;
+      margin: 20px auto 50px;
+      padding: 30px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(223, 197, 136, 0.3);
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(223, 197, 136, 0.3);
+      text-align: left;
+      line-height: 1.6;
+    }
+    .story p {
+      margin-bottom: 20px;
+    }
+    .story h3 {
+      font-size: 1.8em;
+      margin: 30px 0 15px;
+      color: coral;
+      border-bottom: 1px solid rgba(223, 197, 136, 0.5);
+      padding-bottom: 5px;
+    }
+    .story .quote {
+      font-style: italic;
+      margin-left: 20px;
+      border-left: 3px solid rgba(223, 197, 136, 0.5);
+      padding-left: 15px;
+      color: #ddd;
+    }
+
+    /* Back-to-Top Button */
+    .back-to-top {
+      margin: 40px auto 0;
+      cursor: pointer;
+    }
+    
+    /* Minimalistic Copyright Styling */
+    p.copyright {
+      text-align: center;
+      margin: 20px auto 40px;
+      font-size: 0.9em;
+      color: rgba(223, 197, 136, 0.8);
+    }
+  </style>
+</head>
+<body>
+  <!-- Top Navigation Bar -->
+  <div class="top-bar">
+    <img src="icon.png" alt="Site Icon" />
+    <a href="blog.html" class="blog-button">BLOG</a>
+    <button class="music-button" onclick="toggleMusic()">Play Music</button>
+  </div>
+
+  <!-- Hero Section -->
+  <div class="hero" id="hero">
+    <div class="overlay"></div>
+    <div class="container">
+      <h1 class="title">ROFORT CLAN HAS RISEN!</h1>
+      <p class="subtitle">Join the first Romanian founded clan in Anvil Empires</p>
+      <a href="https://discord.gg/V7WR48kkke" class="button">Join our Discord</a>
+    </div>
+  </div>
+
+  <!-- Stats Section -->
+  <div class="stats">
+    <img src="aelogo.png" alt="AE Logo" class="logo" />
+    <div class="stat-container">
+      <div class="stat">RESPECT</div>
+      <div class="stat">FRĂȚIE</div>
+      <div class="stat">ÎNȚELEGERE</div>
+      <div class="stat">EXPERIENȚĂ</div>
+    </div>
+    <img src="art3.png" alt="art3" class="art3" />
+  </div>
+  
+  <!-- Fable Info -->
+  <div class="fable-info">
+    <p>Inspired by: <strong>The Dog and the Puppy (A Retelling of Grigore Alexandrescu’s Fable)</strong></p>
+  </div>
+  
+  <!-- Story Section -->
+  <section class="story">
+    <p class="courier">Once upon a time, in a grand courtyard enclosed by tall stone walls, lived a <b>majestic hound</b> named <b>Lupus</b>. His fur was sleek and well-groomed, his stature imposing, and his deep, booming voice commanded the respect of all animals within the estate. He roamed the grounds with pride, for he was the <b>chief guardian of the household</b>, trusted by his master and feared by all who dared to trespass.</p>
+
+    <p class="courier">Among the many animals in the courtyard was <b>a small puppy named Azor</b>, who was still learning his place in the world. Unlike Lupus, Azor was young, eager, and naive, his tail always wagging in excitement at the sight of the bigger dogs.</p>
+
+    <p class="courier">One summer afternoon, as the sun cast long shadows across the yard, Lupus stood upon the central stone platform where he often made proclamations. Around him gathered the other dogs—some strong and proud, others timid and weak. Azor, curious as always, sat at the front, his small ears perked up.</p>
+
+    <p class="courier">Lupus cleared his throat and, with a dignified air, began to speak:</p>
+
+    <p class="courier quote" style="margin-left: 20px;"><i>"Brothers and friends! We, the dogs of this household, must remember that we are all equal. No matter our size, strength, or age, we share the same duty, the same struggle, and the same worth. Our master feeds us all, whether large or small, and it is only fair that we treat one another as equals. There must be no arrogance among us, no division, no unfair treatment. We are all the same!"</i></p>
+
+    <p class="courier">The crowd murmured in agreement. Azor's eyes sparkled with admiration—what a noble sentiment! With his small voice, he yipped:</p>
+
+    <p class="courier quote" style="margin-left: 20px;"><i>"That is wonderful, sir! So, since we are all equals, does that mean I may stand beside you at the entrance gate and share in your meals?"</i></p>
+
+    <p class="courier">At once, the great hound's expression darkened. He glared down at the tiny puppy, his lips curling in disdain.</p>
+
+    <p class="courier quote" style="margin-left: 20px;"><i>"You? Stand at the entrance? Eat from my bowl? Nonsense!"</i> Lupus barked. <i>"Know your place, little one. Equality is a grand idea, but some of us are… well, more equal than others."</i></p>
+
+    <p class="courier">The crowd chuckled, some uncomfortably, others with amusement. Azor lowered his ears, suddenly aware of his mistake.</p>
+
+    <p class="courier">From that day on, he understood what Lupus truly meant: <b>words of fairness and unity often sound noble, but those in power rarely practice what they preach.</b></p>
+
+    <p class="courier">And so, as the sun dipped below the horizon, the courtyard settled once more into its usual order—where the strong remained strong, the weak remained weak, and the illusion of equality was just another well-spoken lie.</p>
+
+    <h3>Moral of the Story</h3>
+    <p class="courier"><b>Beware of those who speak of fairness yet benefit from inequality. True justice is found not in words but in actions.</b></p>
+
+    <h3>ROFORT’s Vision: Structure with Equality</h3>
+    <p class="courier">At <b>ROFORT</b>, we believe in creating <b>true balance</b>, where <b>order is maintained through structure</b>, but where <b>respect, love, and human equality</b> are not just spoken ideals, but living values. Unlike Lupus, who upheld hierarchy for his own benefit, ROFORT strives for a world where everyone is truly valued—not just in words, but in <b>real opportunity, mutual respect, and shared success</b>. Because equality should never be a false promise, but a principle lived by all.</p>
+  </section>
+
+  <!-- Back-to-Top Button -->
+  <a href="#" class="button back-to-top">Back to Top</a>
+  
+  <!-- Minimalistic Copyright -->
+  <p class="copyright">ROFORT.lol © 2025. Crafted with love in Romania.</p>
+
+  <audio id="background-music" loop>
+    <source src="music.mp3" type="audio/mpeg" />
+    Your browser does not support the audio element.
+  </audio>
+
+  <!-- Star Effect Canvas -->
+  <canvas id="starCanvas"></canvas>
+
+  <script>
+    // Music control
+    document.addEventListener("DOMContentLoaded", function() {
+      const audio = document.getElementById("background-music");
+      audio.volume = 0.1;
+    });
+    let isPlaying = false;
+    function toggleMusic() {
+      const audio = document.getElementById("background-music");
+      const button = document.querySelector(".music-button");
+      if (isPlaying) {
+        audio.pause();
+        button.textContent = "Play Music";
+      } else {
+        audio.play();
+        button.textContent = "Stop Music";
+      }
+      isPlaying = !isPlaying;
+    }
+
+    // Variables for mouse tracking
+    let mouseX = window.innerWidth / 2,
+        mouseY = window.innerHeight / 2;
+    const factor = 0.05;
+    document.addEventListener("mousemove", (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+    });
+
+    // Set up canvas for star effect
+    const canvas = document.getElementById("starCanvas");
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    window.addEventListener("resize", () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+
+    // Star class with comet effect (glow, fade, trail, reversed mouse & scroll offset)
+    class Star {
+      constructor() {
+        this.reset(true);
+      }
+      reset(initial) {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.speed = Math.random() * 2 + 0.5;
+        this.length = Math.random() * 3 + 1;
+        this.opacity = 0;
+        this.life = Math.random() * 100 + 50;
+        this.trail = [];
+        if (!initial) {
+          if (this.x > canvas.width) this.x = 0;
+          if (this.x < 0) this.x = canvas.width;
+          if (this.y > canvas.height) this.y = 0;
+          if (this.y < 0) this.y = canvas.height;
+        }
+      }
+      update() {
+        this.x += this.speed * 0.5;
+        this.y += this.speed * 0.5;
+        this.trail.push({ x: this.x, y: this.y, opacity: this.opacity });
+        if (this.trail.length > 14) this.trail.shift();
+        if (this.life > 50) {
+          this.opacity = Math.min(1, this.opacity + 0.02);
+        } else {
+          this.opacity = Math.max(0, this.opacity - 0.02);
+        }
+        this.life--;
+        if (this.life <= 0) this.reset(false);
+      }
+      draw() {
+        const scrollOffset = window.scrollY * 0.3;
+        const offsetX = (mouseX - canvas.width / 2) * factor;
+        const offsetY = (mouseY - canvas.height / 2) * factor;
+        const posX = this.x + offsetX;
+        const posY = this.y + offsetY - scrollOffset;
+        ctx.save();
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = `rgba(255, 255, 255, ${this.opacity})`;
+        ctx.strokeStyle = `rgba(255, 255, 255, ${this.opacity})`;
+        ctx.lineWidth = this.length;
+        for (let i = 0; i < this.trail.length - 1; i++) {
+          let t = this.trail[i];
+          let nextT = this.trail[i + 1];
+          const tPosX = t.x + offsetX;
+          const tPosY = t.y + offsetY - scrollOffset;
+          const nextTPosX = nextT.x + offsetX;
+          const nextTPosY = nextT.y + offsetY - scrollOffset;
+          ctx.beginPath();
+          ctx.strokeStyle = `rgba(255, 255, 255, ${t.opacity * (i / this.trail.length)})`;
+          ctx.moveTo(tPosX, tPosY);
+          ctx.lineTo(nextTPosX, nextTPosY);
+          ctx.stroke();
+        }
+        ctx.beginPath();
+        ctx.moveTo(posX, posY);
+        ctx.lineTo(posX + this.length, posY + this.length);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+
+    // Create stars array and animate (30 stars)
+    const stars = [];
+    for (let i = 0; i < 30; i++) {
+      stars.push(new Star());
+    }
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      stars.forEach((star) => {
+        star.update();
+        star.draw();
+      });
+      requestAnimationFrame(animate);
+    }
+    animate();
+
+    // Parallax effect on hero section background based on scroll
+    const hero = document.getElementById('hero');
+    window.addEventListener('scroll', () => {
+      const scrollPos = window.scrollY;
+      hero.style.backgroundPosition = `center ${-scrollPos * 0.3}px`;
+    });
+
+    // Smooth scroll to top for the back-to-top button
+    document.querySelector('.back-to-top').addEventListener('click', function(e) {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  </script>
+</body>
+</html>
