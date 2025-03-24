@@ -90,8 +90,7 @@
       width: 50px;
       height: 50px;
     }
-    .blog-button,
-    .music-button {
+    .blog-button {
       background-color: rgba(223, 197, 136, 0.8);
       color: white;
       border: none;
@@ -102,8 +101,7 @@
       border-radius: 5px;
       transition: 0.3s;
     }
-    .blog-button:hover,
-    .music-button:hover {
+    .blog-button:hover {
       background-color: coral;
       transform: scale(1.05);
     }
@@ -258,7 +256,6 @@
   <div class="top-bar">
     <img src="icon.png" alt="Site Icon" />
     <a href="blog.html" class="blog-button">BLOG</a>
-    <button class="music-button" onclick="toggleMusic()">Play Music</button>
   </div>
 
   <!-- Hero Section -->
@@ -275,8 +272,8 @@
   <div class="stats">
     <img src="aelogo.png" alt="AE Logo" class="logo" />
     <div class="stat-container">
-      <div class="stat">RESPECT</div>
       <div class="stat">BROTHERHOOD</div>
+      <div class="stat">COMMUNICATION</div>
       <div class="stat">UNDERSTANDING</div>
       <div class="stat">EXPERIENCE</div>
     </div>
@@ -327,34 +324,11 @@
   <!-- Minimalistic Copyright -->
   <p class="copyright">regnumsolis.com © 2025. Crafted with love in Romania.</p>
 
-  <audio id="background-music" loop>
-    <source src="music.mp3" type="audio/mpeg" />
-    Your browser does not support the audio element.
-  </audio>
-
   <!-- Star Effect Canvas -->
   <canvas id="starCanvas"></canvas>
 
   <script>
-    // Music control
-    document.addEventListener("DOMContentLoaded", function() {
-      const audio = document.getElementById("background-music");
-      audio.volume = 0.1;
-    });
-    let isPlaying = false;
-    function toggleMusic() {
-      const audio = document.getElementById("background-music");
-      const button = document.querySelector(".music-button");
-      if (isPlaying) {
-        audio.pause();
-        button.textContent = "Play Music";
-      } else {
-        audio.play();
-        button.textContent = "Stop Music";
-      }
-      isPlaying = !isPlaying;
-    }
-
+    
     // Variables for mouse tracking
     let mouseX = window.innerWidth / 2,
         mouseY = window.innerHeight / 2;
