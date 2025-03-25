@@ -305,7 +305,7 @@
 
     markerEl.classList.add("marker");
     markerEl.setAttribute("data-id", id);
-    markerEl.setAttribute("transform", translate(${data.x}, ${data.y}));
+    markerEl.setAttribute("transform", `translate(${data.x}, ${data.y})`);
 
     markerEl.addEventListener("click", async () => {
       if (confirm("Delete this marker?")) {
@@ -320,6 +320,5 @@
     svgRoot.appendChild(markerEl);
   }
 </script>
-
 </body>
 </html>
