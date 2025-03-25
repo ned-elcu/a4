@@ -177,7 +177,7 @@
 
     let panZoomInstance;
     let svgRoot;
-    let mapGroup; // The <g> element manipulated by svg-pan-zoom
+    let mapGroup; // This will hold the <g> element (if present) for markers
 
     document.addEventListener("DOMContentLoaded", () => {
       setupLogin();
@@ -219,13 +219,8 @@
 
       svgObject.addEventListener("load", () => {
         svgRoot = svgObject.contentDocument.documentElement;
-        // Locate the first <g> element controlled by svg-pan-zoom, or fallback to svgRoot
+        // Locate the first <g> element; if none exists, fall back to svgRoot
         mapGroup = svgRoot.querySelector("g") || svgRoot;
-
-        if (!svgRoot) {
-          console.error("SVG root not found! Check if the SVG file is loading properly.");
-          return;
-        }
 
         panZoomInstance = svgPanZoom(svgRoot, {
           zoomEnabled: true,
@@ -234,17 +229,14 @@
           maxZoom: 5
         });
 
-        // Now that panZoomInstance is defined, attach the zoom control event listeners
-        document.getElementById("zoom-in").addEventListener("click", () => panZoomInstance.zoomIn());
-        document.getElementById("zoom-out").addEventListener("click", () => panZoomInstance.zoomOut());
-        document.getElementById("reset-zoom").addEventListener("click", () => panZoomInstance.resetZoom());
-
-        // Attach drag & drop event listeners on the map group
         setupDragAndDrop();
-
-        // Listen for markers added to Firestore and render them
         listenForMarkers();
       });
+
+      // These work as before—clicking zoom buttons calls methods on panZoomInstance
+      document.getElementById("zoom-in").addEventListener("click", () => panZoomInstance.zoomIn());
+      document.getElementById("zoom-out").addEventListener("click", () => panZoomInstance.zoomOut());
+      document.getElementById("reset-zoom").addEventListener("click", () => panZoomInstance.resetZoom());
     }
 
     function setupToolbox() {
@@ -257,17 +249,16 @@
     }
 
     function setupDragAndDrop() {
-      // Attach dragover and drop on the map group
-      mapGroup.addEventListener("dragover", (e) => {
+      // Retain the original behavior by attaching events to the svgRoot
+      svgRoot.addEventListener("dragover", (e) => {
         e.preventDefault();
         e.dataTransfer.dropEffect = "move";
       });
 
-      mapGroup.addEventListener("drop", async (e) => {
+      svgRoot.addEventListener("drop", async (e) => {
         e.preventDefault();
-        const markerType = e.dataTransfer.getData("text/plain");
 
-        // Convert client coordinates to SVG coordinates.
+        const markerType = e.dataTransfer.getData("text/plain");
         const pt = svgRoot.createSVGPoint();
         pt.x = e.clientX;
         pt.y = e.clientY;
@@ -294,7 +285,7 @@
     function listenForMarkers() {
       const markersQuery = query(collection(db, "markers"), orderBy("timestamp"));
       onSnapshot(markersQuery, (snapshot) => {
-        // Remove existing markers from the map group
+        // Remove any existing markers from the mapGroup
         mapGroup.querySelectorAll(".marker").forEach((marker) => marker.remove());
         snapshot.forEach((docSnap) => {
           createMarkerElement(docSnap.id, docSnap.data());
@@ -310,7 +301,7 @@
         markerEl.textContent = data.text;
         markerEl.setAttribute("fill", data.color);
         markerEl.setAttribute("font-size", "16");
-        // Set x and y attributes directly
+        // Instead of using a transform, set the x and y attributes
         markerEl.setAttribute("x", data.x);
         markerEl.setAttribute("y", data.y);
       } else {
@@ -319,7 +310,6 @@
         markerEl.setAttributeNS("http://www.w3.org/1999/xlink", "href", markerSrc);
         markerEl.setAttribute("width", "30");
         markerEl.setAttribute("height", "30");
-        // Set x and y attributes directly
         markerEl.setAttribute("x", data.x);
         markerEl.setAttribute("y", data.y);
       }
@@ -337,6 +327,7 @@
         }
       });
 
+      // Append the marker to the inner group instead of the root
       mapGroup.appendChild(markerEl);
     }
   </script>
