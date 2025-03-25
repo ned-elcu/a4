@@ -177,6 +177,7 @@
 
     let panZoomInstance;
     let svgRoot;
+    let markerLayer; // Global reference for markers
 
     document.addEventListener("DOMContentLoaded", () => {
       setupLogin();
@@ -218,35 +219,48 @@
 
       svgObject.addEventListener("load", () => {
         svgRoot = svgObject.contentDocument.documentElement;
+        
+        // Create a group for the pan/zoom layer and move all existing content into it.
+        const panLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        panLayer.setAttribute("id", "pan-zoom-layer");
+        while (svgRoot.firstChild) {
+          panLayer.appendChild(svgRoot.firstChild);
+        }
+        svgRoot.appendChild(panLayer);
+        
+        // Create a separate group for markers.
+        markerLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        markerLayer.setAttribute("id", "marker-layer");
+        svgRoot.appendChild(markerLayer);
 
-        panZoomInstance = svgPanZoom(svgRoot, {
+        // Initialize svg-pan-zoom on the panLayer only.
+        panZoomInstance = svgPanZoom(panLayer, {
           zoomEnabled: true,
           controlIconsEnabled: false,
           minZoom: 0.5,
           maxZoom: 5
         });
 
-        // Set up zoom and pan update for markers.
+        // Function to update marker positions manually.
         const updateMarkersPosition = () => {
           const pan = panZoomInstance.getPan();
           const zoom = panZoomInstance.getZoom();
-          svgRoot.querySelectorAll(".marker").forEach(marker => {
+          // For each marker in the marker layer, recalc position.
+          markerLayer.querySelectorAll(".marker").forEach(marker => {
             const origX = parseFloat(marker.getAttribute("data-x"));
             const origY = parseFloat(marker.getAttribute("data-y"));
-            // Calculate new screen position (without scaling the marker)
             marker.setAttribute("transform", `translate(${pan.x + zoom * origX}, ${pan.y + zoom * origY})`);
           });
         };
 
-        // Listen to zoom changes
+        // Update markers on zoom and pan events.
         panZoomInstance.setOnZoom(updateMarkersPosition);
-        // Also update markers when panning changes (if your version of svg-pan-zoom doesn’t call setOnZoom for pan changes, you may need to add a pan callback too)
         panZoomInstance.setOnPan(updateMarkersPosition);
 
         setupDragAndDrop();
         listenForMarkers();
 
-        // Update markers once on load
+        // Initial update
         updateMarkersPosition();
       });
 
@@ -265,6 +279,7 @@
     }
 
     function setupDragAndDrop() {
+      // Listen for dragover and drop on the panLayer (for coordinate consistency)
       svgRoot.addEventListener("dragover", (e) => {
         e.preventDefault();
         e.dataTransfer.dropEffect = "move";
@@ -277,7 +292,7 @@
         const pt = svgRoot.createSVGPoint();
         pt.x = e.clientX;
         pt.y = e.clientY;
-        // Convert to SVG coordinates
+        // Convert to SVG coordinates relative to the entire SVG.
         const svgP = pt.matrixTransform(svgRoot.getScreenCTM().inverse());
 
         await addMarkerToFirestore(markerType, svgP.x, svgP.y);
@@ -301,8 +316,8 @@
     function listenForMarkers() {
       const markersQuery = query(collection(db, "markers"), orderBy("timestamp"));
       onSnapshot(markersQuery, (snapshot) => {
-        // Remove existing markers
-        svgRoot.querySelectorAll(".marker").forEach((marker) => marker.remove());
+        // Remove existing markers.
+        markerLayer.querySelectorAll(".marker").forEach((marker) => marker.remove());
         snapshot.forEach((docSnap) => {
           createMarkerElement(docSnap.id, docSnap.data());
         });
@@ -327,11 +342,11 @@
 
       markerEl.classList.add("marker");
       markerEl.setAttribute("data-id", id);
-      // Save original map coordinates
+      // Save original coordinates.
       markerEl.setAttribute("data-x", data.x);
       markerEl.setAttribute("data-y", data.y);
 
-      // Initially set position using current pan/zoom values
+      // Initially set position based on current pan and zoom.
       const pan = panZoomInstance.getPan();
       const zoom = panZoomInstance.getZoom();
       markerEl.setAttribute("transform", `translate(${pan.x + zoom * data.x}, ${pan.y + zoom * data.y})`);
@@ -346,7 +361,8 @@
         }
       });
 
-      svgRoot.appendChild(markerEl);
+      // Append the marker to the marker layer (which is not automatically scaled).
+      markerLayer.appendChild(markerEl);
     }
   </script>
 </body>
