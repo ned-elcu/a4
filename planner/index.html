@@ -280,7 +280,7 @@
     }
 
     function setupDragAndDrop() {
-      // Listen for dragover and drop on the panLayer (for coordinate consistency)
+      // Listen for dragover and drop on the svgRoot (for coordinate consistency)
       svgRoot.addEventListener("dragover", (e) => {
         e.preventDefault();
         e.dataTransfer.dropEffect = "move";
@@ -295,11 +295,10 @@
         pt.y = e.clientY;
         // Convert to SVG coordinates relative to the entire SVG.
         const svgP = pt.matrixTransform(svgRoot.getScreenCTM().inverse());
-
-        // Get current pan and zoom values
+        // Get current pan and zoom values.
         const pan = panZoomInstance.getPan();
         const zoom = panZoomInstance.getZoom();
-        // Adjust coordinates to be relative to the pan/zoom layer.
+        // Convert the drop point into the local coordinate system.
         const x = (svgP.x - pan.x) / zoom;
         const y = (svgP.y - pan.y) / zoom;
 
@@ -369,16 +368,9 @@
         }
       });
 
-      // Append the marker to the marker layer (which is not automatically scaled).
+      // Append the marker to the marker layer.
       markerLayer.appendChild(markerEl);
     }
-
-    /* Test Cases:
-       1. Log in with a valid email/password and verify that the map loads.
-       2. Drag a tool from the toolbox onto the map and verify that the marker appears exactly where dropped.
-       3. Use the zoom controls and confirm that markers adjust correctly.
-       4. Click a marker and confirm deletion prompt and subsequent removal upon confirmation.
-    */
   </script>
 </body>
 </html>
