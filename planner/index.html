@@ -156,186 +156,169 @@
   </div>
 
   <!-- Main Script using ES Modules -->
-  <script type="module">
-    // Import Firebase modular SDK functions from CDN
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-analytics.js";
-    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
-    import { getFirestore, collection, addDoc, orderBy, query, onSnapshot, deleteDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+  import { getFirestore, collection, addDoc, orderBy, query, onSnapshot, deleteDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 
-    // Your Firebase configuration (replace with your config if needed)
-    const firebaseConfig = {
-      apiKey: "AIzaSyAIws_FKV_CTaiHdnwc8WigDqRkyUCOjtE",
-      authDomain: "regnum-d3ddf.firebaseapp.com",
-      projectId: "regnum-d3ddf",
-      storageBucket: "regnum-d3ddf.firebasestorage.app",
-      messagingSenderId: "565532905074",
-      appId: "1:565532905074:web:a4cc38363376e49540fceb",
-      measurementId: "G-4RG5NP4FZ3"
-    };
+  const firebaseConfig = {
+    apiKey: "AIzaSyAIws_FKV_CTaiHdnwc8WigDqRkyUCOjtE",
+    authDomain: "regnum-d3ddf.firebaseapp.com",
+    projectId: "regnum-d3ddf",
+    storageBucket: "regnum-d3ddf.firebasestorage.app",
+    messagingSenderId: "565532905074",
+    appId: "1:565532905074:web:a4cc38363376e49540fceb",
+    measurementId: "G-4RG5NP4FZ3"
+  };
 
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
 
-    // Global variable for panZoom instance
-    let panZoomInstance;
+  let panZoomInstance;
+  let svgRoot;
 
-    // Wait for DOM to load
-    document.addEventListener('DOMContentLoaded', function() {
-      // Set up login
-      document.getElementById('login-button').addEventListener('click', function() {
-        const email = document.getElementById('email').value.trim();
-        const password = document.getElementById('password').value.trim();
-        const errorDiv = document.getElementById('login-error');
+  document.addEventListener("DOMContentLoaded", () => {
+    setupLogin();
+    setupToolbox();
+  });
 
-        signInWithEmailAndPassword(auth, email, password)
-          .then(() => {
-            errorDiv.textContent = "";
-            document.getElementById('login-screen').style.display = "none";
-            document.getElementById('app').style.display = "block";
-            initializeMap();
-          })
-          .catch((error) => {
-            errorDiv.textContent = error.message;
-          });
-      });
+  function setupLogin() {
+    document.getElementById("login-button").addEventListener("click", () => {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const errorDiv = document.getElementById("login-error");
 
-      // Monitor authentication state changes
-      onAuthStateChanged(auth, (user) => {
-        if (user) {
-          document.getElementById('login-screen').style.display = "none";
-          document.getElementById('app').style.display = "block";
+      signInWithEmailAndPassword(auth, email, password)
+        .then(() => {
+          errorDiv.textContent = "";
+          document.getElementById("login-screen").style.display = "none";
+          document.getElementById("app").style.display = "block";
           initializeMap();
-        } else {
-          document.getElementById('login-screen').style.display = "flex";
-          document.getElementById('app').style.display = "none";
-        }
-      });
-
-      // Set up zoom control buttons
-      document.getElementById('zoom-in').addEventListener('click', () => {
-        if(panZoomInstance) panZoomInstance.zoomIn();
-      });
-      document.getElementById('zoom-out').addEventListener('click', () => {
-        if(panZoomInstance) panZoomInstance.zoomOut();
-      });
-      document.getElementById('reset-zoom').addEventListener('click', () => {
-        if(panZoomInstance) panZoomInstance.resetZoom();
-      });
+        })
+        .catch((error) => {
+          errorDiv.textContent = error.message;
+        });
     });
 
-    // Initialize the map after login
-    function initializeMap() {
-      const svgObject = document.getElementById('map-svg');
-      svgObject.addEventListener('load', function(){
-        const svgDoc = svgObject.contentDocument;
-        const svgRoot = svgDoc.documentElement;
-        // Initialize pan & zoom with control icons disabled (we use our own buttons)
-        panZoomInstance = svgPanZoom(svgRoot, { controlIconsEnabled: false, zoomScaleSensitivity: 0.2 });
-        setupDragAndDrop(svgRoot);
-        listenForMarkers(svgRoot);
-      });
-    }
-
-    // Setup drag & drop events on the SVG map
-    function setupDragAndDrop(svgRoot) {
-      // Allow dropping by preventing default behavior
-      svgRoot.addEventListener('dragover', (e) => {
-        e.preventDefault();
-      });
-      svgRoot.addEventListener('drop', (e) => {
-        e.preventDefault();
-        // Convert the drop coordinates into the SVG coordinate system
-        const pt = svgRoot.createSVGPoint();
-        pt.x = e.clientX;
-        pt.y = e.clientY;
-        const svgP = pt.matrixTransform(svgRoot.getScreenCTM().inverse());
-        const markerType = e.dataTransfer.getData('text/plain');
-        addMarkerToFirestore(markerType, svgP.x, svgP.y);
-      });
-
-      // Enable drag events for toolbox items
-      document.querySelectorAll('.tool').forEach(tool => {
-        tool.addEventListener('dragstart', (e) => {
-          e.dataTransfer.setData('text/plain', tool.getAttribute('data-type'));
-        });
-      });
-    }
-
-    // Add a new marker document to Firestore
-    async function addMarkerToFirestore(type, x, y) {
-      let markerData = {
-        type: type,
-        x: x,
-        y: y,
-        timestamp: serverTimestamp()
-      };
-      // If it's a text marker, ask for extra options
-      if(type === "marker") {
-        markerData.text = prompt("Enter marker text:") || "";
-        markerData.color = prompt("Enter marker color (e.g., red or #ff0000):") || "black";
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        document.getElementById("login-screen").style.display = "none";
+        document.getElementById("app").style.display = "block";
+        initializeMap();
+      } else {
+        document.getElementById("login-screen").style.display = "flex";
+        document.getElementById("app").style.display = "none";
       }
-      try {
-        await addDoc(collection(db, "markers"), markerData);
-      } catch (error) {
-        console.error("Error adding marker: ", error);
-      }
-    }
+    });
+  }
 
-    // Listen for real-time updates from Firestore and update the SVG accordingly
-    function listenForMarkers(svgRoot) {
-      const markersQuery = query(collection(db, "markers"), orderBy("timestamp"));
-      onSnapshot(markersQuery, (snapshot) => {
-        // Remove all existing markers from the SVG
-        svgRoot.querySelectorAll('.marker').forEach(marker => marker.remove());
-        snapshot.forEach((docSnap) => {
-          createMarkerElement(svgRoot, docSnap.id, docSnap.data());
-        });
+  function initializeMap() {
+    const svgObject = document.getElementById("map-svg");
+
+    svgObject.addEventListener("load", () => {
+      svgRoot = svgObject.contentDocument.documentElement;
+
+      panZoomInstance = svgPanZoom(svgRoot, {
+        zoomEnabled: true,
+        controlIconsEnabled: false,
+        minZoom: 0.5,
+        maxZoom: 5
       });
+
+      setupDragAndDrop();
+      listenForMarkers();
+    });
+
+    document.getElementById("zoom-in").addEventListener("click", () => panZoomInstance.zoomIn());
+    document.getElementById("zoom-out").addEventListener("click", () => panZoomInstance.zoomOut());
+    document.getElementById("reset-zoom").addEventListener("click", () => panZoomInstance.resetZoom());
+  }
+
+  function setupToolbox() {
+    document.querySelectorAll(".tool").forEach((tool) => {
+      tool.addEventListener("dragstart", (e) => {
+        e.dataTransfer.setData("text/plain", tool.getAttribute("data-type"));
+        e.dataTransfer.effectAllowed = "move";
+      });
+    });
+  }
+
+  function setupDragAndDrop() {
+    svgRoot.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
+    });
+
+    svgRoot.addEventListener("drop", async (e) => {
+      e.preventDefault();
+
+      const markerType = e.dataTransfer.getData("text/plain");
+      const pt = svgRoot.createSVGPoint();
+      pt.x = e.clientX;
+      pt.y = e.clientY;
+      const svgP = pt.matrixTransform(svgRoot.getScreenCTM().inverse());
+
+      await addMarkerToFirestore(markerType, svgP.x, svgP.y);
+    });
+  }
+
+  async function addMarkerToFirestore(type, x, y) {
+    let markerData = { type, x, y, timestamp: serverTimestamp() };
+    if (type === "marker") {
+      markerData.text = prompt("Enter marker text:") || "M";
+      markerData.color = prompt("Enter marker color (e.g., red or #ff0000):") || "black";
     }
 
-    // Create and add an SVG element marker based on its type and data
-    function createMarkerElement(svgRoot, id, data) {
-      let markerEl;
-      if(data.type === "marker") {
-        // Create text marker
-        markerEl = document.createElementNS("http://www.w3.org/2000/svg", "text");
-        markerEl.textContent = data.text;
-        markerEl.setAttribute("fill", data.color);
-        markerEl.setAttribute("font-size", "16");
-      } else if(data.type === "citadel") {
-        // Create citadel marker as an SVG image (placeholder)
-        markerEl = document.createElementNS("http://www.w3.org/2000/svg", "image");
-        // Replace with your custom SVG file URL for the citadel
-        markerEl.setAttributeNS("http://www.w3.org/1999/xlink", "href", "https://via.placeholder.com/30?text=C");
-        markerEl.setAttribute("width", "30");
-        markerEl.setAttribute("height", "30");
-      } else if(data.type === "torch") {
-        // Create torch marker as an SVG image (placeholder)
-        markerEl = document.createElementNS("http://www.w3.org/2000/svg", "image");
-        // Replace with your custom SVG file URL for the torch
-        markerEl.setAttributeNS("http://www.w3.org/1999/xlink", "href", "https://via.placeholder.com/30?text=T");
-        markerEl.setAttribute("width", "30");
-        markerEl.setAttribute("height", "30");
-      }
-      markerEl.classList.add('marker');
-      markerEl.setAttribute("data-id", id);
-      markerEl.setAttribute("transform", `translate(${data.x}, ${data.y})`);
-      // Enable deletion on marker click
-      markerEl.addEventListener('click', async () => {
-        if(confirm("Delete this marker?")) {
-          try {
-            await deleteDoc(doc(db, "markers", id));
-          } catch (error) {
-            console.error("Error deleting marker: ", error);
-          }
+    try {
+      await addDoc(collection(db, "markers"), markerData);
+    } catch (error) {
+      console.error("Error adding marker: ", error);
+    }
+  }
+
+  function listenForMarkers() {
+    const markersQuery = query(collection(db, "markers"), orderBy("timestamp"));
+    onSnapshot(markersQuery, (snapshot) => {
+      svgRoot.querySelectorAll(".marker").forEach((marker) => marker.remove());
+      snapshot.forEach((docSnap) => {
+        createMarkerElement(docSnap.id, docSnap.data());
+      });
+    });
+  }
+
+  function createMarkerElement(id, data) {
+    let markerEl;
+
+    if (data.type === "marker") {
+      markerEl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      markerEl.textContent = data.text;
+      markerEl.setAttribute("fill", data.color);
+      markerEl.setAttribute("font-size", "16");
+    } else {
+      markerEl = document.createElementNS("http://www.w3.org/2000/svg", "image");
+      const markerSrc = data.type === "citadel" ? "https://via.placeholder.com/30?text=C" : "https://via.placeholder.com/30?text=T";
+      markerEl.setAttributeNS("http://www.w3.org/1999/xlink", "href", markerSrc);
+      markerEl.setAttribute("width", "30");
+      markerEl.setAttribute("height", "30");
+    }
+
+    markerEl.classList.add("marker");
+    markerEl.setAttribute("data-id", id);
+    markerEl.setAttribute("transform", `translate(${data.x}, ${data.y})`);
+
+    markerEl.addEventListener("click", async () => {
+      if (confirm("Delete this marker?")) {
+        try {
+          await deleteDoc(doc(db, "markers", id));
+        } catch (error) {
+          console.error("Error deleting marker: ", error);
         }
-      });
-      svgRoot.appendChild(markerEl);
-    }
-  </script>
+      }
+    });
+
+    svgRoot.appendChild(markerEl);
+  }
+</script>
 </body>
 </html>
