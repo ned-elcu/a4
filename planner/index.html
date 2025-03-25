@@ -241,6 +241,11 @@
           maxZoom: 5
         });
 
+        // Attach zoom control event listeners now that panZoomInstance is defined.
+        document.getElementById("zoom-in").addEventListener("click", () => panZoomInstance.zoomIn());
+        document.getElementById("zoom-out").addEventListener("click", () => panZoomInstance.zoomOut());
+        document.getElementById("reset-zoom").addEventListener("click", () => panZoomInstance.resetZoom());
+
         // Function to update marker positions manually.
         const updateMarkersPosition = () => {
           const pan = panZoomInstance.getPan();
@@ -263,10 +268,6 @@
         // Initial update
         updateMarkersPosition();
       });
-
-      document.getElementById("zoom-in").addEventListener("click", () => panZoomInstance.zoomIn());
-      document.getElementById("zoom-out").addEventListener("click", () => panZoomInstance.zoomOut());
-      document.getElementById("reset-zoom").addEventListener("click", () => panZoomInstance.resetZoom());
     }
 
     function setupToolbox() {
@@ -371,6 +372,13 @@
       // Append the marker to the marker layer (which is not automatically scaled).
       markerLayer.appendChild(markerEl);
     }
+
+    /* Test Cases:
+       1. Log in with a valid email/password and verify that the map loads.
+       2. Drag a tool from the toolbox onto the map and verify that the marker appears exactly where dropped.
+       3. Use the zoom controls and confirm that markers adjust correctly.
+       4. Click a marker and confirm deletion prompt and subsequent removal upon confirmation.
+    */
   </script>
 </body>
 </html>
