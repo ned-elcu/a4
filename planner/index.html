@@ -216,8 +216,14 @@
 
     function initializeMap() {
       const svgObject = document.getElementById("map-svg");
-
-      svgObject.addEventListener("load", () => {
+      
+      svgObject.addEventListener("load", function init() {
+        // Check if the SVG is fully loaded.
+        if (!svgObject.contentDocument) {
+          console.error("SVG contentDocument is null. Retrying in 100ms...");
+          setTimeout(init, 100);
+          return;
+        }
         svgRoot = svgObject.contentDocument.documentElement;
         
         // Create a group for the pan/zoom layer and move all existing content into it.
@@ -371,6 +377,13 @@
       // Append the marker to the marker layer.
       markerLayer.appendChild(markerEl);
     }
+    
+    /* Test Cases:
+       1. Log in with a valid email/password and verify that the map loads.
+       2. Drag a toolbox item onto the map and verify that a marker is created at the drop location.
+       3. Use the zoom controls to zoom in/out and confirm that the markers adjust correctly.
+       4. Click a marker to test the deletion prompt and subsequent removal upon confirmation.
+    */
   </script>
 </body>
 </html>
