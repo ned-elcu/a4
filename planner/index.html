@@ -64,7 +64,6 @@
 
         document.addEventListener("DOMContentLoaded", () => {
             setupLogin();
-            setupToolbox();
         });
 
         function setupLogin() {
@@ -78,7 +77,7 @@
                         errorDiv.textContent = "";
                         document.getElementById("login-screen").style.display = "none";
                         document.getElementById("app").style.display = "block";
-                        initializeMap();
+                        document.getElementById("map-svg").addEventListener("load", initializeMap);
                     })
                     .catch((error) => {
                         errorDiv.textContent = error.message;
@@ -89,55 +88,41 @@
                 if (user) {
                     document.getElementById("login-screen").style.display = "none";
                     document.getElementById("app").style.display = "block";
-                    initializeMap();
+                    document.getElementById("map-svg").addEventListener("load", initializeMap);
                 }
             });
         }
 
         function initializeMap() {
             const svgObject = document.getElementById("map-svg");
-            svgObject.addEventListener("load", () => {
-                svgRoot = svgObject.contentDocument.documentElement;
-                panZoomInstance = svgPanZoom(svgRoot, { zoomEnabled: true, controlIconsEnabled: false, minZoom: 0.5, maxZoom: 5 });
-                setupDragAndDrop();
-                listenForMarkers();
-            });
-
-            document.getElementById("zoom-in").addEventListener("click", () => panZoomInstance.zoomIn());
-            document.getElementById("zoom-out").addEventListener("click", () => panZoomInstance.zoomOut());
-            document.getElementById("reset-zoom").addEventListener("click", () => panZoomInstance.resetZoom());
-        }
-
-        function setupToolbox() {
-            document.querySelectorAll(".tool").forEach((tool) => {
-                tool.addEventListener("dragstart", (e) => {
-                    e.dataTransfer.setData("text/plain", tool.getAttribute("data-type"));
-                });
-            });
+            svgRoot = svgObject.contentDocument.documentElement;
+            panZoomInstance = svgPanZoom(svgRoot, { zoomEnabled: true, controlIconsEnabled: false, minZoom: 0.5, maxZoom: 5 });
+            setupDragAndDrop();
         }
 
         function setupDragAndDrop() {
-            const viewport = svgRoot.querySelector("g");
-            svgRoot.addEventListener("dragover", (e) => e.preventDefault());
+            document.querySelectorAll(".tool").forEach((tool) => {
+                tool.addEventListener("dragstart", (e) => {
+                    e.preventDefault();
+                    e.dataTransfer.setData("text/plain", tool.getAttribute("data-type"));
+                });
+            });
+
+            svgRoot.addEventListener("dragover", (e) => {
+                e.preventDefault();
+            });
+
             svgRoot.addEventListener("drop", async (e) => {
                 e.preventDefault();
                 const markerType = e.dataTransfer.getData("text/plain");
+                if (!markerType) return;
+                
                 const pt = svgRoot.createSVGPoint();
                 pt.x = e.clientX;
                 pt.y = e.clientY;
-                const svgP = pt.matrixTransform(viewport.getScreenCTM().inverse());
-                await addMarkerToFirestore(markerType, svgP.x, svgP.y);
-            });
-        }
-
-        async function addMarkerToFirestore(type, x, y) {
-            await addDoc(collection(db, "markers"), { type, x, y, timestamp: serverTimestamp() });
-        }
-
-        function listenForMarkers() {
-            onSnapshot(query(collection(db, "markers"), orderBy("timestamp")), (snapshot) => {
-                svgRoot.querySelectorAll(".marker").forEach(marker => marker.remove());
-                snapshot.forEach(docSnap => createMarkerElement(docSnap.id, docSnap.data()));
+                const svgP = pt.matrixTransform(svgRoot.getScreenCTM().inverse());
+                
+                await addDoc(collection(db, "markers"), { type: markerType, x: svgP.x, y: svgP.y, timestamp: serverTimestamp() });
             });
         }
     </script>
