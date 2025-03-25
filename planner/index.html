@@ -295,7 +295,14 @@
         // Convert to SVG coordinates relative to the entire SVG.
         const svgP = pt.matrixTransform(svgRoot.getScreenCTM().inverse());
 
-        await addMarkerToFirestore(markerType, svgP.x, svgP.y);
+        // Get current pan and zoom values
+        const pan = panZoomInstance.getPan();
+        const zoom = panZoomInstance.getZoom();
+        // Adjust coordinates to be relative to the pan/zoom layer.
+        const x = (svgP.x - pan.x) / zoom;
+        const y = (svgP.y - pan.y) / zoom;
+
+        await addMarkerToFirestore(markerType, x, y);
       });
     }
 
@@ -332,9 +339,6 @@
         markerEl.textContent = data.text;
         markerEl.setAttribute("fill", data.color);
         markerEl.setAttribute("font-size", "16");
-        // Center the text marker over its coordinates.
-        markerEl.setAttribute("text-anchor", "middle");
-        markerEl.setAttribute("dominant-baseline", "middle");
       } else {
         markerEl = document.createElementNS("http://www.w3.org/2000/svg", "image");
         const markerSrc = data.type === "citadel" ? "https://via.placeholder.com/30?text=C" : "https://via.placeholder.com/30?text=T";
