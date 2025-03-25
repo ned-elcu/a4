@@ -156,184 +156,190 @@
   </div>
 
   <!-- Main Script using ES Modules -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-  import { getFirestore, collection, addDoc, orderBy, query, onSnapshot, deleteDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
-  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, orderBy, query, onSnapshot, deleteDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyAIws_FKV_CTaiHdnwc8WigDqRkyUCOjtE",
-    authDomain: "regnum-d3ddf.firebaseapp.com",
-    projectId: "regnum-d3ddf",
-    storageBucket: "regnum-d3ddf.firebasestorage.app",
-    messagingSenderId: "565532905074",
-    appId: "1:565532905074:web:a4cc38363376e49540fceb",
-    measurementId: "G-4RG5NP4FZ3"
-  };
+    const firebaseConfig = {
+      apiKey: "AIzaSyAIws_FKV_CTaiHdnwc8WigDqRkyUCOjtE",
+      authDomain: "regnum-d3ddf.firebaseapp.com",
+      projectId: "regnum-d3ddf",
+      storageBucket: "regnum-d3ddf.firebasestorage.app",
+      messagingSenderId: "565532905074",
+      appId: "1:565532905074:web:a4cc38363376e49540fceb",
+      measurementId: "G-4RG5NP4FZ3"
+    };
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  const auth = getAuth(app);
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
 
-  let panZoomInstance;
-  let svgRoot;
-  let mapGroup; // The <g> element manipulated by svg-pan-zoom
+    let panZoomInstance;
+    let svgRoot;
+    let mapGroup; // The <g> element manipulated by svg-pan-zoom
 
-  document.addEventListener("DOMContentLoaded", () => {
-    setupLogin();
-    setupToolbox();
-  });
+    document.addEventListener("DOMContentLoaded", () => {
+      setupLogin();
+      setupToolbox();
+    });
 
-  function setupLogin() {
-    document.getElementById("login-button").addEventListener("click", () => {
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value.trim();
-      const errorDiv = document.getElementById("login-error");
+    function setupLogin() {
+      document.getElementById("login-button").addEventListener("click", () => {
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value.trim();
+        const errorDiv = document.getElementById("login-error");
 
-      signInWithEmailAndPassword(auth, email, password)
-        .then(() => {
-          errorDiv.textContent = "";
+        signInWithEmailAndPassword(auth, email, password)
+          .then(() => {
+            errorDiv.textContent = "";
+            document.getElementById("login-screen").style.display = "none";
+            document.getElementById("app").style.display = "block";
+            initializeMap();
+          })
+          .catch((error) => {
+            errorDiv.textContent = error.message;
+          });
+      });
+
+      onAuthStateChanged(auth, (user) => {
+        if (user) {
           document.getElementById("login-screen").style.display = "none";
           document.getElementById("app").style.display = "block";
           initializeMap();
-        })
-        .catch((error) => {
-          errorDiv.textContent = error.message;
-        });
-    });
-
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        document.getElementById("login-screen").style.display = "none";
-        document.getElementById("app").style.display = "block";
-        initializeMap();
-      } else {
-        document.getElementById("login-screen").style.display = "flex";
-        document.getElementById("app").style.display = "none";
-      }
-    });
-  }
-
-  function initializeMap() {
-    const svgObject = document.getElementById("map-svg");
-
-    svgObject.addEventListener("load", () => {
-      svgRoot = svgObject.contentDocument.documentElement;
-      // Locate the first <g> element which is controlled by svg-pan-zoom.
-      mapGroup = svgRoot.querySelector("g") || svgRoot;
-      
-      panZoomInstance = svgPanZoom(svgRoot, {
-        zoomEnabled: true,
-        controlIconsEnabled: false,
-        minZoom: 0.5,
-        maxZoom: 5
-      });
-
-      // Instead of attaching drag events on the root, attach them on the group.
-      setupDragAndDrop();
-
-      listenForMarkers();
-    });
-
-    document.getElementById("zoom-in").addEventListener("click", () => panZoomInstance.zoomIn());
-    document.getElementById("zoom-out").addEventListener("click", () => panZoomInstance.zoomOut());
-    document.getElementById("reset-zoom").addEventListener("click", () => panZoomInstance.resetZoom());
-  }
-
-  function setupToolbox() {
-    // Prevent default drag behaviour on toolbox elements
-    document.querySelectorAll(".tool").forEach((tool) => {
-      tool.addEventListener("dragstart", (e) => {
-        e.dataTransfer.setData("text/plain", tool.getAttribute("data-type"));
-        e.dataTransfer.effectAllowed = "move";
-      });
-    });
-  }
-
-  function setupDragAndDrop() {
-    // Attach dragover and drop on the map group
-    mapGroup.addEventListener("dragover", (e) => {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = "move";
-    });
-
-    mapGroup.addEventListener("drop", async (e) => {
-      e.preventDefault();
-      const markerType = e.dataTransfer.getData("text/plain");
-      
-      // Convert the client coordinates to SVG coordinates.
-      const pt = svgRoot.createSVGPoint();
-      pt.x = e.clientX;
-      pt.y = e.clientY;
-      const svgP = pt.matrixTransform(svgRoot.getScreenCTM().inverse());
-
-      await addMarkerToFirestore(markerType, svgP.x, svgP.y);
-    });
-  }
-
-  async function addMarkerToFirestore(type, x, y) {
-    let markerData = { type, x, y, timestamp: serverTimestamp() };
-    if (type === "marker") {
-      markerData.text = prompt("Enter marker text:") || "M";
-      markerData.color = prompt("Enter marker color (e.g., red or #ff0000):") || "black";
-    }
-
-    try {
-      await addDoc(collection(db, "markers"), markerData);
-    } catch (error) {
-      console.error("Error adding marker: ", error);
-    }
-  }
-
-  function listenForMarkers() {
-    const markersQuery = query(collection(db, "markers"), orderBy("timestamp"));
-    onSnapshot(markersQuery, (snapshot) => {
-      // Remove existing markers from the group
-      mapGroup.querySelectorAll(".marker").forEach((marker) => marker.remove());
-      snapshot.forEach((docSnap) => {
-        createMarkerElement(docSnap.id, docSnap.data());
-      });
-    });
-  }
-
-  function createMarkerElement(id, data) {
-    let markerEl;
-
-    if (data.type === "marker") {
-      markerEl = document.createElementNS("http://www.w3.org/2000/svg", "text");
-      markerEl.textContent = data.text;
-      markerEl.setAttribute("fill", data.color);
-      markerEl.setAttribute("font-size", "16");
-      // Set x and y directly
-      markerEl.setAttribute("x", data.x);
-      markerEl.setAttribute("y", data.y);
-    } else {
-      markerEl = document.createElementNS("http://www.w3.org/2000/svg", "image");
-      const markerSrc = data.type === "citadel" ? "https://via.placeholder.com/30?text=C" : "https://via.placeholder.com/30?text=T";
-      markerEl.setAttributeNS("http://www.w3.org/1999/xlink", "href", markerSrc);
-      markerEl.setAttribute("width", "30");
-      markerEl.setAttribute("height", "30");
-      // Set x and y directly
-      markerEl.setAttribute("x", data.x);
-      markerEl.setAttribute("y", data.y);
-    }
-
-    markerEl.classList.add("marker");
-    markerEl.setAttribute("data-id", id);
-
-    markerEl.addEventListener("click", async () => {
-      if (confirm("Delete this marker?")) {
-        try {
-          await deleteDoc(doc(db, "markers", id));
-        } catch (error) {
-          console.error("Error deleting marker: ", error);
+        } else {
+          document.getElementById("login-screen").style.display = "flex";
+          document.getElementById("app").style.display = "none";
         }
-      }
-    });
+      });
+    }
 
-    mapGroup.appendChild(markerEl);
-  }
-</script>
+    function initializeMap() {
+      const svgObject = document.getElementById("map-svg");
+
+      svgObject.addEventListener("load", () => {
+        svgRoot = svgObject.contentDocument.documentElement;
+        // Locate the first <g> element controlled by svg-pan-zoom, or fallback to svgRoot
+        mapGroup = svgRoot.querySelector("g") || svgRoot;
+
+        if (!svgRoot) {
+          console.error("SVG root not found! Check if the SVG file is loading properly.");
+          return;
+        }
+
+        panZoomInstance = svgPanZoom(svgRoot, {
+          zoomEnabled: true,
+          controlIconsEnabled: false,
+          minZoom: 0.5,
+          maxZoom: 5
+        });
+
+        // Now that panZoomInstance is defined, attach the zoom control event listeners
+        document.getElementById("zoom-in").addEventListener("click", () => panZoomInstance.zoomIn());
+        document.getElementById("zoom-out").addEventListener("click", () => panZoomInstance.zoomOut());
+        document.getElementById("reset-zoom").addEventListener("click", () => panZoomInstance.resetZoom());
+
+        // Attach drag & drop event listeners on the map group
+        setupDragAndDrop();
+
+        // Listen for markers added to Firestore and render them
+        listenForMarkers();
+      });
+    }
+
+    function setupToolbox() {
+      document.querySelectorAll(".tool").forEach((tool) => {
+        tool.addEventListener("dragstart", (e) => {
+          e.dataTransfer.setData("text/plain", tool.getAttribute("data-type"));
+          e.dataTransfer.effectAllowed = "move";
+        });
+      });
+    }
+
+    function setupDragAndDrop() {
+      // Attach dragover and drop on the map group
+      mapGroup.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+      });
+
+      mapGroup.addEventListener("drop", async (e) => {
+        e.preventDefault();
+        const markerType = e.dataTransfer.getData("text/plain");
+
+        // Convert client coordinates to SVG coordinates.
+        const pt = svgRoot.createSVGPoint();
+        pt.x = e.clientX;
+        pt.y = e.clientY;
+        const svgP = pt.matrixTransform(svgRoot.getScreenCTM().inverse());
+
+        await addMarkerToFirestore(markerType, svgP.x, svgP.y);
+      });
+    }
+
+    async function addMarkerToFirestore(type, x, y) {
+      let markerData = { type, x, y, timestamp: serverTimestamp() };
+      if (type === "marker") {
+        markerData.text = prompt("Enter marker text:") || "M";
+        markerData.color = prompt("Enter marker color (e.g., red or #ff0000):") || "black";
+      }
+
+      try {
+        await addDoc(collection(db, "markers"), markerData);
+      } catch (error) {
+        console.error("Error adding marker: ", error);
+      }
+    }
+
+    function listenForMarkers() {
+      const markersQuery = query(collection(db, "markers"), orderBy("timestamp"));
+      onSnapshot(markersQuery, (snapshot) => {
+        // Remove existing markers from the map group
+        mapGroup.querySelectorAll(".marker").forEach((marker) => marker.remove());
+        snapshot.forEach((docSnap) => {
+          createMarkerElement(docSnap.id, docSnap.data());
+        });
+      });
+    }
+
+    function createMarkerElement(id, data) {
+      let markerEl;
+
+      if (data.type === "marker") {
+        markerEl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        markerEl.textContent = data.text;
+        markerEl.setAttribute("fill", data.color);
+        markerEl.setAttribute("font-size", "16");
+        // Set x and y attributes directly
+        markerEl.setAttribute("x", data.x);
+        markerEl.setAttribute("y", data.y);
+      } else {
+        markerEl = document.createElementNS("http://www.w3.org/2000/svg", "image");
+        const markerSrc = data.type === "citadel" ? "https://via.placeholder.com/30?text=C" : "https://via.placeholder.com/30?text=T";
+        markerEl.setAttributeNS("http://www.w3.org/1999/xlink", "href", markerSrc);
+        markerEl.setAttribute("width", "30");
+        markerEl.setAttribute("height", "30");
+        // Set x and y attributes directly
+        markerEl.setAttribute("x", data.x);
+        markerEl.setAttribute("y", data.y);
+      }
+
+      markerEl.classList.add("marker");
+      markerEl.setAttribute("data-id", id);
+
+      markerEl.addEventListener("click", async () => {
+        if (confirm("Delete this marker?")) {
+          try {
+            await deleteDoc(doc(db, "markers", id));
+          } catch (error) {
+            console.error("Error deleting marker: ", error);
+          }
+        }
+      });
+
+      mapGroup.appendChild(markerEl);
+    }
+  </script>
 
 </body>
 </html>
