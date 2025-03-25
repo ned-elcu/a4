@@ -177,6 +177,7 @@
 
   let panZoomInstance;
   let svgRoot;
+  let mapGroup; // This will hold the <g> element that svg-pan-zoom manipulates
 
   document.addEventListener("DOMContentLoaded", () => {
     setupLogin();
@@ -218,7 +219,9 @@
 
     svgObject.addEventListener("load", () => {
       svgRoot = svgObject.contentDocument.documentElement;
-
+      // Find the first <g> element that will be manipulated by svg-pan-zoom
+      mapGroup = svgRoot.querySelector("g") || svgRoot;
+      
       panZoomInstance = svgPanZoom(svgRoot, {
         zoomEnabled: true,
         controlIconsEnabled: false,
@@ -280,7 +283,8 @@
   function listenForMarkers() {
     const markersQuery = query(collection(db, "markers"), orderBy("timestamp"));
     onSnapshot(markersQuery, (snapshot) => {
-      svgRoot.querySelectorAll(".marker").forEach((marker) => marker.remove());
+      // Remove existing markers
+      mapGroup.querySelectorAll(".marker").forEach((marker) => marker.remove());
       snapshot.forEach((docSnap) => {
         createMarkerElement(docSnap.id, docSnap.data());
       });
@@ -295,17 +299,22 @@
       markerEl.textContent = data.text;
       markerEl.setAttribute("fill", data.color);
       markerEl.setAttribute("font-size", "16");
+      // Set x and y attributes directly
+      markerEl.setAttribute("x", data.x);
+      markerEl.setAttribute("y", data.y);
     } else {
       markerEl = document.createElementNS("http://www.w3.org/2000/svg", "image");
       const markerSrc = data.type === "citadel" ? "https://via.placeholder.com/30?text=C" : "https://via.placeholder.com/30?text=T";
       markerEl.setAttributeNS("http://www.w3.org/1999/xlink", "href", markerSrc);
       markerEl.setAttribute("width", "30");
       markerEl.setAttribute("height", "30");
+      // Set x and y attributes directly
+      markerEl.setAttribute("x", data.x);
+      markerEl.setAttribute("y", data.y);
     }
 
     markerEl.classList.add("marker");
     markerEl.setAttribute("data-id", id);
-    markerEl.setAttribute("transform", `translate(${data.x}, ${data.y})`);
 
     markerEl.addEventListener("click", async () => {
       if (confirm("Delete this marker?")) {
@@ -317,7 +326,8 @@
       }
     });
 
-    svgRoot.appendChild(markerEl);
+    // Append the marker to the map group
+    mapGroup.appendChild(markerEl);
   }
 </script>
 
