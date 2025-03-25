@@ -1,1 +1,254 @@
-planner
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Interactive Game Map</title>
+  <!-- Firebase Libraries -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+  <!-- svg-pan-zoom Library -->
+  <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
+  <style>
+    /* General styling */
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+    }
+    /* Login screen styling */
+    #login-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background: #2c3e50;
+      color: #ecf0f1;
+    }
+    #login-screen input {
+      margin: 5px;
+      padding: 10px;
+      font-size: 16px;
+      width: 250px;
+      border: none;
+      border-radius: 4px;
+    }
+    #login-screen button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 4px;
+      background: #27ae60;
+      color: #fff;
+      cursor: pointer;
+    }
+    #login-screen button:hover {
+      background: #2ecc71;
+    }
+    #login-error {
+      margin-top: 10px;
+      color: #e74c3c;
+      font-weight: bold;
+    }
+    /* Main app layout */
+    #app {
+      display: none;
+      height: 100vh;
+    }
+    #toolbox {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      background: rgba(255,255,255,0.95);
+      padding: 10px;
+      border-radius: 5px;
+      box-shadow: 0px 0px 10px rgba(0,0,0,0.3);
+      z-index: 10;
+    }
+    .tool {
+      margin: 5px 0;
+      padding: 5px;
+      border: 1px solid #ccc;
+      background: #fff;
+      cursor: grab;
+      text-align: center;
+      border-radius: 3px;
+      user-select: none;
+    }
+    #map-container {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+    /* Marker styles */
+    .marker:hover { opacity: 0.8; }
+  </style>
+</head>
+<body>
+  <!-- Login Screen -->
+  <div id="login-screen">
+    <h2>Login</h2>
+    <input id="username" type="text" placeholder="Username" />
+    <input id="password" type="password" placeholder="Password" />
+    <button id="login-button">Login</button>
+    <div id="login-error"></div>
+  </div>
+  
+  <!-- Main App -->
+  <div id="app">
+    <!-- Toolbox for draggable items -->
+    <div id="toolbox">
+      <h3>Toolbox</h3>
+      <div class="tool" draggable="true" data-type="marker">Marker</div>
+      <div class="tool" draggable="true" data-type="citadel">Citadel</div>
+      <div class="tool" draggable="true" data-type="torch">Torch</div>
+    </div>
+    <!-- Map Container -->
+    <div id="map-container">
+      <!-- The SVG is loaded via an object element -->
+      <object id="map-svg" type="image/svg+xml" data="https://regnumsolis.com/planner/images/map.svg" width="100%" height="100%"></object>
+    </div>
+  </div>
+  
+  <script>
+    // Ensure DOM is fully loaded before attaching events
+    document.addEventListener('DOMContentLoaded', function() {
+      // Firebase configuration – replace with your own config
+      const firebaseConfig = {
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_AUTH_DOMAIN",
+        projectId: "YOUR_PROJECT_ID",
+        storageBucket: "YOUR_STORAGE_BUCKET",
+        messagingSenderId: "YOUR_SENDER_ID",
+        appId: "YOUR_APP_ID"
+      };
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.firestore();
+
+      // Login functionality
+      document.getElementById('login-button').addEventListener('click', function() {
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value.trim();
+        const errorDiv = document.getElementById('login-error');
+        
+        // Hardcoded credentials (update as needed)
+        if(username === "admin" && password === "adminpass") {
+          errorDiv.textContent = "";
+          document.getElementById('login-screen').style.display = "none";
+          document.getElementById('app').style.display = "block";
+          initializeMap();
+        } else {
+          errorDiv.textContent = "Incorrect username or password. Please try again.";
+        }
+      });
+
+      // Initialize the map after successful login
+      function initializeMap() {
+        const svgObject = document.getElementById('map-svg');
+        svgObject.addEventListener('load', function(){
+          const svgDoc = svgObject.contentDocument;
+          const svgRoot = svgDoc.documentElement;
+          // Initialize pan & zoom on the SVG
+          window.panZoomInstance = svgPanZoom(svgRoot, { controlIconsEnabled: true });
+          // Set up drag & drop functionality on the SVG
+          setupDragAndDrop(svgRoot);
+          // Listen for markers from Firebase
+          listenForMarkers(svgRoot);
+        });
+      }
+
+      // Set up drag & drop on the SVG
+      function setupDragAndDrop(svgRoot) {
+        svgRoot.addEventListener('dragover', function(e){
+          e.preventDefault();
+        });
+        svgRoot.addEventListener('drop', function(e){
+          e.preventDefault();
+          // Convert drop coordinates to SVG space
+          const pt = svgRoot.createSVGPoint();
+          pt.x = e.clientX;
+          pt.y = e.clientY;
+          const svgP = pt.matrixTransform(svgRoot.getScreenCTM().inverse());
+          // Get marker type from dataTransfer
+          const markerType = e.dataTransfer.getData('text/plain');
+          addMarkerToFirestore(markerType, svgP.x, svgP.y);
+        });
+        // Enable dragging from the toolbox
+        const tools = document.querySelectorAll('.tool');
+        tools.forEach(tool => {
+          tool.addEventListener('dragstart', function(e){
+            e.dataTransfer.setData('text/plain', tool.getAttribute('data-type'));
+          });
+        });
+      }
+
+      // Add a marker to Firestore
+      function addMarkerToFirestore(type, x, y) {
+        let markerData = {
+          type: type,
+          x: x,
+          y: y,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        // For a text marker, ask for custom text and color
+        if(type === "marker") {
+          markerData.text = prompt("Enter marker text:") || "";
+          markerData.color = prompt("Enter marker color (e.g., red or #ff0000):") || "black";
+        }
+        db.collection("markers").add(markerData);
+      }
+
+      // Listen for real-time marker updates from Firestore
+      function listenForMarkers(svgRoot) {
+        db.collection("markers").orderBy("timestamp")
+          .onSnapshot(snapshot => {
+            // Remove any existing markers from the SVG
+            const existingMarkers = svgRoot.querySelectorAll('.marker');
+            existingMarkers.forEach(m => m.parentNode.removeChild(m));
+            // Create elements for each marker from Firestore
+            snapshot.forEach(doc => {
+              createMarkerElement(svgRoot, doc.id, doc.data());
+            });
+          });
+      }
+
+      // Create and add a marker element to the SVG
+      function createMarkerElement(svgRoot, id, data) {
+        let markerEl;
+        if(data.type === "marker") {
+          // Create a text element for custom markers
+          markerEl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+          markerEl.textContent = data.text;
+          markerEl.setAttribute("fill", data.color);
+          markerEl.setAttribute("font-size", "16");
+        } else if(data.type === "citadel") {
+          // Placeholder SVG for a citadel (using a rectangle)
+          markerEl = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+          markerEl.setAttribute("width", "30");
+          markerEl.setAttribute("height", "30");
+          markerEl.setAttribute("fill", "gray");
+        } else if(data.type === "torch") {
+          // Placeholder SVG for a torch (using a circle)
+          markerEl = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+          markerEl.setAttribute("r", "15");
+          markerEl.setAttribute("fill", "orange");
+        }
+        // Add class and a data attribute for deletion
+        markerEl.classList.add('marker');
+        markerEl.setAttribute("data-id", id);
+        // Use transform for positioning (x,y)
+        markerEl.setAttribute("transform", `translate(${data.x}, ${data.y})`);
+        // Add a click listener to allow deletion (with confirmation)
+        markerEl.addEventListener('click', function(){
+          if(confirm("Delete this marker?")) {
+            db.collection("markers").doc(id).delete();
+          }
+        });
+        svgRoot.appendChild(markerEl);
+      }
+    });
+  </script>
+</body>
+</html>
