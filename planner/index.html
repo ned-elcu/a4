@@ -6,6 +6,7 @@
   <!-- Firebase Libraries -->
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
   <!-- svg-pan-zoom Library -->
   <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
   <style>
@@ -89,7 +90,7 @@
   <!-- Login Screen -->
   <div id="login-screen">
     <h2>Login</h2>
-    <input id="username" type="text" placeholder="Username" />
+    <input id="email" type="email" placeholder="Email" />
     <input id="password" type="password" placeholder="Password" />
     <button id="login-button">Login</button>
     <div id="login-error"></div>
@@ -114,7 +115,7 @@
   <script>
     // Ensure DOM is fully loaded before attaching events
     document.addEventListener('DOMContentLoaded', function() {
-      // Firebase configuration – replace with your own config
+      // Firebase configuration – replace with your own config values
       const firebaseConfig = {
         apiKey: "YOUR_API_KEY",
         authDomain: "YOUR_AUTH_DOMAIN",
@@ -126,21 +127,39 @@
       // Initialize Firebase
       firebase.initializeApp(firebaseConfig);
       const db = firebase.firestore();
+      const auth = firebase.auth();
 
-      // Login functionality
+      // Firebase Authentication: sign in on login button click
       document.getElementById('login-button').addEventListener('click', function() {
-        const username = document.getElementById('username').value.trim();
+        const email = document.getElementById('email').value.trim();
         const password = document.getElementById('password').value.trim();
         const errorDiv = document.getElementById('login-error');
-        
-        // Hardcoded credentials (update as needed)
-        if(username === "admin" && password === "adminpass") {
-          errorDiv.textContent = "";
+
+        auth.signInWithEmailAndPassword(email, password)
+          .then((userCredential) => {
+            // Clear any previous error
+            errorDiv.textContent = "";
+            // Hide login and show app
+            document.getElementById('login-screen').style.display = "none";
+            document.getElementById('app').style.display = "block";
+            initializeMap();
+          })
+          .catch((error) => {
+            errorDiv.textContent = error.message;
+          });
+      });
+
+      // Optionally, monitor authentication state changes
+      auth.onAuthStateChanged(user => {
+        if (user) {
+          // User is signed in.
           document.getElementById('login-screen').style.display = "none";
           document.getElementById('app').style.display = "block";
           initializeMap();
         } else {
-          errorDiv.textContent = "Incorrect username or password. Please try again.";
+          // User is signed out.
+          document.getElementById('login-screen').style.display = "flex";
+          document.getElementById('app').style.display = "none";
         }
       });
 
@@ -154,7 +173,7 @@
           window.panZoomInstance = svgPanZoom(svgRoot, { controlIconsEnabled: true });
           // Set up drag & drop functionality on the SVG
           setupDragAndDrop(svgRoot);
-          // Listen for markers from Firebase
+          // Listen for markers from Firestore
           listenForMarkers(svgRoot);
         });
       }
