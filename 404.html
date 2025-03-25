@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>[404] - Page Not Found</title>
+  <link rel="icon" type="image/png" href="/home/icon.png" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap">
+  <style>
+    .courier {
+      font-family: 'Courier New';
+      font-size: 16px;
+    }
+
+    /* Reset & Basic Styling */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    html, body {
+      width: 100%;
+      background: black;
+      color: white;
+      font-family: 'Bebas Neue', sans-serif;
+      text-align: center;
+      font-size: 1.3em;
+      overflow-x: hidden;
+    }
+
+    /* Animation Keyframes */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes neonGlow {
+      0% {
+        text-shadow: 0 0 5px rgba(223, 197, 136, 0.8),
+                     0 0 10px rgba(223, 197, 136, 0.8),
+                     0 0 15px rgba(223, 197, 136, 0.8);
+        opacity: 0.8;
+      }
+      100% {
+        text-shadow: 0 0 20px rgba(223, 197, 136, 0.8),
+                     0 0 30px rgba(223, 197, 136, 0.8),
+                     0 0 40px rgba(223, 197, 136, 0.8);
+        opacity: 1;
+      }
+    }
+    @keyframes backgroundPulse {
+      0% { filter: brightness(1); }
+      50% { filter: brightness(1.1); }
+      100% { filter: brightness(1); }
+    }
+    @keyframes float {
+      0% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+      100% { transform: translateY(0); }
+    }
+
+    /* Overlay Canvas for Star Effect */
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 10000;
+      pointer-events: none;
+      background: transparent;
+    }
+
+    /* Top Bar Styling */
+    .top-bar {
+      width: 100%;
+      height: 70px;
+      background: black;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 11000;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+      padding: 0 15px;
+      gap: 15px;
+    }
+    .top-bar img {
+      width: 50px;
+      height: 50px;
+    }
+    .blog-button {
+      background-color: rgba(223, 197, 136, 0.8);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      cursor: pointer;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 20px;
+      border-radius: 5px;
+      transition: 0.3s;
+    }
+    .blog-button:hover {
+      background-color: coral;
+      transform: scale(1.05);
+    }
+
+    /* Hero Section */
+    .hero {
+      background: url('background.png') no-repeat center center/cover;
+      padding: 104px 26px;
+      position: relative;
+      margin-top: 75px;
+      width: 100%;
+      background-position: center top;
+      transition: background-position 0.3s ease-out;
+      overflow: visible;
+      animation: fadeIn 1s ease-out, backgroundPulse 10s ease-in-out infinite;
+    }
+    .overlay {
+      background: rgba(14, 17, 19, 0.8);
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+    .container {
+      position: relative;
+      max-width: 900px;
+      margin: auto;
+      padding: 0 15px;
+      animation: fadeIn 1s ease-out;
+    }
+    .title {
+      font-size: 3.64em;
+      font-weight: bold;
+      text-transform: uppercase;
+      text-shadow: 0 0 10px rgba(223, 197, 136, 0.8),
+                   0 0 20px rgba(223, 197, 136, 0.8),
+                   0 0 30px rgba(223, 197, 136, 0.8);
+      animation: neonGlow 1.5s infinite alternate ease-in-out;
+    }
+    .subtitle {
+      font-size: 2.08em;
+      margin-top: 10px;
+      font-weight: 300;
+      text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
+    }
+    .button {
+      display: inline-block;
+      padding: 15.6px 45.5px;
+      margin-top: 26px;
+      font-size: 1.69em;
+      color: white;
+      background: linear-gradient(45deg, rgba(223, 197, 136, 0.8), rgba(223, 197, 136, 0.8));
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: bold;
+      text-transform: uppercase;
+      transition: 0.3s;
+      box-shadow: 0 4px 15px rgba(223, 197, 136, 0.5);
+      animation: float 3s ease-in-out infinite;
+    }
+    .button:hover {
+      background: linear-gradient(45deg, rgba(223, 197, 136, 0.8), black);
+      box-shadow: 0 4px 15px rgba(223, 197, 136, 0.9);
+    }
+    
+    /* Minimalistic Copyright Styling */
+    p.copyright {
+      text-align: center;
+      margin: 20px auto 40px;
+      font-size: 0.9em;
+      color: rgba(223, 197, 136, 0.8);
+    }
+  </style>
+</head>
+<body>
+  <!-- Top Navigation Bar -->
+  <div class="top-bar">
+    <img src="icon.png" alt="Site Icon" />
+    <a href="/blog/" class="blog-button">BLOG</a>
+  </div>
+
+  <!-- Hero Section -->
+  <div class="hero">
+    <div class="overlay"></div>
+    <div class="container">
+      <h1 class="title">404 ERROR!</h1>
+      <p class="subtitle">Oops! The page you're looking for does not exist.</p>
+      <a href="/" class="button">Back to Home</a>
+    </div>
+  </div>
+
+  <!-- Minimalistic Copyright -->
+  <p class="copyright">regnumsolis.com © 2025</p>
+
+  <!-- Star Effect Canvas -->
+  <canvas id="starCanvas"></canvas>
+
+  <script>
+    // Variables for mouse tracking
+    let mouseX = window.innerWidth / 2,
+        mouseY = window.innerHeight / 2;
+    const factor = 0.05;
+    document.addEventListener("mousemove", (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+    });
+
+    // Set up canvas for star effect
+    const canvas = document.getElementById("starCanvas");
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    window.addEventListener("resize", () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+
+    // Star class with comet effect (glow, fade, trail)
+    class Star {
+      constructor() {
+        this.reset(true);
+      }
+      reset(initial) {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.speed = Math.random() * 2 + 0.5;
+        this.length = Math.random() * 3 + 1;
+        this.opacity = 0;
+        this.life = Math.random() * 100 + 50;
+        this.trail = [];
+        if (!initial) {
+          if (this.x > canvas.width) this.x = 0;
+          if (this.x < 0) this.x = canvas.width;
+          if (this.y > canvas.height) this.y = 0;
+          if (this.y < 0) this.y = canvas.height;
+        }
+      }
+      update() {
+        this.x += this.speed * (Math.random() - 0.5);
+        this.y += this.speed * (Math.random() - 0.5);
+        this.opacity = Math.min(this.opacity + 0.05, 1);
+        this.life--;
+        if (this.life <= 0) this.reset();
+        this.trail.push({ x: this.x, y: this.y });
+        if (this.trail.length > this.length) this.trail.shift();
+      }
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, 1, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+        ctx.fill();
+        for (let i = 0; i < this.trail.length; i++) {
+          const trail = this.trail[i];
+          ctx.beginPath();
+          ctx.arc(trail.x, trail.y, 1, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity - i / this.length})`;
+          ctx.fill();
+        }
+      }
+    }
+
+    const stars = Array.from({ length: 100 }, () => new Star());
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let star of stars) {
+        star.update();
+        star.draw();
+      }
+      requestAnimationFrame(animate);
+    }
+    animate();
+  </script>
+</body>
+</html>
