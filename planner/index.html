@@ -1,324 +1,145 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Interactive Game Map</title>
-  <!-- svg-pan-zoom Library -->
-  <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
-  <style>
-    /* General styling */
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f4f4f4;
-    }
-    /* Login screen styling */
-    #login-screen {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      background: #2c3e50;
-      color: #ecf0f1;
-    }
-    #login-screen input {
-      margin: 5px;
-      padding: 10px;
-      font-size: 16px;
-      width: 250px;
-      border: none;
-      border-radius: 4px;
-    }
-    #login-screen button {
-      margin-top: 10px;
-      padding: 10px 20px;
-      font-size: 16px;
-      border: none;
-      border-radius: 4px;
-      background: #27ae60;
-      color: #fff;
-      cursor: pointer;
-    }
-    #login-screen button:hover {
-      background: #2ecc71;
-    }
-    #login-error {
-      margin-top: 10px;
-      color: #e74c3c;
-      font-weight: bold;
-    }
-    /* Main app layout */
-    #app {
-      display: none;
-      height: 100vh;
-      position: relative;
-    }
-    /* Toolbox styling */
-    #toolbox {
-      position: fixed;
-      top: 10px;
-      left: 10px;
-      background: rgba(255,255,255,0.95);
-      padding: 10px;
-      border-radius: 5px;
-      box-shadow: 0px 0px 10px rgba(0,0,0,0.3);
-      z-index: 20;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .tool {
-      width: 50px;
-      height: 50px;
-      border: 1px solid #ccc;
-      background: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: grab;
-      border-radius: 5px;
-      user-select: none;
-    }
-    .tool img {
-      max-width: 40px;
-      max-height: 40px;
-    }
-    /* Zoom controls styling */
-    #zoom-controls {
-      position: fixed;
-      top: 10px;
-      right: 10px;
-      z-index: 20;
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
-    #zoom-controls button {
-      padding: 8px;
-      border: none;
-      border-radius: 4px;
-      background: #3498db;
-      color: #fff;
-      cursor: pointer;
-    }
-    #zoom-controls button:hover {
-      background: #2980b9;
-    }
-    /* Map container styling */
-    #map-container {
-      width: 100vw;
-      height: 100vh;
-      overflow: hidden;
-    }
-    /* Marker styling */
-    .marker:hover { opacity: 0.8; cursor: pointer; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Map Planner</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/svg-pan-zoom/3.6.1/svg-pan-zoom.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        #login-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
+        #app { display: none; }
+        .map-container { position: relative; width: 100%; height: 80vh; overflow: hidden; border: 1px solid black; }
+        .toolbox { margin: 10px; }
+        .tool { cursor: grab; display: inline-block; padding: 10px; border: 1px solid black; margin: 5px; background-color: lightgray; }
+        .controls button { margin: 5px; }
+    </style>
 </head>
 <body>
-  <!-- Login Screen -->
-  <div id="login-screen">
-    <h2>Login</h2>
-    <input id="email" type="email" placeholder="Email" />
-    <input id="password" type="password" placeholder="Password" />
-    <button id="login-button">Login</button>
-    <div id="login-error"></div>
-  </div>
-  
-  <!-- Main App -->
-  <div id="app">
-    <!-- Toolbox for draggable items -->
-    <div id="toolbox">
-      <div class="tool" draggable="true" data-type="marker" title="Text Marker">
-        <!-- Use text icon (or letter M) -->
-        <span style="font-size:24px;">M</span>
-      </div>
-      <div class="tool" draggable="true" data-type="citadel" title="Citadel">
-        <!-- Placeholder SVG icon for citadel -->
-        <img src="https://via.placeholder.com/40?text=C" alt="Citadel">
-      </div>
-      <div class="tool" draggable="true" data-type="torch" title="Torch">
-        <!-- Placeholder SVG icon for torch -->
-        <img src="https://via.placeholder.com/40?text=T" alt="Torch">
-      </div>
+    <div id="login-screen">
+        <h2>Login</h2>
+        <input type="email" id="email" placeholder="Email">
+        <input type="password" id="password" placeholder="Password">
+        <button id="login-button">Login</button>
+        <p id="login-error" style="color:red;"></p>
     </div>
-    <!-- Zoom Controls -->
-    <div id="zoom-controls">
-      <button id="zoom-in">Zoom In</button>
-      <button id="zoom-out">Zoom Out</button>
-      <button id="reset-zoom">Reset</button>
+
+    <div id="app">
+        <div class="controls">
+            <button id="zoom-in">Zoom In</button>
+            <button id="zoom-out">Zoom Out</button>
+            <button id="reset-zoom">Reset</button>
+        </div>
+        <div class="toolbox">
+            <div class="tool" draggable="true" data-type="marker">Marker</div>
+            <div class="tool" draggable="true" data-type="citadel">Citadel</div>
+            <div class="tool" draggable="true" data-type="torch">Torch</div>
+        </div>
+        <div class="map-container">
+            <object id="map-svg" type="image/svg+xml" data="https://regnumsolis.com/planner/images/map.svg"></object>
+        </div>
     </div>
-    <!-- Map Container -->
-    <div id="map-container">
-      <!-- Load the SVG map from external URL -->
-      <object id="map-svg" type="image/svg+xml" data="https://regnumsolis.com/planner/images/map.svg" width="100%" height="100%"></object>
-    </div>
-  </div>
 
-  <!-- Main Script using ES Modules -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-  import { getFirestore, collection, addDoc, orderBy, query, onSnapshot, deleteDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
-  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, orderBy, query, onSnapshot, deleteDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyAIws_FKV_CTaiHdnwc8WigDqRkyUCOjtE",
-    authDomain: "regnum-d3ddf.firebaseapp.com",
-    projectId: "regnum-d3ddf",
-    storageBucket: "regnum-d3ddf.firebasestorage.app",
-    messagingSenderId: "565532905074",
-    appId: "1:565532905074:web:a4cc38363376e49540fceb",
-    measurementId: "G-4RG5NP4FZ3"
-  };
+        const firebaseConfig = {
+            apiKey: "AIzaSyAIws_FKV_CTaiHdnwc8WigDqRkyUCOjtE",
+            authDomain: "regnum-d3ddf.firebaseapp.com",
+            projectId: "regnum-d3ddf",
+            storageBucket: "regnum-d3ddf.firebasestorage.app",
+            messagingSenderId: "565532905074",
+            appId: "1:565532905074:web:a4cc38363376e49540fceb",
+            measurementId: "G-4RG5NP4FZ3"
+        };
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  const auth = getAuth(app);
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
 
-  let panZoomInstance;
-  let svgRoot;
+        let panZoomInstance;
+        let svgRoot;
 
-  document.addEventListener("DOMContentLoaded", () => {
-    setupLogin();
-    setupToolbox();
-  });
-
-  function setupLogin() {
-    document.getElementById("login-button").addEventListener("click", () => {
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value.trim();
-      const errorDiv = document.getElementById("login-error");
-
-      signInWithEmailAndPassword(auth, email, password)
-        .then(() => {
-          errorDiv.textContent = "";
-          document.getElementById("login-screen").style.display = "none";
-          document.getElementById("app").style.display = "block";
-          initializeMap();
-        })
-        .catch((error) => {
-          errorDiv.textContent = error.message;
+        document.addEventListener("DOMContentLoaded", () => {
+            setupLogin();
+            setupToolbox();
         });
-    });
 
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        document.getElementById("login-screen").style.display = "none";
-        document.getElementById("app").style.display = "block";
-        initializeMap();
-      } else {
-        document.getElementById("login-screen").style.display = "flex";
-        document.getElementById("app").style.display = "none";
-      }
-    });
-  }
+        function setupLogin() {
+            document.getElementById("login-button").addEventListener("click", () => {
+                const email = document.getElementById("email").value.trim();
+                const password = document.getElementById("password").value.trim();
+                const errorDiv = document.getElementById("login-error");
 
-  function initializeMap() {
-    const svgObject = document.getElementById("map-svg");
+                signInWithEmailAndPassword(auth, email, password)
+                    .then(() => {
+                        errorDiv.textContent = "";
+                        document.getElementById("login-screen").style.display = "none";
+                        document.getElementById("app").style.display = "block";
+                        initializeMap();
+                    })
+                    .catch((error) => {
+                        errorDiv.textContent = error.message;
+                    });
+            });
 
-    svgObject.addEventListener("load", () => {
-      svgRoot = svgObject.contentDocument.documentElement;
-
-      panZoomInstance = svgPanZoom(svgRoot, {
-        zoomEnabled: true,
-        controlIconsEnabled: false,
-        minZoom: 0.5,
-        maxZoom: 5
-      });
-
-      setupDragAndDrop();
-      listenForMarkers();
-    });
-
-    document.getElementById("zoom-in").addEventListener("click", () => panZoomInstance.zoomIn());
-    document.getElementById("zoom-out").addEventListener("click", () => panZoomInstance.zoomOut());
-    document.getElementById("reset-zoom").addEventListener("click", () => panZoomInstance.resetZoom());
-  }
-
-  function setupToolbox() {
-    document.querySelectorAll(".tool").forEach((tool) => {
-      tool.addEventListener("dragstart", (e) => {
-        e.dataTransfer.setData("text/plain", tool.getAttribute("data-type"));
-        e.dataTransfer.effectAllowed = "move";
-      });
-    });
-  }
-
-  function setupDragAndDrop() {
-    svgRoot.addEventListener("dragover", (e) => {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = "move";
-    });
-
-    svgRoot.addEventListener("drop", async (e) => {
-      e.preventDefault();
-
-      const markerType = e.dataTransfer.getData("text/plain");
-      const pt = svgRoot.createSVGPoint();
-      pt.x = e.clientX;
-      pt.y = e.clientY;
-      const svgP = pt.matrixTransform(svgRoot.getScreenCTM().inverse());
-
-      await addMarkerToFirestore(markerType, svgP.x, svgP.y);
-    });
-  }
-
-  async function addMarkerToFirestore(type, x, y) {
-    let markerData = { type, x, y, timestamp: serverTimestamp() };
-    if (type === "marker") {
-      markerData.text = prompt("Enter marker text:") || "M";
-      markerData.color = prompt("Enter marker color (e.g., red or #ff0000):") || "black";
-    }
-
-    try {
-      await addDoc(collection(db, "markers"), markerData);
-    } catch (error) {
-      console.error("Error adding marker: ", error);
-    }
-  }
-
-  function listenForMarkers() {
-    const markersQuery = query(collection(db, "markers"), orderBy("timestamp"));
-    onSnapshot(markersQuery, (snapshot) => {
-      svgRoot.querySelectorAll(".marker").forEach((marker) => marker.remove());
-      snapshot.forEach((docSnap) => {
-        createMarkerElement(docSnap.id, docSnap.data());
-      });
-    });
-  }
-
-  function createMarkerElement(id, data) {
-    let markerEl;
-
-    if (data.type === "marker") {
-      markerEl = document.createElementNS("http://www.w3.org/2000/svg", "text");
-      markerEl.textContent = data.text;
-      markerEl.setAttribute("fill", data.color);
-      markerEl.setAttribute("font-size", "16");
-    } else {
-      markerEl = document.createElementNS("http://www.w3.org/2000/svg", "image");
-      const markerSrc = data.type === "citadel" ? "https://via.placeholder.com/30?text=C" : "https://via.placeholder.com/30?text=T";
-      markerEl.setAttributeNS("http://www.w3.org/1999/xlink", "href", markerSrc);
-      markerEl.setAttribute("width", "30");
-      markerEl.setAttribute("height", "30");
-    }
-
-    markerEl.classList.add("marker");
-    markerEl.setAttribute("data-id", id);
-    markerEl.setAttribute("transform", `translate(${data.x}, ${data.y})`);
-
-    markerEl.addEventListener("click", async () => {
-      if (confirm("Delete this marker?")) {
-        try {
-          await deleteDoc(doc(db, "markers", id));
-        } catch (error) {
-          console.error("Error deleting marker: ", error);
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    document.getElementById("login-screen").style.display = "none";
+                    document.getElementById("app").style.display = "block";
+                    initializeMap();
+                }
+            });
         }
-      }
-    });
 
-    svgRoot.appendChild(markerEl);
-  }
-</script>
+        function initializeMap() {
+            const svgObject = document.getElementById("map-svg");
+            svgObject.addEventListener("load", () => {
+                svgRoot = svgObject.contentDocument.documentElement;
+                panZoomInstance = svgPanZoom(svgRoot, { zoomEnabled: true, controlIconsEnabled: false, minZoom: 0.5, maxZoom: 5 });
+                setupDragAndDrop();
+                listenForMarkers();
+            });
+
+            document.getElementById("zoom-in").addEventListener("click", () => panZoomInstance.zoomIn());
+            document.getElementById("zoom-out").addEventListener("click", () => panZoomInstance.zoomOut());
+            document.getElementById("reset-zoom").addEventListener("click", () => panZoomInstance.resetZoom());
+        }
+
+        function setupToolbox() {
+            document.querySelectorAll(".tool").forEach((tool) => {
+                tool.addEventListener("dragstart", (e) => {
+                    e.dataTransfer.setData("text/plain", tool.getAttribute("data-type"));
+                });
+            });
+        }
+
+        function setupDragAndDrop() {
+            const viewport = svgRoot.querySelector("g");
+            svgRoot.addEventListener("dragover", (e) => e.preventDefault());
+            svgRoot.addEventListener("drop", async (e) => {
+                e.preventDefault();
+                const markerType = e.dataTransfer.getData("text/plain");
+                const pt = svgRoot.createSVGPoint();
+                pt.x = e.clientX;
+                pt.y = e.clientY;
+                const svgP = pt.matrixTransform(viewport.getScreenCTM().inverse());
+                await addMarkerToFirestore(markerType, svgP.x, svgP.y);
+            });
+        }
+
+        async function addMarkerToFirestore(type, x, y) {
+            await addDoc(collection(db, "markers"), { type, x, y, timestamp: serverTimestamp() });
+        }
+
+        function listenForMarkers() {
+            onSnapshot(query(collection(db, "markers"), orderBy("timestamp")), (snapshot) => {
+                svgRoot.querySelectorAll(".marker").forEach(marker => marker.remove());
+                snapshot.forEach(docSnap => createMarkerElement(docSnap.id, docSnap.data()));
+            });
+        }
+    </script>
 </body>
 </html>
