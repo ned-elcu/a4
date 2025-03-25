@@ -52,7 +52,9 @@
     #app {
       display: none;
       height: 100vh;
+      position: relative;
     }
+    /* Toolbox styling */
     #toolbox {
       position: fixed;
       top: 10px;
@@ -61,25 +63,56 @@
       padding: 10px;
       border-radius: 5px;
       box-shadow: 0px 0px 10px rgba(0,0,0,0.3);
-      z-index: 10;
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
     .tool {
-      margin: 5px 0;
-      padding: 5px;
+      width: 50px;
+      height: 50px;
       border: 1px solid #ccc;
       background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       cursor: grab;
-      text-align: center;
-      border-radius: 3px;
+      border-radius: 5px;
       user-select: none;
     }
+    .tool img {
+      max-width: 40px;
+      max-height: 40px;
+    }
+    /* Zoom controls styling */
+    #zoom-controls {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    #zoom-controls button {
+      padding: 8px;
+      border: none;
+      border-radius: 4px;
+      background: #3498db;
+      color: #fff;
+      cursor: pointer;
+    }
+    #zoom-controls button:hover {
+      background: #2980b9;
+    }
+    /* Map container styling */
     #map-container {
       width: 100vw;
       height: 100vh;
       overflow: hidden;
     }
-    /* Marker styles */
-    .marker:hover { opacity: 0.8; }
+    /* Marker styling */
+    .marker:hover { opacity: 0.8; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -96,27 +129,41 @@
   <div id="app">
     <!-- Toolbox for draggable items -->
     <div id="toolbox">
-      <h3>Toolbox</h3>
-      <div class="tool" draggable="true" data-type="marker">Marker</div>
-      <div class="tool" draggable="true" data-type="citadel">Citadel</div>
-      <div class="tool" draggable="true" data-type="torch">Torch</div>
+      <div class="tool" draggable="true" data-type="marker" title="Text Marker">
+        <!-- Use text icon (or letter M) -->
+        <span style="font-size:24px;">M</span>
+      </div>
+      <div class="tool" draggable="true" data-type="citadel" title="Citadel">
+        <!-- Placeholder SVG icon for citadel -->
+        <img src="https://via.placeholder.com/40?text=C" alt="Citadel">
+      </div>
+      <div class="tool" draggable="true" data-type="torch" title="Torch">
+        <!-- Placeholder SVG icon for torch -->
+        <img src="https://via.placeholder.com/40?text=T" alt="Torch">
+      </div>
+    </div>
+    <!-- Zoom Controls -->
+    <div id="zoom-controls">
+      <button id="zoom-in">Zoom In</button>
+      <button id="zoom-out">Zoom Out</button>
+      <button id="reset-zoom">Reset</button>
     </div>
     <!-- Map Container -->
     <div id="map-container">
-      <!-- The SVG is loaded via an object element -->
+      <!-- Load the SVG map from external URL -->
       <object id="map-svg" type="image/svg+xml" data="https://regnumsolis.com/planner/images/map.svg" width="100%" height="100%"></object>
     </div>
   </div>
 
   <!-- Main Script using ES Modules -->
   <script type="module">
-    // Import the functions you need from the Firebase SDKs
+    // Import Firebase modular SDK functions from CDN
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-analytics.js";
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
     import { getFirestore, collection, addDoc, orderBy, query, onSnapshot, deleteDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
-    // Your web app's Firebase configuration (provided)
+    // Your Firebase configuration (replace with your config if needed)
     const firebaseConfig = {
       apiKey: "AIzaSyAIws_FKV_CTaiHdnwc8WigDqRkyUCOjtE",
       authDomain: "regnum-d3ddf.firebaseapp.com",
@@ -133,19 +180,20 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
+    // Global variable for panZoom instance
+    let panZoomInstance;
+
     // Wait for DOM to load
     document.addEventListener('DOMContentLoaded', function() {
-      // Firebase Authentication: sign in on login button click
+      // Set up login
       document.getElementById('login-button').addEventListener('click', function() {
         const email = document.getElementById('email').value.trim();
         const password = document.getElementById('password').value.trim();
         const errorDiv = document.getElementById('login-error');
 
         signInWithEmailAndPassword(auth, email, password)
-          .then((userCredential) => {
-            // Clear any previous error
+          .then(() => {
             errorDiv.textContent = "";
-            // Hide login and show app
             document.getElementById('login-screen').style.display = "none";
             document.getElementById('app').style.display = "block";
             initializeMap();
@@ -158,59 +206,66 @@
       // Monitor authentication state changes
       onAuthStateChanged(auth, (user) => {
         if (user) {
-          // User is signed in.
           document.getElementById('login-screen').style.display = "none";
           document.getElementById('app').style.display = "block";
           initializeMap();
         } else {
-          // User is signed out.
           document.getElementById('login-screen').style.display = "flex";
           document.getElementById('app').style.display = "none";
         }
       });
+
+      // Set up zoom control buttons
+      document.getElementById('zoom-in').addEventListener('click', () => {
+        if(panZoomInstance) panZoomInstance.zoomIn();
+      });
+      document.getElementById('zoom-out').addEventListener('click', () => {
+        if(panZoomInstance) panZoomInstance.zoomOut();
+      });
+      document.getElementById('reset-zoom').addEventListener('click', () => {
+        if(panZoomInstance) panZoomInstance.resetZoom();
+      });
     });
 
-    // Initialize the map after successful login
+    // Initialize the map after login
     function initializeMap() {
       const svgObject = document.getElementById('map-svg');
       svgObject.addEventListener('load', function(){
         const svgDoc = svgObject.contentDocument;
         const svgRoot = svgDoc.documentElement;
-        // Initialize pan & zoom on the SVG
-        window.panZoomInstance = svgPanZoom(svgRoot, { controlIconsEnabled: true });
-        // Set up drag & drop functionality on the SVG
+        // Initialize pan & zoom with control icons disabled (we use our own buttons)
+        panZoomInstance = svgPanZoom(svgRoot, { controlIconsEnabled: false, zoomScaleSensitivity: 0.2 });
         setupDragAndDrop(svgRoot);
-        // Listen for markers from Firestore
         listenForMarkers(svgRoot);
       });
     }
 
-    // Set up drag & drop on the SVG
+    // Setup drag & drop events on the SVG map
     function setupDragAndDrop(svgRoot) {
-      svgRoot.addEventListener('dragover', function(e){
+      // Allow dropping by preventing default behavior
+      svgRoot.addEventListener('dragover', (e) => {
         e.preventDefault();
       });
-      svgRoot.addEventListener('drop', function(e){
+      svgRoot.addEventListener('drop', (e) => {
         e.preventDefault();
-        // Convert drop coordinates to SVG space
+        // Convert the drop coordinates into the SVG coordinate system
         const pt = svgRoot.createSVGPoint();
         pt.x = e.clientX;
         pt.y = e.clientY;
         const svgP = pt.matrixTransform(svgRoot.getScreenCTM().inverse());
-        // Get marker type from dataTransfer
         const markerType = e.dataTransfer.getData('text/plain');
         addMarkerToFirestore(markerType, svgP.x, svgP.y);
       });
-      // Enable dragging from the toolbox
-      const tools = document.querySelectorAll('.tool');
-      tools.forEach(tool => {
-        tool.addEventListener('dragstart', function(e){
+
+      // Enable drag events for toolbox items
+      document.querySelectorAll('.tool').forEach(tool => {
+        tool.addEventListener('dragstart', (e) => {
           e.dataTransfer.setData('text/plain', tool.getAttribute('data-type'));
         });
       });
     }
 
-    // Add a marker to Firestore
+    // Add a new marker document to Firestore
     async function addMarkerToFirestore(type, x, y) {
       let markerData = {
         type: type,
@@ -218,7 +273,7 @@
         y: y,
         timestamp: serverTimestamp()
       };
-      // For a text marker, ask for custom text and color
+      // If it's a text marker, ask for extra options
       if(type === "marker") {
         markerData.text = prompt("Enter marker text:") || "";
         markerData.color = prompt("Enter marker color (e.g., red or #ff0000):") || "black";
@@ -230,48 +285,47 @@
       }
     }
 
-    // Listen for real-time marker updates from Firestore
+    // Listen for real-time updates from Firestore and update the SVG accordingly
     function listenForMarkers(svgRoot) {
       const markersQuery = query(collection(db, "markers"), orderBy("timestamp"));
       onSnapshot(markersQuery, (snapshot) => {
-        // Remove any existing markers from the SVG
-        const existingMarkers = svgRoot.querySelectorAll('.marker');
-        existingMarkers.forEach(m => m.parentNode.removeChild(m));
-        // Create elements for each marker from Firestore
+        // Remove all existing markers from the SVG
+        svgRoot.querySelectorAll('.marker').forEach(marker => marker.remove());
         snapshot.forEach((docSnap) => {
           createMarkerElement(svgRoot, docSnap.id, docSnap.data());
         });
       });
     }
 
-    // Create and add a marker element to the SVG
+    // Create and add an SVG element marker based on its type and data
     function createMarkerElement(svgRoot, id, data) {
       let markerEl;
       if(data.type === "marker") {
-        // Create a text element for custom markers
+        // Create text marker
         markerEl = document.createElementNS("http://www.w3.org/2000/svg", "text");
         markerEl.textContent = data.text;
         markerEl.setAttribute("fill", data.color);
         markerEl.setAttribute("font-size", "16");
       } else if(data.type === "citadel") {
-        // Placeholder SVG for a citadel (using a rectangle)
-        markerEl = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        // Create citadel marker as an SVG image (placeholder)
+        markerEl = document.createElementNS("http://www.w3.org/2000/svg", "image");
+        // Replace with your custom SVG file URL for the citadel
+        markerEl.setAttributeNS("http://www.w3.org/1999/xlink", "href", "https://via.placeholder.com/30?text=C");
         markerEl.setAttribute("width", "30");
         markerEl.setAttribute("height", "30");
-        markerEl.setAttribute("fill", "gray");
       } else if(data.type === "torch") {
-        // Placeholder SVG for a torch (using a circle)
-        markerEl = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-        markerEl.setAttribute("r", "15");
-        markerEl.setAttribute("fill", "orange");
+        // Create torch marker as an SVG image (placeholder)
+        markerEl = document.createElementNS("http://www.w3.org/2000/svg", "image");
+        // Replace with your custom SVG file URL for the torch
+        markerEl.setAttributeNS("http://www.w3.org/1999/xlink", "href", "https://via.placeholder.com/30?text=T");
+        markerEl.setAttribute("width", "30");
+        markerEl.setAttribute("height", "30");
       }
-      // Add class and a data attribute for deletion
       markerEl.classList.add('marker');
       markerEl.setAttribute("data-id", id);
-      // Use transform for positioning (x,y)
       markerEl.setAttribute("transform", `translate(${data.x}, ${data.y})`);
-      // Add a click listener to allow deletion (with confirmation)
-      markerEl.addEventListener('click', async function(){
+      // Enable deletion on marker click
+      markerEl.addEventListener('click', async () => {
         if(confirm("Delete this marker?")) {
           try {
             await deleteDoc(doc(db, "markers", id));
