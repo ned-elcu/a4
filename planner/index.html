@@ -177,7 +177,7 @@
 
   let panZoomInstance;
   let svgRoot;
-  let mapGroup; // This will hold the <g> element that svg-pan-zoom manipulates
+  let mapGroup; // The <g> element manipulated by svg-pan-zoom
 
   document.addEventListener("DOMContentLoaded", () => {
     setupLogin();
@@ -219,7 +219,7 @@
 
     svgObject.addEventListener("load", () => {
       svgRoot = svgObject.contentDocument.documentElement;
-      // Find the first <g> element that will be manipulated by svg-pan-zoom
+      // Locate the first <g> element which is controlled by svg-pan-zoom.
       mapGroup = svgRoot.querySelector("g") || svgRoot;
       
       panZoomInstance = svgPanZoom(svgRoot, {
@@ -229,7 +229,9 @@
         maxZoom: 5
       });
 
+      // Instead of attaching drag events on the root, attach them on the group.
       setupDragAndDrop();
+
       listenForMarkers();
     });
 
@@ -239,6 +241,7 @@
   }
 
   function setupToolbox() {
+    // Prevent default drag behaviour on toolbox elements
     document.querySelectorAll(".tool").forEach((tool) => {
       tool.addEventListener("dragstart", (e) => {
         e.dataTransfer.setData("text/plain", tool.getAttribute("data-type"));
@@ -248,15 +251,17 @@
   }
 
   function setupDragAndDrop() {
-    svgRoot.addEventListener("dragover", (e) => {
+    // Attach dragover and drop on the map group
+    mapGroup.addEventListener("dragover", (e) => {
       e.preventDefault();
       e.dataTransfer.dropEffect = "move";
     });
 
-    svgRoot.addEventListener("drop", async (e) => {
+    mapGroup.addEventListener("drop", async (e) => {
       e.preventDefault();
-
       const markerType = e.dataTransfer.getData("text/plain");
+      
+      // Convert the client coordinates to SVG coordinates.
       const pt = svgRoot.createSVGPoint();
       pt.x = e.clientX;
       pt.y = e.clientY;
@@ -283,7 +288,7 @@
   function listenForMarkers() {
     const markersQuery = query(collection(db, "markers"), orderBy("timestamp"));
     onSnapshot(markersQuery, (snapshot) => {
-      // Remove existing markers
+      // Remove existing markers from the group
       mapGroup.querySelectorAll(".marker").forEach((marker) => marker.remove());
       snapshot.forEach((docSnap) => {
         createMarkerElement(docSnap.id, docSnap.data());
@@ -299,7 +304,7 @@
       markerEl.textContent = data.text;
       markerEl.setAttribute("fill", data.color);
       markerEl.setAttribute("font-size", "16");
-      // Set x and y attributes directly
+      // Set x and y directly
       markerEl.setAttribute("x", data.x);
       markerEl.setAttribute("y", data.y);
     } else {
@@ -308,7 +313,7 @@
       markerEl.setAttributeNS("http://www.w3.org/1999/xlink", "href", markerSrc);
       markerEl.setAttribute("width", "30");
       markerEl.setAttribute("height", "30");
-      // Set x and y attributes directly
+      // Set x and y directly
       markerEl.setAttribute("x", data.x);
       markerEl.setAttribute("y", data.y);
     }
@@ -326,7 +331,6 @@
       }
     });
 
-    // Append the marker to the map group
     mapGroup.appendChild(markerEl);
   }
 </script>
