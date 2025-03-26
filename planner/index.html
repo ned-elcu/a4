@@ -572,8 +572,8 @@
           currentLine.setAttribute("y1", pt.y);
           currentLine.setAttribute("x2", pt.x);
           currentLine.setAttribute("y2", pt.y);
-          // Increase stroke width by 30%
-          currentLine.setAttribute("stroke-width", "2.6");
+          // Increase stroke width by 60% (from 2 to 3.2)
+          currentLine.setAttribute("stroke-width", "3.2");
           currentLine.setAttribute("stroke", lineColor);
 
           currentLineGroup.startPoint = { x: pt.x, y: pt.y };
@@ -595,9 +595,9 @@
           const midY = (y1 + y2) / 2;
           const angle = Math.atan2(y2 - y1, x2 - x1) * (180 / Math.PI);
 
-          // Scale arrow polygon by 30%
+          // Scale arrow polygon by 60% (from original arrow scaled by 30%)
           const arrow = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-          arrow.setAttribute("points", "0,-6.5 13,0 0,6.5");
+          arrow.setAttribute("points", "0,-8 16,0 0,8");
           arrow.setAttribute("fill", currentLineGroup.lineColor);
           arrow.setAttribute("transform", `translate(${midX},${midY}) rotate(${angle})`);
           currentLineGroup.appendChild(arrow);
@@ -760,7 +760,7 @@
       textEl.style.fontFamily = "'Bebas Neue', sans-serif";
       markerEl.appendChild(textEl);
 
-      // Increase text background opacity by 40% (from 0.35 to 0.49)
+      // Double down on the text background opacity (0.35 * 1.8 = 0.63)
       requestAnimationFrame(() => {
         const bbox = textEl.getBBox();
         const textLength = textEl.getComputedTextLength();
@@ -770,7 +770,7 @@
         rectEl.setAttribute("width", textLength);
         rectEl.setAttribute("height", bbox.height);
         rectEl.setAttribute("fill", "#1e1e1e");
-        rectEl.setAttribute("opacity", "0.49");
+        rectEl.setAttribute("opacity", "0.63");
         markerEl.insertBefore(rectEl, textEl);
       });
 
@@ -802,12 +802,12 @@
       line.setAttribute("x2", data.x2);
       line.setAttribute("y2", data.y2);
       line.setAttribute("stroke", data.color);
-      // Increase stroke width by 30%
-      line.setAttribute("stroke-width", "2.6");
+      // Increase stroke width by 60 (from 2 to 3.2)
+      line.setAttribute("stroke-width", "3.2");
 
       const arrow = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-      // Scale arrow polygon by 30%
-      arrow.setAttribute("points", "0,-6.5 13,0 0,6.5");
+      // Arrow points scaled by 60%: "0,-8 16,0 0,8"
+      arrow.setAttribute("points", "0,-8 16,0 0,8");
       arrow.setAttribute("fill", data.color);
       arrow.setAttribute("transform", `translate(${data.midX},${data.midY}) rotate(${data.angle})`);
 
