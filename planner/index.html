@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>[SUN] - Planner</title>
+  <title>Interactive Game Map - Regnum Solis</title>
   <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap">
   <style>
@@ -50,7 +50,7 @@
       text-align: center;
     }
     #login-screen img.logo {
-      max-width: 300px;
+      max-width: 600px;
       margin-bottom: 20px;
     }
     #login-screen h2 {
@@ -95,10 +95,19 @@
       position: relative;
       animation: fadeIn 1s ease-out;
     }
+    /* Header Logo above Toolbox */
+    #header-logo {
+      text-align: center;
+      padding: 10px 0;
+      background: #1e1e1e;
+    }
+    #header-logo img {
+      max-width: 600px; /* Approximately 2x larger than login logo */
+    }
     /* Toolbox */
     #toolbox {
       position: fixed;
-      top: 90px;
+      top: 160px; /* Adjusted to account for header logo */
       left: 20px;
       background: rgba(30,30,30,0.9);
       padding: 10px;
@@ -132,7 +141,7 @@
     /* Zoom Controls */
     #zoom-controls {
       position: fixed;
-      top: 90px;
+      top: 160px;
       right: 20px;
       z-index: 20;
       display: flex;
@@ -156,7 +165,7 @@
     /* Map Container */
     #map-container {
       width: 100vw;
-      height: 100vh;
+      height: calc(100vh - 60px); /* Allow some space at bottom if needed */
       overflow: hidden;
     }
     #map-svg-container {
@@ -166,15 +175,6 @@
     .marker:hover {
       opacity: 0.8;
       cursor: pointer;
-    }
-    /* Footer Logo (below the map) */
-    #footer-logo {
-      text-align: center;
-      padding: 10px 0;
-      background: #1e1e1e;
-    }
-    #footer-logo img {
-      max-width: 300px;
     }
     /* Error Overlay */
     #error-overlay {
@@ -261,6 +261,10 @@
   
   <!-- Main App -->
   <div id="app">
+    <!-- Header Logo Above Toolbox -->
+    <div id="header-logo">
+      <img src="https://regnumsolis.com/planner/images/longlogo.svg" alt="Long Logo">
+    </div>
     <!-- Toolbox -->
     <div id="toolbox">
       <!-- Text Marker Tool -->
@@ -285,10 +289,6 @@
     <!-- Map Container -->
     <div id="map-container">
       <div id="map-svg-container"></div>
-    </div>
-    <!-- Footer Logo (below the map) -->
-    <div id="footer-logo">
-      <img src="https://regnumsolis.com/planner/images/longlogo.svg" alt="Long Logo">
     </div>
     <!-- Admin Panel -->
     <div id="admin-panel">
