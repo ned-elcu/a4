@@ -16,7 +16,7 @@
     html, body {
       width: 100%;
       height: 100%;
-      background: #1e1e1e; /* Modern dark gray background */
+      background: #1e1e1e;
       color: white;
       font-family: 'Bebas Neue', sans-serif;
       overflow-x: hidden;
@@ -50,7 +50,7 @@
       text-align: center;
     }
     #login-screen img.logo {
-      max-width: 800px;
+      max-width: 600px;
       margin-bottom: 20px;
     }
     #login-screen h2 {
@@ -73,7 +73,7 @@
       font-size: 1.2em;
       border: none;
       border-radius: 4px;
-      background: rgba(223,197,136,0.8); /* Accent color */
+      background: rgba(223,197,136,0.8);
       color: white;
       cursor: pointer;
       transition: transform 0.3s, box-shadow 0.3s;
@@ -102,12 +102,12 @@
       background: #1e1e1e;
     }
     #header-logo img {
-      max-width: 600px; /* Approximately 2x larger than login logo */
+      max-width: 600px;
     }
     /* Toolbox */
     #toolbox {
       position: fixed;
-      top: 160px; /* Adjusted to account for header logo */
+      top: 160px;
       left: 20px;
       background: rgba(30,30,30,0.9);
       padding: 10px;
@@ -127,7 +127,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      cursor: grab;
+      cursor: pointer;
       border-radius: 5px;
       transition: transform 0.3s;
     }
@@ -165,7 +165,7 @@
     /* Map Container */
     #map-container {
       width: 100vw;
-      height: calc(100vh - 60px); /* Allow some space at bottom if needed */
+      height: calc(100vh - 60px);
       overflow: hidden;
     }
     #map-svg-container {
@@ -295,6 +295,11 @@
       <div class="tool" draggable="true" data-type="bow" title="Bow">
         <img src="https://regnumsolis.com/planner/images/bow.svg" alt="Bow">
       </div>
+      <!-- Line Draw Tool -->
+      <div class="tool" data-type="line" title="Line Draw">
+        <!-- Replace with an actual icon if available -->
+        <img src="https://regnumsolis.com/planner/images/line.svg" alt="Line Draw" onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2250%22 height=%2250%22><text x=%220%22 y=%2230%22 fill=%22white%22 font-size=%2230%22>―</text></svg>'">
+      </div>
     </div>
     <!-- Zoom Controls -->
     <div id="zoom-controls">
@@ -342,12 +347,15 @@
     const db = getFirestore(app);
     const auth = getAuth(app);
 
-    let panZoomInstance;
-    let svgRoot;
-    let panLayer;
-    let markerLayer;
+    let panZoomInstance, svgRoot, panLayer, lineLayer, markerLayer;
     let isMapReady = false;
     const adminEmail = "gryves_dev@yahoo.com";
+
+    // Variables for line drawing
+    let activeTool = null;
+    let isDrawingLine = false;
+    let currentLine = null;
+    let lineStartPoint = null;
 
     document.addEventListener("DOMContentLoaded", () => {
       setupLogin();
@@ -400,6 +408,7 @@
           setupPanZoomLayers();
           setupZoomControls();
           setupDragAndDrop();
+          setupLineDrawing(); // Initialize line drawing events
           listenForMarkers();
           isMapReady = true;
         })
@@ -422,6 +431,12 @@
       }
       svgRoot.appendChild(panLayer);
 
+      // Create a layer for lines (below markers)
+      lineLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      lineLayer.id = "line-layer";
+      panLayer.appendChild(lineLayer);
+
+      // Marker layer comes after lineLayer so markers remain on top
       markerLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
       markerLayer.id = "marker-layer";
       panLayer.appendChild(markerLayer);
@@ -433,6 +448,7 @@
         minZoom: 0.5,
         maxZoom: 5,
         beforeMouseDown: function(e) {
+          // Prevent panning if clicking on a marker
           if (e.target.getAttribute("data-marker") === "true" ||
               (e.target.parentNode && e.target.parentNode.getAttribute("data-marker") === "true")) {
             return false;
@@ -450,14 +466,24 @@
 
     function setupToolbox() {
       document.querySelectorAll(".tool").forEach((tool) => {
-        tool.addEventListener("dragstart", (e) => {
-          e.dataTransfer.setData("text/plain", tool.dataset.type);
-        });
+        const type = tool.dataset.type;
+        if (type === "line") {
+          // For line tool, use click to activate instead of drag
+          tool.addEventListener("click", () => {
+            activeTool = "line";
+            // Optionally provide a visual indicator for active state
+            document.querySelectorAll(".tool").forEach(t => t.style.borderColor = "rgba(223,197,136,0.5)");
+            tool.style.borderColor = "red";
+          });
+        } else {
+          tool.addEventListener("dragstart", (e) => {
+            e.dataTransfer.setData("text/plain", type);
+          });
+        }
       });
     }
 
     function setupAuditControls() {
-      // Delete audit logs on clicking the trash icon
       document.getElementById("delete-audit").addEventListener("click", async () => {
         if (confirm("Delete all audit logs?")) {
           try {
@@ -470,7 +496,6 @@
           }
         }
       });
-      // Minimize audit log toggle
       document.getElementById("minimize-audit").addEventListener("click", () => {
         const auditLogDiv = document.getElementById("audit-log");
         if (auditLogDiv.style.display === "none") {
@@ -497,7 +522,8 @@
       });
 
       svgRoot.addEventListener("drop", async (e) => {
-        if (!isMapReady) return;
+        // Only process drop events if not in line drawing mode
+        if (!isMapReady || activeTool === "line") return;
         e.preventDefault();
 
         const type = e.dataTransfer.getData("text/plain");
@@ -506,9 +532,43 @@
       });
     }
 
+    // Set up events for drawing lines when the "line" tool is active
+    function setupLineDrawing() {
+      svgRoot.addEventListener("mousedown", (e) => {
+        if (activeTool !== "line") return;
+        e.preventDefault();
+        isDrawingLine = true;
+        lineStartPoint = getSVGPoint(e);
+        // Create new line element and add it to the lineLayer
+        currentLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        currentLine.setAttribute("x1", lineStartPoint.x);
+        currentLine.setAttribute("y1", lineStartPoint.y);
+        currentLine.setAttribute("x2", lineStartPoint.x);
+        currentLine.setAttribute("y2", lineStartPoint.y);
+        currentLine.setAttribute("stroke", prompt("Enter line color (e.g., red or #ff0000):") || "white");
+        currentLine.setAttribute("stroke-width", "2");
+        lineLayer.appendChild(currentLine);
+      });
+
+      svgRoot.addEventListener("mousemove", (e) => {
+        if (!isDrawingLine || !currentLine) return;
+        const pt = getSVGPoint(e);
+        currentLine.setAttribute("x2", pt.x);
+        currentLine.setAttribute("y2", pt.y);
+      });
+
+      svgRoot.addEventListener("mouseup", (e) => {
+        if (!isDrawingLine) return;
+        isDrawingLine = false;
+        currentLine = null;
+        // Reset active tool and visual indicator
+        activeTool = null;
+        document.querySelectorAll(".tool").forEach(t => t.style.borderColor = "rgba(223,197,136,0.5)");
+      });
+    }
+
     async function addMarkerToFirestore(type, x, y) {
       let markerData = { type, x, y, timestamp: serverTimestamp() };
-      // Update the condition to include the new marker types
       if (["marker", "citadel", "torch", "cave", "sword", "spear", "bow"].includes(type)) {
         markerData.text = prompt("Enter marker text:") || "";
         markerData.color = prompt("Enter marker color (e.g., red or #ff0000):") || "black";
@@ -518,7 +578,6 @@
       }
       try {
         const docRef = await addDoc(collection(db, "markers"), markerData);
-        // Record marker addition in the audit log
         recordAuditLog("add", { markerId: docRef.id, markerType: type });
       } catch (error) {
         console.error("Error adding marker:", error);
@@ -557,15 +616,15 @@
       let imgSrc, imgWidth, imgHeight, imgXOffset, imgYOffset, textXOffset;
       if (data.type === "marker") {
         imgSrc = "https://regnumsolis.com/planner/images/marker.svg";
-        imgWidth = 30;
-        imgHeight = 30;
+        imgWidth = 40;
+        imgHeight = 40;
         imgXOffset = -20;
         imgYOffset = -20;
         textXOffset = 20;
       } else if (data.type === "citadel") {
         imgSrc = "https://regnumsolis.com/planner/images/citadel.svg";
-        imgWidth = 45;
-        imgHeight = 45;
+        imgWidth = 30;
+        imgHeight = 30;
         imgXOffset = -15;
         imgYOffset = -15;
         textXOffset = 15;
@@ -645,7 +704,6 @@
         if (confirm("Delete this marker?")) {
           try {
             await deleteDoc(doc(db, "markers", id));
-            // Record marker deletion in the audit log
             recordAuditLog("delete", { markerId: id, markerType: data.type });
           } catch (error) {
             console.error("Error deleting marker:", error);
@@ -655,7 +713,6 @@
       markerLayer.appendChild(markerEl);
     }
 
-    // Record audit logs in Firestore
     function recordAuditLog(action, details) {
       const user = auth.currentUser;
       if (!user) return;
@@ -669,7 +726,6 @@
         .catch(error => console.error("Error writing audit log:", error));
     }
 
-    // Listen for audit log changes and group events occurring within 5 minutes
     function listenForAuditLogs() {
       const auditLogContainer = document.getElementById("audit-log");
       const auditQuery = query(collection(db, "auditLogs"), orderBy("timestamp", "asc"));
@@ -681,7 +737,6 @@
           logs.push({ timestamp: ts, log });
         });
 
-        // Group events for "add" and "delete" with markerType defined
         const groupedLogs = [];
         const groupingThreshold = 300; // 5 minutes
         let currentGroup = null;
@@ -734,7 +789,6 @@
         });
         if (currentGroup) groupedLogs.push(currentGroup);
 
-        // Sort for display (most recent first)
         groupedLogs.sort((a, b) => b.lastTimestamp - a.lastTimestamp);
         auditLogContainer.innerHTML = "";
         groupedLogs.forEach(group => {
