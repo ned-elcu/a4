@@ -3,10 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Solis Planner</title>
+  <title>SOLIS Planner</title></title>
+  <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap">
-  <!-- Use Panzoom for panning/zooming -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/panzoom/9.4.0/panzoom.min.js"></script>
   <style>
     * {
       box-sizing: border-box;
@@ -37,7 +36,6 @@
                      0 0 40px rgba(223,197,136,0.8);
       }
     }
-    /* Login Screen */
     #login-screen {
       display: flex;
       flex-direction: column;
@@ -87,7 +85,6 @@
       color: #e74c3c;
       font-weight: bold;
     }
-    /* App Screen */
     #app {
       display: none;
       height: 100vh;
@@ -158,42 +155,19 @@
       transform: scale(1.05);
       box-shadow: 0 4px 15px rgba(223,197,136,0.9);
     }
-    /* Map Container */
     #map-container {
       width: 100vw;
       height: calc(100vh - 60px);
       overflow: hidden;
-      position: relative;
-      background: #1e1e1e;
     }
-    /* Pan/Zoom Container holding PNG map and SVG overlay */
-    #pan-container {
-      position: absolute;
-      top: 0;
-      left: 0;
+    #map-svg-container {
       width: 100%;
       height: 100%;
     }
-    #map-image {
-      display: block;
-      width: 100%;
-      height: auto;
-    }
-    /* SVG Overlay for markers and lines */
-    #overlay-svg {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none; /* allow underlying events unless overridden */
-    }
-    /* Markers and lines will be added into these groups inside overlay-svg */
     .marker:hover {
       opacity: 0.8;
       cursor: pointer;
     }
-    /* Error Overlay */
     #error-overlay {
       position: fixed;
       top: 0;
@@ -210,7 +184,6 @@
       text-align: center;
       padding: 20px;
     }
-    /* Admin Panel */
     #admin-panel {
       position: fixed;
       bottom: 20px;
@@ -266,7 +239,6 @@
   </style>
 </head>
 <body>
-  <!-- Login Screen -->
   <div id="login-screen">
     <img class="logo" src="https://regnumsolis.com/planner/images/longlogo.svg" alt="Long Logo">
     <h2>Login</h2>
@@ -276,16 +248,14 @@
     <div id="login-error"></div>
   </div>
 
-  <!-- App Screen -->
   <div id="app">
     <div id="header-logo">
       <img src="https://regnumsolis.com/planner/images/longlogo.svg" alt="Long Logo">
     </div>
 
-    <!-- Toolbox -->
     <div id="toolbox">
       <div class="tool" draggable="true" data-type="marker" title="Text Marker">
-        <img src="https://regnumsolis.com/planner/images/marker.svg" alt="Marker">
+        <img src="https://regnumsolis.com/planner/images/marker.svg" alt="Marker Background">
       </div>
       <div class="tool" draggable="true" data-type="citadel" title="Citadel">
         <img src="https://regnumsolis.com/planner/images/citadel.svg" alt="Citadel">
@@ -310,26 +280,16 @@
       </div>
     </div>
 
-    <!-- Zoom Controls -->
     <div id="zoom-controls">
       <button id="zoom-in">Zoom In</button>
       <button id="zoom-out">Zoom Out</button>
       <button id="reset-zoom">Reset</button>
     </div>
 
-    <!-- Map Container -->
     <div id="map-container">
-      <!-- Pan/Zoom Container: holds the PNG map and the SVG overlay -->
-      <div id="pan-container">
-        <img id="map-image" src="https://regnumsolis.com/planner/images/map.png" alt="Map">
-        <svg id="overlay-svg" xmlns="http://www.w3.org/2000/svg">
-          <g id="line-layer"></g>
-          <g id="marker-layer"></g>
-        </svg>
-      </div>
+      <div id="map-svg-container"></div>
     </div>
 
-    <!-- Admin Panel -->
     <div id="admin-panel">
       <h3>
         Audit log
@@ -343,10 +303,8 @@
     </div>
   </div>
 
-  <!-- Error Overlay -->
   <div id="error-overlay">Database connection failed. The app cannot be used at this time.</div>
 
-  <!-- Firebase and Application Scripts -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
     import { getFirestore, collection, addDoc, orderBy, query, onSnapshot, deleteDoc, doc, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
@@ -366,7 +324,7 @@
     const db = getFirestore(app);
     const auth = getAuth(app);
 
-    let panzoomInstance, panContainer, overlaySvg, markerLayer, lineLayer;
+    let panZoomInstance, svgRoot, panLayer, lineLayer, markerLayer;
     let isMapReady = false;
     const adminEmail = "gryves_dev@yahoo.com";
 
@@ -417,37 +375,68 @@
     }
 
     function initializeMap() {
-      panContainer = document.getElementById("pan-container");
-      overlaySvg = document.getElementById("overlay-svg");
-      markerLayer = document.getElementById("marker-layer");
-      lineLayer = document.getElementById("line-layer");
+      const container = document.getElementById("map-svg-container");
 
-      // Initialize Panzoom on the pan-container so that both PNG and SVG overlay pan/zoom together.
-      const mapContainer = document.getElementById("map-container");
-      panzoomInstance = Panzoom(panContainer, { maxScale: 5, minScale: 0.5 });
-      mapContainer.addEventListener("wheel", panzoomInstance.zoomWithWheel);
-
-      setupDragAndDrop();
-      setupZoomControls();
-      setupLineDrawing();
-      listenForMarkers();
-      listenForLines();
-      isMapReady = true;
+      fetch("https://regnumsolis.com/planner/images/map.svg")
+        .then(response => response.text())
+        .then(svgText => {
+          container.innerHTML = svgText;
+          setupPanZoomLayers();
+          setupZoomControls();
+          setupDragAndDrop();
+          setupLineDrawing();
+          listenForMarkers();
+          listenForLines();
+          isMapReady = true;
+        })
+        .catch(error => {
+          console.error("Error loading SVG:", error);
+          displayErrorOverlay("Error loading map data.");
+        });
     }
 
-    // Calculate map-relative coordinates using the current Panzoom transform
-    function getMapPoint(e) {
-      const rect = panContainer.getBoundingClientRect();
-      const transform = panzoomInstance.getTransform();
-      const x = (e.clientX - rect.left - transform.x) / transform.scale;
-      const y = (e.clientY - rect.top - transform.y) / transform.scale;
-      return { x, y };
+    function setupPanZoomLayers() {
+      svgRoot = document.getElementById("map-svg-container").querySelector("svg");
+      svgRoot.setAttribute("width", "100%");
+      svgRoot.setAttribute("height", "100%");
+      svgRoot.setAttribute("preserveAspectRatio", "xMidYMid meet");
+
+      panLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      panLayer.id = "pan-layer";
+      while (svgRoot.firstChild) {
+        panLayer.appendChild(svgRoot.firstChild);
+      }
+      svgRoot.appendChild(panLayer);
+
+      lineLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      lineLayer.id = "line-layer";
+      panLayer.appendChild(lineLayer);
+
+      markerLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      markerLayer.id = "marker-layer";
+      panLayer.appendChild(markerLayer);
+
+      panZoomInstance = svgPanZoom(svgRoot, {
+        zoomEnabled: true,
+        panEnabled: true,
+        controlIconsEnabled: false,
+        minZoom: 0.5,
+        maxZoom: 5,
+        beforeMouseDown: function(e) {
+          if (activeTool === "line") return false;
+          if (e.target.getAttribute("data-marker") === "true" ||
+              (e.target.parentNode && e.target.parentNode.getAttribute("data-marker") === "true")) {
+            return false;
+          }
+          return true;
+        }
+      });
     }
 
     function setupZoomControls() {
-      document.getElementById("zoom-in").addEventListener("click", () => panzoomInstance.zoomIn());
-      document.getElementById("zoom-out").addEventListener("click", () => panzoomInstance.zoomOut());
-      document.getElementById("reset-zoom").addEventListener("click", () => panzoomInstance.reset());
+      document.getElementById("zoom-in").addEventListener("click", () => panZoomInstance.zoomIn());
+      document.getElementById("zoom-out").addEventListener("click", () => panZoomInstance.zoomOut());
+      document.getElementById("reset-zoom").addEventListener("click", () => panZoomInstance.resetZoom());
     }
 
     function setupToolbox() {
@@ -457,7 +446,6 @@
           tool.addEventListener("click", () => {
             activeTool = "line";
             lineDrawingState = 0;
-            // Disable marker dragging during line drawing
             markerLayer.style.pointerEvents = "none";
             document.querySelectorAll(".tool").forEach(t => t.style.borderColor = "rgba(223,197,136,0.5)");
             tool.style.borderColor = "red";
@@ -496,28 +484,33 @@
       });
     }
 
+    function getSVGPoint(e) {
+      const pt = svgRoot.createSVGPoint();
+      pt.x = e.clientX;
+      pt.y = e.clientY;
+      return pt.matrixTransform(panLayer.getScreenCTM().inverse());
+    }
+
     function setupDragAndDrop() {
-      // Attach drag events to the pan-container so markers can be dropped on the map
-      panContainer.addEventListener("dragover", (e) => {
+      svgRoot.addEventListener("dragover", (e) => {
         e.preventDefault();
         e.dataTransfer.dropEffect = "move";
       });
 
-      panContainer.addEventListener("drop", async (e) => {
+      svgRoot.addEventListener("drop", async (e) => {
         if (!isMapReady || activeTool === "line") return;
         e.preventDefault();
         const type = e.dataTransfer.getData("text/plain");
-        const cursorPos = getMapPoint(e);
+        const cursorPos = getSVGPoint(e);
         await addMarkerToFirestore(type, cursorPos.x, cursorPos.y);
       });
     }
 
     function setupLineDrawing() {
-      // Attach click event to the pan-container for drawing lines
-      panContainer.addEventListener("click", async (e) => {
+      svgRoot.addEventListener("click", async (e) => {
         if (activeTool !== "line") return;
         e.preventDefault();
-        const pt = getMapPoint(e);
+        const pt = getSVGPoint(e);
 
         if (lineDrawingState === 0) {
           currentLineGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
@@ -608,8 +601,9 @@
       const markersQuery = query(collection(db, "markers"), orderBy("timestamp"));
       const unsubscribe = onSnapshot(markersQuery, (snapshot) => {
         snapshotReceived = true;
-        // Clear existing markers
-        markerLayer.innerHTML = "";
+        while (markerLayer.firstChild) {
+          markerLayer.removeChild(markerLayer.firstChild);
+        }
         snapshot.forEach((docSnap) => {
           createMarkerElement(docSnap.id, docSnap.data());
         });
@@ -712,7 +706,6 @@
       textEl.style.fontFamily = "'Bebas Neue', sans-serif";
       markerEl.appendChild(textEl);
 
-      // Insert a background rectangle behind the text for better readability
       requestAnimationFrame(() => {
         const bbox = textEl.getBBox();
         const textLength = textEl.getComputedTextLength();
@@ -922,3 +915,4 @@
   </script>
 </body>
 </html>
+```
