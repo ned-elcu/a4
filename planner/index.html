@@ -5,6 +5,7 @@
   <title>Interactive Game Map</title>
   <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
     body { margin: 0; font-family: Arial, sans-serif; background: #f4f4f4; }
     #login-screen {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -194,7 +195,6 @@
         minZoom: 0.5,
         maxZoom: 5,
         beforeMouseDown: function(e) {
-          // If the clicked element (or its parent) is a marker, do not trigger pan.
           if (e.target.getAttribute("data-marker") === "true" ||
               (e.target.parentNode && e.target.parentNode.getAttribute("data-marker") === "true")) {
             return false;
@@ -218,7 +218,6 @@
       });
     }
 
-    // Calculate drop point relative to pan layer
     function getSVGPoint(e) {
       const pt = svgRoot.createSVGPoint();
       pt.x = e.clientX;
@@ -244,7 +243,6 @@
 
     async function addMarkerToFirestore(type, x, y) {
       let markerData = { type, x, y, timestamp: serverTimestamp() };
-      // For all three marker types, prompt for text and color.
       if (type === "marker" || type === "citadel" || type === "torch") {
         markerData.text = prompt("Enter marker text:") || "";
         markerData.color = prompt("Enter marker color (e.g., red or #ff0000):") || "black";
@@ -264,7 +262,6 @@
       const markersQuery = query(collection(db, "markers"), orderBy("timestamp"));
       const unsubscribe = onSnapshot(markersQuery, (snapshot) => {
         snapshotReceived = true;
-        // Clear existing markers
         while (markerLayer.firstChild) {
           markerLayer.removeChild(markerLayer.firstChild);
         }
@@ -276,7 +273,6 @@
         displayErrorOverlay("Firestore connection failed.");
       });
 
-      // If no snapshot is received within 5 seconds, assume connection failure.
       setTimeout(() => {
         if (!snapshotReceived) {
           console.error("No Firestore snapshot received within timeout.");
@@ -287,7 +283,7 @@
     }
 
     function createMarkerElement(id, data) {
-      // Create a group element for the marker (all types now get text)
+      // Create group for marker and add identifier
       let markerEl = document.createElementNS("http://www.w3.org/2000/svg", "g");
       markerEl.setAttribute("data-marker", "true");
 
@@ -296,27 +292,26 @@
         imgSrc = "https://regnumsolis.com/planner/images/marker.svg";
         imgWidth = 40;
         imgHeight = 40;
-        // Use center coordinates: image top-left is offset by half width/height
         imgXOffset = -20;
         imgYOffset = -20;
-        textXOffset = 20 + 5; // half width + margin
+        textXOffset = 20; // right by the icon (no extra gap)
       } else if (data.type === "citadel") {
         imgSrc = "https://regnumsolis.com/planner/images/citadel.svg";
         imgWidth = 30;
         imgHeight = 30;
         imgXOffset = -15;
         imgYOffset = -15;
-        textXOffset = 15 + 5;
+        textXOffset = 15;
       } else if (data.type === "torch") {
         imgSrc = "https://regnumsolis.com/planner/images/torch.svg";
         imgWidth = 30;
         imgHeight = 30;
         imgXOffset = -15;
         imgYOffset = -15;
-        textXOffset = 15 + 5;
+        textXOffset = 15;
       }
 
-      // Create the icon image element
+      // Create image element
       const imgEl = document.createElementNS("http://www.w3.org/2000/svg", "image");
       imgEl.setAttributeNS("http://www.w3.org/1999/xlink", "href", imgSrc);
       imgEl.setAttribute("width", imgWidth);
@@ -325,21 +320,35 @@
       imgEl.setAttribute("y", data.y + imgYOffset);
       markerEl.appendChild(imgEl);
 
-      // Create the text element positioned to the right of the icon
+      // Create text element to be positioned right to the icon
       const textEl = document.createElementNS("http://www.w3.org/2000/svg", "text");
       textEl.textContent = data.text;
       textEl.setAttribute("fill", data.color);
-      // Adjust font size: slightly smaller for citadel/torch if desired
       textEl.setAttribute("font-size", data.type === "marker" ? "16" : "14");
       textEl.setAttribute("x", data.x + textXOffset);
       textEl.setAttribute("y", data.y);
       textEl.setAttribute("text-anchor", "start");
       textEl.setAttribute("dominant-baseline", "middle");
+      textEl.style.fontFamily = "'Bebas Neue', sans-serif";
       markerEl.appendChild(textEl);
+
+      // Insert a background rectangle behind the text after it's rendered
+      // Use requestAnimationFrame to ensure the text is in the DOM and rendered.
+      requestAnimationFrame(() => {
+        const bbox = textEl.getBBox();
+        const rectEl = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        rectEl.setAttribute("x", bbox.x);
+        rectEl.setAttribute("y", bbox.y);
+        rectEl.setAttribute("width", bbox.width);
+        rectEl.setAttribute("height", bbox.height);
+        rectEl.setAttribute("fill", "black");
+        rectEl.setAttribute("opacity", "0.35");
+        // Insert the rectangle before the text element so it appears behind.
+        markerEl.insertBefore(rectEl, textEl);
+      });
 
       markerEl.classList.add("marker");
       markerEl.dataset.id = id;
-      // Click handler for deletion; stop propagation so pan/zoom doesn't intercept.
       markerEl.addEventListener("click", async (e) => {
         e.stopPropagation();
         if (confirm("Delete this marker?")) {
