@@ -377,7 +377,7 @@
     function initializeMap() {
       const container = document.getElementById("map-svg-container");
 
-      fetch("https://regnumsolis.com/planner/images/map.svg")
+      fetch("https://regnumsolis.com/planner/images/map.png")
         .then(response => response.text())
         .then(svgText => {
           container.innerHTML = svgText;
