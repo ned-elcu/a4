@@ -631,69 +631,65 @@
       });
     }
 
-    // Updated createMarkerElement to scale marker dimensions by 4x
+    // Updated createMarkerElement: text is now positioned immediately at the right edge of the icon.
     function createMarkerElement(id, data) {
       let markerEl = document.createElementNS("http://www.w3.org/2000/svg", "g");
       markerEl.setAttribute("data-marker", "true");
 
-      let imgSrc, imgWidth, imgHeight, imgXOffset, imgYOffset, textXOffset, fontSize;
+      let imgSrc, imgWidth, imgHeight, imgXOffset, imgYOffset, fontSize;
+      // For each marker type, base values are scaled by a factor of 2.5.
       if (data.type === "marker") {
         imgSrc = "https://regnumsolis.com/planner/images/marker.svg";
-        imgWidth = 30 * 2.5;      // 160
-        imgHeight = 30 * 2.5;     // 160
-        imgXOffset = -20 * 2.5;   // -80
-        imgYOffset = -20 * 2.5;   // -80
-        textXOffset = 20 * 2.5;   // 80
-        fontSize = "16" * 2.5;    // 64
+        imgWidth = 30 * 2.5;      // 75
+        imgHeight = 30 * 2.5;     // 75
+        imgXOffset = -20 * 2.5;   // -50
+        imgYOffset = -20 * 2.5;   // -50
+        fontSize = 16 * 2.5;      // 40
       } else if (data.type === "citadel") {
         imgSrc = "https://regnumsolis.com/planner/images/citadel.svg";
-        imgWidth = 30 * 2.5;      // 120
-        imgHeight = 30 * 2.5;     // 120
-        imgXOffset = -15 * 2.5;   // -60
-        imgYOffset = -15 * 2.5;   // -60
-        textXOffset = 15 * 2.5;   // 60
-        fontSize = "14" * 2.5;    // 56
+        imgWidth = 30 * 2.5;      // 75
+        imgHeight = 30 * 2.5;     // 75
+        imgXOffset = -15 * 2.5;   // -37.5
+        imgYOffset = -15 * 2.5;   // -37.5
+        fontSize = 14 * 2.5;      // 35
       } else if (data.type === "torch") {
         imgSrc = "https://regnumsolis.com/planner/images/torch.svg";
         imgWidth = 30 * 2.5;
         imgHeight = 30 * 2.5;
         imgXOffset = -15 * 2.5;
         imgYOffset = -15 * 2.5;
-        textXOffset = 15 * 2.5;
-        fontSize = "14" * 2.5;
+        fontSize = 14 * 2.5;
       } else if (data.type === "cave") {
         imgSrc = "https://regnumsolis.com/planner/images/cave.svg";
         imgWidth = 30 * 2.5;
         imgHeight = 30 * 2.5;
         imgXOffset = -15 * 2.5;
         imgYOffset = -15 * 2.5;
-        textXOffset = 15 * 2.5;
-        fontSize = "14" * 2.5;
+        fontSize = 14 * 2.5;
       } else if (data.type === "sword") {
         imgSrc = "https://regnumsolis.com/planner/images/sword.svg";
         imgWidth = 30 * 2.5;
         imgHeight = 30 * 2.5;
         imgXOffset = -15 * 2.5;
         imgYOffset = -15 * 2.5;
-        textXOffset = 15 * 2.5;
-        fontSize = "14" * 2.5;
+        fontSize = 14 * 2.5;
       } else if (data.type === "spear") {
         imgSrc = "https://regnumsolis.com/planner/images/spear.svg";
         imgWidth = 30 * 2.5;
         imgHeight = 30 * 2.5;
         imgXOffset = -15 * 2.5;
         imgYOffset = -15 * 2.5;
-        textXOffset = 15 * 2.5;
-        fontSize = "14" * 2.5;
+        fontSize = 14 * 2.5;
       } else if (data.type === "bow") {
         imgSrc = "https://regnumsolis.com/planner/images/bow.svg";
         imgWidth = 30 * 2.5;
         imgHeight = 30 * 2.5;
         imgXOffset = -15 * 2.5;
         imgYOffset = -15 * 2.5;
-        textXOffset = 15 * 2.5;
-        fontSize = "14" * 2.5;
+        fontSize = 14 * 2.5;
       }
+      // Compute the text's x-offset so it starts exactly at the right edge of the icon.
+      let textXOffset = imgXOffset + imgWidth;
 
       const imgEl = document.createElementNS("http://www.w3.org/2000/svg", "image");
       imgEl.setAttributeNS("http://www.w3.org/1999/xlink", "href", imgSrc);
@@ -707,6 +703,7 @@
       textEl.textContent = data.text;
       textEl.setAttribute("fill", data.color);
       textEl.setAttribute("font-size", fontSize);
+      // Place text immediately to the right of the marker icon.
       textEl.setAttribute("x", data.x + textXOffset);
       textEl.setAttribute("y", data.y);
       textEl.setAttribute("text-anchor", "start");
@@ -714,6 +711,7 @@
       textEl.style.fontFamily = "'Bebas Neue', sans-serif";
       markerEl.appendChild(textEl);
 
+      // Optional: Add a background rectangle behind the text for improved legibility.
       requestAnimationFrame(() => {
         const bbox = textEl.getBBox();
         const textLength = textEl.getComputedTextLength();
