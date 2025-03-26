@@ -533,9 +533,10 @@
       });
     }
 
-    // Setup click-based line drawing with two clicks:
-    //  - First click sets the start point and creates a group for the line and its arrow.
-    //  - Second click sets the end point, updates the line, and creates an arrow at the midpoint.
+    // Click-based line drawing with two clicks:
+    //  - First click creates a group and a line element.
+    //  - Second click completes the line and creates an arrow at the midpoint.
+    // The entire group listens (in capture phase) for clicks to prompt deletion.
     function setupLineDrawing() {
       svgRoot.addEventListener("click", (e) => {
         if (activeTool !== "line") return;
@@ -545,14 +546,13 @@
           // First click: Create group and line element
           currentLineGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
           currentLineGroup.classList.add("line-group");
-          // Add deletion listener to the entire group
+          // Use capture phase so clicks on children trigger deletion
           currentLineGroup.addEventListener("click", (ev) => {
-            // Prevent click propagation to the map
             ev.stopPropagation();
             if (confirm("Delete this line?")) {
               currentLineGroup.remove();
             }
-          });
+          }, true);
           // Create the line element
           const lineEl = document.createElementNS("http://www.w3.org/2000/svg", "line");
           lineEl.setAttribute("x1", pt.x);
@@ -562,7 +562,6 @@
           const lineColor = prompt("Enter line color (e.g., red or #ff0000):") || "white";
           lineEl.setAttribute("stroke", lineColor);
           lineEl.setAttribute("stroke-width", "2");
-          // Save the line element inside the group for later reference
           currentLineGroup.lineEl = lineEl;
           currentLineGroup.lineColor = lineColor;
           currentLineGroup.startPoint = { x: pt.x, y: pt.y };
@@ -586,10 +585,10 @@
           const arrow = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
           arrow.setAttribute("points", "0,-5 10,0 0,5");
           arrow.setAttribute("fill", currentLineGroup.lineColor);
-          // Position the arrow at the midpoint and rotate it so that it points toward the end point
+          // Position the arrow at the midpoint and rotate it so it points toward the end point
           arrow.setAttribute("transform", `translate(${midX},${midY}) rotate(${angle})`);
           currentLineGroup.appendChild(arrow);
-          // Reset the line drawing state and re-enable markers
+          // Reset line drawing state and re-enable marker interactivity
           activeTool = null;
           lineDrawingState = 0;
           currentLineGroup = null;
