@@ -1,1052 +1,1858 @@
 <!DOCTYPE html>
+ 
 <html lang="en">
+ 
 <head>
-  <meta charset="UTF-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, maximum-scale=1.0, user-scalable=no"
-  />
+ 
+  <meta charset="UTF-8">
+ 
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+ 
   <title>Interactive Game Map - Regnum Solis</title>
-  <script
-    src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"
-  ></script>
-  <link
-    rel="stylesheet"
-    href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap"
-  />
+ 
+  <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
+ 
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap">
+ 
   <style>
+ 
     /* Reset & Basic Styling */
+ 
     * {
+ 
       box-sizing: border-box;
+ 
       margin: 0;
+ 
       padding: 0;
+ 
     }
-    html,
-    body {
+ 
+    html, body {
+ 
       width: 100%;
+ 
       height: 100%;
+ 
       background: #1e1e1e;
+ 
       color: white;
-      font-family: "Bebas Neue", sans-serif;
+ 
+      font-family: 'Bebas Neue', sans-serif;
+ 
       overflow-x: hidden;
+ 
     }
+ 
     /* Animations */
+ 
     @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+ 
+      from { opacity: 0; transform: translateY(20px); }
+ 
+      to { opacity: 1; transform: translateY(0); }
+ 
     }
+ 
     @keyframes neonGlow {
+ 
       0% {
-        text-shadow: 0 0 5px rgba(223, 197, 136, 0.8),
-          0 0 10px rgba(223, 197, 136, 0.8), 0 0 15px rgba(223, 197, 136, 0.8);
+ 
+        text-shadow: 0 0 5px rgba(223,197,136,0.8),
+ 
+                     0 0 10px rgba(223,197,136,0.8),
+ 
+                     0 0 15px rgba(223,197,136,0.8);
+ 
       }
+ 
       100% {
-        text-shadow: 0 0 20px rgba(223, 197, 136, 0.8),
-          0 0 30px rgba(223, 197, 136, 0.8), 0 0 40px rgba(223, 197, 136, 0.8);
+ 
+        text-shadow: 0 0 20px rgba(223,197,136,0.8),
+ 
+                     0 0 30px rgba(223,197,136,0.8),
+ 
+                     0 0 40px rgba(223,197,136,0.8);
+ 
       }
+ 
     }
+ 
     /* Login Screen */
+ 
     #login-screen {
+ 
       display: flex;
+ 
       flex-direction: column;
+ 
       align-items: center;
+ 
       justify-content: center;
+ 
       height: 100vh;
+ 
       background: #1e1e1e;
+ 
       animation: fadeIn 1s ease-out;
+ 
       text-align: center;
+ 
     }
+ 
     #login-screen img.logo {
+ 
       max-width: 600px;
+ 
       margin-bottom: 20px;
+ 
     }
+ 
     #login-screen h2 {
+ 
       font-size: 3em;
+ 
       margin-bottom: 20px;
+ 
       animation: neonGlow 1.5s infinite alternate ease-in-out;
+ 
     }
+ 
     #login-screen input {
+ 
       margin: 5px;
+ 
       padding: 10px;
+ 
       font-size: 1.2em;
+ 
       width: 250px;
+ 
       border: none;
+ 
       border-radius: 4px;
+ 
       text-align: center;
+ 
     }
+ 
     #login-screen button {
+ 
       margin-top: 10px;
+ 
       padding: 10px 20px;
+ 
       font-size: 1.2em;
+ 
       border: none;
+ 
       border-radius: 4px;
-      background: rgba(223, 197, 136, 0.8);
+ 
+      background: rgba(223,197,136,0.8);
+ 
       color: white;
+ 
       cursor: pointer;
+ 
       transition: transform 0.3s, box-shadow 0.3s;
-      box-shadow: 0 4px 15px rgba(223, 197, 136, 0.5);
+ 
+      box-shadow: 0 4px 15px rgba(223,197,136,0.5);
+ 
     }
+ 
     #login-screen button:hover {
+ 
       transform: scale(1.05);
-      box-shadow: 0 4px 15px rgba(223, 197, 136, 0.9);
+ 
+      box-shadow: 0 4px 15px rgba(223,197,136,0.9);
+ 
     }
+ 
     #login-error {
+ 
       margin-top: 10px;
+ 
       color: #e74c3c;
+ 
       font-weight: bold;
+ 
     }
+ 
     /* App Container */
+ 
     #app {
+ 
       display: none;
+ 
       height: 100vh;
+ 
       position: relative;
+ 
       animation: fadeIn 1s ease-out;
+ 
     }
+ 
     /* Header Logo above Toolbox */
+ 
     #header-logo {
+ 
       text-align: center;
+ 
       padding: 10px 0;
+ 
       background: #1e1e1e;
+ 
     }
+ 
     #header-logo img {
+ 
       max-width: 600px;
+ 
     }
+ 
     /* Toolbox */
+ 
     #toolbox {
+ 
       position: fixed;
+ 
       top: 160px;
+ 
       left: 20px;
-      background: rgba(30, 30, 30, 0.9);
+ 
+      background: rgba(30,30,30,0.9);
+ 
       padding: 10px;
-      border: 1px solid rgba(223, 197, 136, 0.5);
+ 
+      border: 1px solid rgba(223,197,136,0.5);
+ 
       border-radius: 5px;
-      box-shadow: 0 0 10px rgba(223, 197, 136, 0.5);
+ 
+      box-shadow: 0 0 10px rgba(223,197,136,0.5);
+ 
       z-index: 20;
+ 
       display: flex;
+ 
       flex-direction: column;
+ 
       gap: 10px;
+ 
     }
+ 
     .tool {
+ 
       width: 50px;
+ 
       height: 50px;
-      border: 1px solid rgba(223, 197, 136, 0.5);
-      background: rgba(30, 30, 30, 0.9);
+ 
+      border: 1px solid rgba(223,197,136,0.5);
+ 
+      background: rgba(30,30,30,0.9);
+ 
       display: flex;
+ 
       align-items: center;
+ 
       justify-content: center;
+ 
       cursor: pointer;
+ 
       border-radius: 5px;
+ 
       transition: transform 0.3s;
+ 
     }
+ 
     .tool:hover {
+ 
       transform: scale(1.1);
+ 
     }
+ 
     .tool img {
+ 
       max-width: 100%;
+ 
       max-height: 100%;
+ 
     }
+ 
     /* Zoom Controls */
+ 
     #zoom-controls {
+ 
       position: fixed;
+ 
       top: 160px;
+ 
       right: 20px;
+ 
       z-index: 20;
+ 
       display: flex;
+ 
       flex-direction: column;
+ 
       gap: 5px;
+ 
     }
+ 
     #zoom-controls button {
+ 
       padding: 8px;
+ 
       border: none;
+ 
       border-radius: 4px;
-      background: rgba(223, 197, 136, 0.8);
+ 
+      background: rgba(223,197,136,0.8);
+ 
       color: white;
+ 
       cursor: pointer;
+ 
       transition: transform 0.3s, box-shadow 0.3s;
-      box-shadow: 0 4px 15px rgba(223, 197, 136, 0.5);
+ 
+      box-shadow: 0 4px 15px rgba(223,197,136,0.5);
+ 
     }
+ 
     #zoom-controls button:hover {
+ 
       transform: scale(1.05);
-      box-shadow: 0 4px 15px rgba(223, 197, 136, 0.9);
+ 
+      box-shadow: 0 4px 15px rgba(223,197,136,0.9);
+ 
     }
+ 
     /* Map Container */
+ 
     #map-container {
+ 
       width: 100vw;
+ 
       height: calc(100vh - 60px);
+ 
       overflow: hidden;
+ 
     }
+ 
     #map-svg-container {
+ 
       width: 100%;
+ 
       height: 100%;
+ 
     }
+ 
     .marker:hover {
+ 
       opacity: 0.8;
+ 
       cursor: pointer;
+ 
     }
+ 
     /* Error Overlay */
+ 
     #error-overlay {
+ 
       position: fixed;
+ 
       top: 0;
+ 
       left: 0;
+ 
       right: 0;
+ 
       bottom: 0;
-      background: rgba(30, 30, 30, 0.95);
+ 
+      background: rgba(30,30,30,0.95);
+ 
       color: #ecf0f1;
+ 
       display: none;
+ 
       align-items: center;
+ 
       justify-content: center;
+ 
       z-index: 50;
+ 
       font-size: 1.5em;
+ 
       text-align: center;
+ 
       padding: 20px;
+ 
     }
+ 
     /* Admin Panel */
+ 
     #admin-panel {
+ 
       position: fixed;
+ 
       bottom: 20px;
+ 
       right: 20px;
+ 
       width: 320px;
-      background: rgba(30, 30, 30, 0.9);
-      border: 1px solid rgba(223, 197, 136, 0.5);
+ 
+      background: rgba(30,30,30,0.9);
+ 
+      border: 1px solid rgba(223,197,136,0.5);
+ 
       border-radius: 5px;
-      box-shadow: 0 0 10px rgba(223, 197, 136, 0.5);
+ 
+      box-shadow: 0 0 10px rgba(223,197,136,0.5);
+ 
       padding: 10px;
+ 
       z-index: 30;
+ 
       display: none;
+ 
       animation: fadeIn 1s ease-out;
+ 
     }
+ 
     #admin-panel h3 {
+ 
       margin-top: 0;
+ 
       font-size: 1.8em;
+ 
       display: flex;
+ 
       justify-content: space-between;
+ 
       align-items: center;
-      border-bottom: 1px solid rgba(223, 197, 136, 0.5);
+ 
+      border-bottom: 1px solid rgba(223,197,136,0.5);
+ 
       padding-bottom: 5px;
+ 
       margin-bottom: 10px;
+ 
     }
+ 
     #admin-panel h3 span.icon {
+ 
       cursor: pointer;
+ 
       margin-left: 5px;
+ 
       font-size: 1.2em;
+ 
     }
+ 
     #audit-log {
+ 
       font-size: 0.9em;
+ 
       height: 200px;
+ 
       overflow-y: auto;
+ 
       margin-bottom: 10px;
-      border-top: 1px solid rgba(223, 197, 136, 0.5);
+ 
+      border-top: 1px solid rgba(223,197,136,0.5);
+ 
       padding-top: 5px;
+ 
     }
+ 
     #delete-all {
+ 
       padding: 8px;
+ 
       border: none;
+ 
       border-radius: 4px;
-      background: rgba(223, 197, 136, 0.8);
+ 
+      background: rgba(223,197,136,0.8);
+ 
       color: white;
+ 
       cursor: pointer;
+ 
       width: 100%;
+ 
       transition: transform 0.3s, box-shadow 0.3s;
-      box-shadow: 0 4px 15px rgba(223, 197, 136, 0.5);
+ 
+      box-shadow: 0 4px 15px rgba(223,197,136,0.5);
+ 
     }
+ 
     #delete-all:hover {
+ 
       transform: scale(1.05);
-      box-shadow: 0 4px 15px rgba(223, 197, 136, 0.9);
+ 
+      box-shadow: 0 4px 15px rgba(223,197,136,0.9);
+ 
     }
+ 
   </style>
+ 
 </head>
+ 
 <body>
+ 
   <!-- Login Screen -->
+ 
   <div id="login-screen">
-    <img
-      class="logo"
-      src="https://regnumsolis.com/planner/images/longlogo.svg"
-      alt="Long Logo"
-    />
+ 
+    <img class="logo" src="https://regnumsolis.com/planner/images/longlogo.svg" alt="Long Logo">
+ 
     <h2>Login</h2>
+ 
     <input id="email" type="email" placeholder="Email" />
+ 
     <input id="password" type="password" placeholder="Password" />
+ 
     <button id="login-button">Login</button>
+ 
     <div id="login-error"></div>
+ 
   </div>
+ 
 
+ 
   <!-- Main App -->
+ 
   <div id="app">
+ 
     <!-- Header Logo Above Toolbox -->
+ 
     <div id="header-logo">
-      <img
-        src="https://regnumsolis.com/planner/images/longlogo.svg"
-        alt="Long Logo"
-      />
+ 
+      <img src="https://regnumsolis.com/planner/images/longlogo.svg" alt="Long Logo">
+ 
     </div>
+ 
     <!-- Toolbox -->
+ 
     <div id="toolbox">
+ 
       <!-- Text Marker Tool -->
+ 
       <div class="tool" draggable="true" data-type="marker" title="Text Marker">
-        <img
-          src="https://regnumsolis.com/planner/images/marker.svg"
-          alt="Marker Background"
-        />
+ 
+        <img src="https://regnumsolis.com/planner/images/marker.svg" alt="Marker Background">
+ 
       </div>
+ 
       <!-- Citadel Marker Tool -->
+ 
       <div class="tool" draggable="true" data-type="citadel" title="Citadel">
-        <img
-          src="https://regnumsolis.com/planner/images/citadel.svg"
-          alt="Citadel"
-        />
+ 
+        <img src="https://regnumsolis.com/planner/images/citadel.svg" alt="Citadel">
+ 
       </div>
+ 
       <!-- Torch Marker Tool -->
+ 
       <div class="tool" draggable="true" data-type="torch" title="Torch">
-        <img
-          src="https://regnumsolis.com/planner/images/torch.svg"
-          alt="Torch"
-        />
+ 
+        <img src="https://regnumsolis.com/planner/images/torch.svg" alt="Torch">
+ 
       </div>
+ 
       <!-- Cave Marker Tool -->
+ 
       <div class="tool" draggable="true" data-type="cave" title="Cave">
-        <img
-          src="https://regnumsolis.com/planner/images/cave.svg"
-          alt="Cave"
-        />
+ 
+        <img src="https://regnumsolis.com/planner/images/cave.svg" alt="Cave">
+ 
       </div>
+ 
       <!-- Sword Marker Tool -->
+ 
       <div class="tool" draggable="true" data-type="sword" title="Sword">
-        <img
-          src="https://regnumsolis.com/planner/images/sword.svg"
-          alt="Sword"
-        />
+ 
+        <img src="https://regnumsolis.com/planner/images/sword.svg" alt="Sword">
+ 
       </div>
+ 
       <!-- Spear Marker Tool -->
+ 
       <div class="tool" draggable="true" data-type="spear" title="Spear">
-        <img
-          src="https://regnumsolis.com/planner/images/spear.svg"
-          alt="Spear"
-        />
+ 
+        <img src="https://regnumsolis.com/planner/images/spear.svg" alt="Spear">
+ 
       </div>
+ 
       <!-- Bow Marker Tool -->
+ 
       <div class="tool" draggable="true" data-type="bow" title="Bow">
-        <img src="https://regnumsolis.com/planner/images/bow.svg" alt="Bow" />
+ 
+        <img src="https://regnumsolis.com/planner/images/bow.svg" alt="Bow">
+ 
       </div>
+ 
       <!-- Line Draw Tool -->
+ 
       <div class="tool" data-type="line" title="Line Draw">
-        <img
-          src="https://regnumsolis.com/planner/images/line.svg"
-          alt="Line Draw"
-          onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2250%22 height=%2250%22><text x=%220%22 y=%2230%22 fill=%22white%22 font-size=%2230%22>―</text></svg>'"
-        />
+ 
+        <img src="https://regnumsolis.com/planner/images/line.svg" alt="Line Draw" onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2250%22 height=%2250%22><text x=%220%22 y=%2230%22 fill=%22white%22 font-size=%2230%22>―</text></svg>'">
+ 
       </div>
+ 
     </div>
+ 
     <!-- Zoom Controls -->
+ 
     <div id="zoom-controls">
+ 
       <button id="zoom-in">Zoom In</button>
+ 
       <button id="zoom-out">Zoom Out</button>
+ 
       <button id="reset-zoom">Reset</button>
+ 
     </div>
+ 
     <!-- Map Container -->
+ 
     <div id="map-container">
+ 
       <div id="map-svg-container"></div>
+ 
     </div>
+ 
     <!-- Admin Panel -->
+ 
     <div id="admin-panel">
+ 
       <h3>
+ 
         Audit log
+ 
         <span>
-          <span
-            id="delete-audit"
-            class="icon"
-            title="Delete all audit logs"
-            >🗑️</span
-          >
-          <span
-            id="minimize-audit"
-            class="icon"
-            title="Minimize audit log"
-            >➖</span
-          >
+ 
+          <span id="delete-audit" class="icon" title="Delete all audit logs">🗑️</span>
+ 
+          <span id="minimize-audit" class="icon" title="Minimize audit log">➖</span>
+ 
         </span>
+ 
       </h3>
+ 
       <div id="audit-log"></div>
+ 
       <button id="delete-all">Delete All Markers</button>
+ 
     </div>
+ 
   </div>
+ 
 
+ 
   <!-- Error Overlay -->
-  <div id="error-overlay">
-    Database connection failed. The app cannot be used at this time.
-  </div>
+ 
+  <div id="error-overlay">Database connection failed. The app cannot be used at this time.</div>
+ 
 
+ 
   <script type="module">
-    // Import the functions you need from the SDKs you need
-    import { initializeApp } from "firebase/app";
-    import { getAnalytics } from "firebase/analytics";
-    // TODO: Add SDKs for Firebase products that you want to use
-    // https://firebase.google.com/docs/web/setup#available-libraries
+ 
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+ 
+    import { getFirestore, collection, addDoc, orderBy, query, onSnapshot, deleteDoc, doc, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+ 
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+ 
 
-    // Your web app's Firebase configuration
-    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+ 
     const firebaseConfig = {
+ 
       apiKey: "AIzaSyAIws_FKV_CTaiHdnwc8WigDqRkyUCOjtE",
+ 
       authDomain: "regnum-d3ddf.firebaseapp.com",
+ 
       projectId: "regnum-d3ddf",
-      storageBucket: "regnumsolis.com/planner/images",
+ 
+      storageBucket: "regnum-d3ddf.firebasestorage.app",
+ 
       messagingSenderId: "565532905074",
+ 
       appId: "1:565532905074:web:a4cc38363376e49540fceb",
+ 
       measurementId: "G-4RG5NP4FZ3"
+ 
     };
+ 
 
-    // Initialize Firebase
+ 
     const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
-
-    // ---- The rest of your imports for Firestore/Auth (9.6.1 style) ----
-    import {
-      getFirestore,
-      collection,
-      addDoc,
-      orderBy,
-      query,
-      onSnapshot,
-      deleteDoc,
-      doc,
-      serverTimestamp,
-      getDocs
-    } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
-    import {
-      getAuth,
-      signInWithEmailAndPassword,
-      onAuthStateChanged
-    } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
-
-    let panZoomInstance,
-      svgRoot,
-      panLayer,
-      lineLayer,
-      markerLayer;
-    let isMapReady = false;
-    const adminEmail = "gryves_dev@yahoo.com";
-
-    // For line drawing:
-    let activeTool = null;
-    let lineDrawingState = 0; // 0 = not started, 1 = start point set
-    let tempLine = null;      // The line we see while drawing
-    let lineStart = null;     // { x, y }
-    let lineColor = "#ffffff";
-
-    // ... rest of your code that references db, auth, etc. ...
-    // (Below is the exact code from the prior answer, just merged with the new snippet)
-
+ 
     const db = getFirestore(app);
+ 
     const auth = getAuth(app);
+ 
 
+ 
+    let panZoomInstance, svgRoot, panLayer, lineLayer, markerLayer;
+ 
+    let isMapReady = false;
+ 
+    const adminEmail = "gryves_dev@yahoo.com";
+ 
+
+ 
+    // Variables for line drawing
+ 
+    let activeTool = null;
+ 
+    let lineDrawingState = 0; // 0 = not started, 1 = start point set
+ 
+
+    let currentLine = null;
+ 
+
+    let currentLineGroup = null; // will contain both the line and arrow
+ 
+
+ 
     document.addEventListener("DOMContentLoaded", () => {
+ 
       setupLogin();
+ 
       setupToolbox();
+ 
       setupAuditControls();
+ 
     });
+ 
 
+ 
     function setupLogin() {
+ 
       document.getElementById("login-button").addEventListener("click", () => {
+ 
         const email = document.getElementById("email").value.trim();
+ 
         const password = document.getElementById("password").value.trim();
+ 
         const errorDiv = document.getElementById("login-error");
+ 
 
+ 
         signInWithEmailAndPassword(auth, email, password)
+ 
           .then(() => {
+ 
             errorDiv.textContent = "";
+ 
             document.getElementById("login-screen").style.display = "none";
+ 
             document.getElementById("app").style.display = "block";
+ 
             initializeMap();
+ 
           })
+ 
           .catch((error) => {
+ 
             errorDiv.textContent = error.message;
+ 
           });
+ 
       });
+ 
 
+ 
       onAuthStateChanged(auth, (user) => {
+ 
         if (user) {
+ 
           document.getElementById("login-screen").style.display = "none";
+ 
           document.getElementById("app").style.display = "block";
+ 
           initializeMap();
+ 
           if (user.email === adminEmail) {
+ 
             document.getElementById("admin-panel").style.display = "block";
+ 
             listenForAuditLogs();
+ 
             setupDeleteAll();
+ 
           }
+ 
         } else {
+ 
           document.getElementById("login-screen").style.display = "flex";
+ 
           document.getElementById("app").style.display = "none";
+ 
         }
+ 
       });
+ 
     }
+ 
 
+ 
     function initializeMap() {
+ 
       const container = document.getElementById("map-svg-container");
+ 
 
+ 
       fetch("https://regnumsolis.com/planner/images/map.svg")
-        .then((response) => response.text())
-        .then((svgText) => {
+ 
+        .then(response => response.text())
+ 
+        .then(svgText => {
+ 
           container.innerHTML = svgText;
+ 
           setupPanZoomLayers();
+ 
           setupZoomControls();
+ 
           setupDragAndDrop();
+ 
+          setupLineDrawing();
+ 
           listenForMarkers();
-          listenForLines();
+ 
           isMapReady = true;
+ 
         })
-        .catch((error) => {
+ 
+        .catch(error => {
+ 
           console.error("Error loading SVG:", error);
+ 
           displayErrorOverlay("Error loading map data.");
+ 
         });
+ 
     }
+ 
 
+ 
     function setupPanZoomLayers() {
+ 
       svgRoot = document.getElementById("map-svg-container").querySelector("svg");
+ 
       svgRoot.setAttribute("width", "100%");
+ 
       svgRoot.setAttribute("height", "100%");
+ 
       svgRoot.setAttribute("preserveAspectRatio", "xMidYMid meet");
+ 
 
+ 
       panLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
+ 
       panLayer.id = "pan-layer";
+ 
       while (svgRoot.firstChild) {
+ 
         panLayer.appendChild(svgRoot.firstChild);
+ 
       }
+ 
       svgRoot.appendChild(panLayer);
+ 
 
+ 
       // Create a layer for lines (below markers)
+ 
       lineLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
+ 
       lineLayer.id = "line-layer";
+ 
       panLayer.appendChild(lineLayer);
+ 
 
-      // Marker layer after lineLayer so markers remain on top
+ 
+      // Marker layer comes after lineLayer so markers remain on top
+ 
       markerLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
+ 
       markerLayer.id = "marker-layer";
+ 
       panLayer.appendChild(markerLayer);
+ 
 
+ 
       panZoomInstance = svgPanZoom(svgRoot, {
+ 
         zoomEnabled: true,
+ 
         panEnabled: true,
+ 
         controlIconsEnabled: false,
+ 
         minZoom: 0.5,
+ 
         maxZoom: 5,
-        beforeMouseDown: function (e) {
-          // Disable panning if line tool is active
+ 
+        beforeMouseDown: function(e) {
+ 
+
+          // Prevent panning if clicking on a marker (unless line tool is active)
+ 
+
+          // When line tool is active, disable panning
+ 
           if (activeTool === "line") return false;
-
-          // Also prevent panning if user clicked on a marker
-          if (
-            e.target.getAttribute("data-marker") === "true" ||
-            (e.target.parentNode &&
-              e.target.parentNode.getAttribute("data-marker") === "true")
-          ) {
+ 
+          if (e.target.getAttribute("data-marker") === "true" ||
+ 
+              (e.target.parentNode && e.target.parentNode.getAttribute("data-marker") === "true")) {
+ 
             return false;
+ 
           }
+ 
           return true;
+ 
         }
+ 
       });
-
-      // Listen for line drawing clicks
-      svgRoot.addEventListener("click", handleLineDrawingClick);
+ 
     }
+ 
 
+ 
     function setupZoomControls() {
-      document
-        .getElementById("zoom-in")
-        .addEventListener("click", () => panZoomInstance.zoomIn());
-      document
-        .getElementById("zoom-out")
-        .addEventListener("click", () => panZoomInstance.zoomOut());
-      document
-        .getElementById("reset-zoom")
-        .addEventListener("click", () => panZoomInstance.resetZoom());
+ 
+      document.getElementById("zoom-in").addEventListener("click", () => panZoomInstance.zoomIn());
+ 
+      document.getElementById("zoom-out").addEventListener("click", () => panZoomInstance.zoomOut());
+ 
+      document.getElementById("reset-zoom").addEventListener("click", () => panZoomInstance.resetZoom());
+ 
     }
+ 
 
+ 
     function setupToolbox() {
+ 
       document.querySelectorAll(".tool").forEach((tool) => {
+ 
         const type = tool.dataset.type;
+ 
         if (type === "line") {
-          // Activate line tool on click
+ 
+          // Activate line tool on click (do not use drag)
+ 
           tool.addEventListener("click", () => {
+ 
             activeTool = "line";
+ 
             lineDrawingState = 0;
-            markerLayer.style.pointerEvents = "none"; // disable marker interactivity
-            // Visual highlight for the active tool
-            document
-              .querySelectorAll(".tool")
-              .forEach((t) => (t.style.borderColor = "rgba(223,197,136,0.5)"));
+ 
+            // Disable marker interactivity while drawing a line
+ 
+            markerLayer.style.pointerEvents = "none";
+ 
+            // Visual indicator for active tool
+ 
+            document.querySelectorAll(".tool").forEach(t => t.style.borderColor = "rgba(223,197,136,0.5)");
+ 
             tool.style.borderColor = "red";
+ 
           });
+ 
         } else {
-          // Markers use drag and drop
+ 
           tool.addEventListener("dragstart", (e) => {
+ 
             e.dataTransfer.setData("text/plain", type);
+ 
           });
+ 
         }
+ 
       });
+ 
     }
+ 
 
-    function handleLineDrawingClick(e) {
-      if (activeTool !== "line") return;
-      e.preventDefault();
-
-      const pt = getSVGPoint(e);
-      if (lineDrawingState === 0) {
-        // First click => ask for line color, create a temporary line
-        lineColor =
-          prompt("Enter line color (e.g., red or #ff0000):") || "white";
-        lineStart = { x: pt.x, y: pt.y };
-        // Create a local line so user can see while drawing
-        tempLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        tempLine.setAttribute("x1", lineStart.x);
-        tempLine.setAttribute("y1", lineStart.y);
-        tempLine.setAttribute("x2", lineStart.x);
-        tempLine.setAttribute("y2", lineStart.y);
-        tempLine.setAttribute("stroke", lineColor);
-        tempLine.setAttribute("stroke-width", "2");
-        tempLine.setAttribute("opacity", "0.7");
-        lineLayer.appendChild(tempLine);
-
-        lineDrawingState = 1;
-      } else {
-        // Second click => finalize line
-        const x2 = pt.x;
-        const y2 = pt.y;
-        // Remove temp line from the DOM
-        if (tempLine) {
-          tempLine.remove();
-          tempLine = null;
-        }
-        // Add the line to Firestore so everyone sees it
-        addLineToFirestore(lineStart.x, lineStart.y, x2, y2, lineColor);
-
-        // Reset tool
-        activeTool = null;
-        lineDrawingState = 0;
-        markerLayer.style.pointerEvents = "auto";
-        document
-          .querySelectorAll(".tool")
-          .forEach((t) => (t.style.borderColor = "rgba(223,197,136,0.5)"));
-      }
-    }
-
-    // Store line data in Firestore
-    async function addLineToFirestore(x1, y1, x2, y2, color) {
-      const lineData = {
-        x1,
-        y1,
-        x2,
-        y2,
-        color,
-        timestamp: serverTimestamp()
-      };
-      try {
-        const docRef = await addDoc(collection(db, "lines"), lineData);
-        recordAuditLog("add", {
-          markerId: docRef.id,
-          markerType: "line"
-        });
-      } catch (error) {
-        console.error("Error adding line:", error);
-      }
-    }
-
-    // Listen for line docs in Firestore, and create line elements in the DOM
-    function listenForLines() {
-      const linesQuery = query(collection(db, "lines"), orderBy("timestamp"));
-      onSnapshot(
-        linesQuery,
-        (snapshot) => {
-          // Clear existing lines
-          while (lineLayer.firstChild) {
-            lineLayer.removeChild(lineLayer.firstChild);
-          }
-          // Rebuild lines from the DB
-          snapshot.forEach((docSnap) => {
-            const data = docSnap.data();
-            createLineElement(docSnap.id, data);
-          });
-        },
-        (error) => {
-          console.error("Error listening for lines:", error);
-        }
-      );
-    }
-
-    // Create a line group with a line + arrow, clickable to delete from Firestore
-    function createLineElement(id, data) {
-      const { x1, y1, x2, y2, color } = data;
-      const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
-      group.classList.add("line-group");
-      // Use data attribute for line doc ID
-      group.dataset.lineId = id;
-
-      // The actual line
-      const lineEl = document.createElementNS("http://www.w3.org/2000/svg", "line");
-      lineEl.setAttribute("x1", x1);
-      lineEl.setAttribute("y1", y1);
-      lineEl.setAttribute("x2", x2);
-      lineEl.setAttribute("y2", y2);
-      lineEl.setAttribute("stroke", color || "white");
-      lineEl.setAttribute("stroke-width", "2");
-      group.appendChild(lineEl);
-
-      // Arrow polygon
-      const midX = (x1 + x2) / 2;
-      const midY = (y1 + y2) / 2;
-      const angle = Math.atan2(y2 - y1, x2 - x1) * (180 / Math.PI);
-      const arrow = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-      arrow.setAttribute("points", "0,-5 10,0 0,5");
-      arrow.setAttribute("fill", color || "white");
-      arrow.setAttribute("transform", `translate(${midX},${midY}) rotate(${angle})`);
-      group.appendChild(arrow);
-
-      // On click, ask to delete from Firestore
-      group.addEventListener(
-        "click",
-        async (e) => {
-          e.stopPropagation();
-          if (activeTool === "line") return; // ignore if line tool active
-          if (confirm("Delete this line?")) {
-            try {
-              await deleteDoc(doc(db, "lines", id));
-              recordAuditLog("delete", { markerId: id, markerType: "line" });
-            } catch (error) {
-              console.error("Error deleting line:", error);
-            }
-          }
-        },
-        true // capture
-      );
-
-      lineLayer.appendChild(group);
-    }
-
-    // Markers
-    async function addMarkerToFirestore(type, x, y) {
-      let markerData = { type, x, y, timestamp: serverTimestamp() };
-      if (
-        ["marker", "citadel", "torch", "cave", "sword", "spear", "bow"].includes(
-          type
-        )
-      ) {
-        markerData.text = prompt("Enter marker text:") || "";
-        markerData.color =
-          prompt("Enter marker color (e.g., red or #ff0000):") || "black";
-        if (type === "marker" && markerData.text === "") {
-          markerData.text = "M";
-        }
-      }
-      try {
-        const docRef = await addDoc(collection(db, "markers"), markerData);
-        recordAuditLog("add", { markerId: docRef.id, markerType: type });
-      } catch (error) {
-        console.error("Error adding marker:", error);
-      }
-    }
-
-    function listenForMarkers() {
-      const markersQuery = query(collection(db, "markers"), orderBy("timestamp"));
-      onSnapshot(
-        markersQuery,
-        (snapshot) => {
-          // Clear existing markers
-          while (markerLayer.firstChild) {
-            markerLayer.removeChild(markerLayer.firstChild);
-          }
-          // Rebuild from the DB
-          snapshot.forEach((docSnap) => {
-            createMarkerElement(docSnap.id, docSnap.data());
-          });
-        },
-        (error) => {
-          console.error("Firestore connection error:", error);
-          displayErrorOverlay("Firestore connection failed.");
-        }
-      );
-    }
-
-    function createMarkerElement(id, data) {
-      const markerEl = document.createElementNS("http://www.w3.org/2000/svg", "g");
-      markerEl.setAttribute("data-marker", "true");
-      markerEl.dataset.id = id;
-
-      let imgSrc,
-        imgWidth,
-        imgHeight,
-        imgXOffset,
-        imgYOffset,
-        textXOffset;
-      if (data.type === "marker") {
-        imgSrc = "https://regnumsolis.com/planner/images/marker.svg";
-        imgWidth = 40;
-        imgHeight = 40;
-        imgXOffset = -20;
-        imgYOffset = -20;
-        textXOffset = 20;
-      } else if (data.type === "citadel") {
-        imgSrc = "https://regnumsolis.com/planner/images/citadel.svg";
-        imgWidth = 30;
-        imgHeight = 30;
-        imgXOffset = -15;
-        imgYOffset = -15;
-        textXOffset = 15;
-      } else if (data.type === "torch") {
-        imgSrc = "https://regnumsolis.com/planner/images/torch.svg";
-        imgWidth = 30;
-        imgHeight = 30;
-        imgXOffset = -15;
-        imgYOffset = -15;
-        textXOffset = 15;
-      } else if (data.type === "cave") {
-        imgSrc = "https://regnumsolis.com/planner/images/cave.svg";
-        imgWidth = 30;
-        imgHeight = 30;
-        imgXOffset = -15;
-        imgYOffset = -15;
-        textXOffset = 15;
-      } else if (data.type === "sword") {
-        imgSrc = "https://regnumsolis.com/planner/images/sword.svg";
-        imgWidth = 30;
-        imgHeight = 30;
-        imgXOffset = -15;
-        imgYOffset = -15;
-        textXOffset = 15;
-      } else if (data.type === "spear") {
-        imgSrc = "https://regnumsolis.com/planner/images/spear.svg";
-        imgWidth = 30;
-        imgHeight = 30;
-        imgXOffset = -15;
-        imgYOffset = -15;
-        textXOffset = 15;
-      } else if (data.type === "bow") {
-        imgSrc = "https://regnumsolis.com/planner/images/bow.svg";
-        imgWidth = 30;
-        imgHeight = 30;
-        imgXOffset = -15;
-        imgYOffset = -15;
-        textXOffset = 15;
-      }
-
-      // The marker image
-      const imgEl = document.createElementNS("http://www.w3.org/2000/svg", "image");
-      imgEl.setAttributeNS("http://www.w3.org/1999/xlink", "href", imgSrc);
-      imgEl.setAttribute("width", imgWidth);
-      imgEl.setAttribute("height", imgHeight);
-      imgEl.setAttribute("x", data.x + imgXOffset);
-      imgEl.setAttribute("y", data.y + imgYOffset);
-      markerEl.appendChild(imgEl);
-
-      // The text
-      const textEl = document.createElementNS("http://www.w3.org/2000/svg", "text");
-      textEl.textContent = data.text;
-      textEl.setAttribute("fill", data.color);
-      textEl.setAttribute("font-size", data.type === "marker" ? "16" : "14");
-      textEl.setAttribute("x", data.x + textXOffset);
-      textEl.setAttribute("y", data.y);
-      textEl.setAttribute("text-anchor", "start");
-      textEl.setAttribute("dominant-baseline", "middle");
-      textEl.style.fontFamily = "'Bebas Neue', sans-serif";
-      markerEl.appendChild(textEl);
-
-      // Background rect behind the text
-      requestAnimationFrame(() => {
-        const bbox = textEl.getBBox();
-        const textLength = textEl.getComputedTextLength();
-        const rectEl = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-        rectEl.setAttribute("x", bbox.x.toString());
-        rectEl.setAttribute("y", bbox.y.toString());
-        rectEl.setAttribute("width", textLength.toString());
-        rectEl.setAttribute("height", bbox.height.toString());
-        rectEl.setAttribute("fill", "#1e1e1e");
-        rectEl.setAttribute("opacity", "0.35");
-        markerEl.insertBefore(rectEl, textEl);
-      });
-
-      // Deletion on click
-      markerEl.addEventListener("click", async (e) => {
-        e.stopPropagation();
-        if (activeTool === "line") return; // ignore if line tool active
-        if (confirm("Delete this marker?")) {
+ 
+    function setupAuditControls() {
+ 
+      document.getElementById("delete-audit").addEventListener("click", async () => {
+ 
+        if (confirm("Delete all audit logs?")) {
+ 
           try {
-            await deleteDoc(doc(db, "markers", id));
-            recordAuditLog("delete", { markerId: id, markerType: data.type });
-          } catch (error) {
-            console.error("Error deleting marker:", error);
-          }
-        }
-      });
-
-      markerLayer.appendChild(markerEl);
-    }
-
-    // Audit logs
-    function recordAuditLog(action, details) {
-      const user = auth.currentUser;
-      if (!user) return;
-      const logData = {
-        action,
-        details,
-        user: user.email,
-        timestamp: serverTimestamp()
-      };
-      addDoc(collection(db, "auditLogs"), logData).catch((error) =>
-        console.error("Error writing audit log:", error)
-      );
-    }
-
-    function listenForAuditLogs() {
-      const auditLogContainer = document.getElementById("audit-log");
-      const auditQuery = query(
-        collection(db, "auditLogs"),
-        orderBy("timestamp", "asc")
-      );
-      onSnapshot(auditQuery, (snapshot) => {
-        const logs = [];
-        snapshot.forEach((docSnap) => {
-          const log = docSnap.data();
-          const ts = log.timestamp ? log.timestamp.seconds : 0;
-          logs.push({ timestamp: ts, log });
-        });
-
-        // Group logs for "add" and "delete" with markerType
-        const groupedLogs = [];
-        const groupingThreshold = 300; // 5 minutes
-        let currentGroup = null;
-
-        logs.forEach((item) => {
-          const { timestamp, log } = item;
-          const applicable =
-            (log.action === "add" || log.action === "delete") &&
-            log.details &&
-            log.details.markerType;
-          if (applicable) {
-            if (
-              currentGroup &&
-              currentGroup.key.user === log.user &&
-              currentGroup.key.action === log.action &&
-              currentGroup.key.markerType === log.details.markerType
-            ) {
-              if (timestamp - currentGroup.lastTimestamp <= groupingThreshold) {
-                currentGroup.count += 1;
-                currentGroup.lastTimestamp = timestamp;
-              } else {
-                groupedLogs.push(currentGroup);
-                currentGroup = {
-                  key: {
-                    user: log.user,
-                    action: log.action,
-                    markerType: log.details.markerType
-                  },
-                  count: 1,
-                  timestamp: timestamp,
-                  lastTimestamp: timestamp
-                };
-              }
-            } else {
-              if (currentGroup) {
-                groupedLogs.push(currentGroup);
-              }
-              currentGroup = {
-                key: {
-                  user: log.user,
-                  action: log.action,
-                  markerType: log.details.markerType
-                },
-                count: 1,
-                timestamp: timestamp,
-                lastTimestamp: timestamp
-              };
-            }
-          } else {
-            if (currentGroup) {
-              groupedLogs.push(currentGroup);
-              currentGroup = null;
-            }
-            groupedLogs.push({
-              key: {
-                user: log.user,
-                action: log.action,
-                markerType:
-                  log.details && log.details.markerType
-                    ? log.details.markerType
-                    : null
-              },
-              count: 1,
-              timestamp: timestamp,
-              lastTimestamp: timestamp
+ 
+            const auditSnapshot = await getDocs(collection(db, "auditLogs"));
+ 
+            auditSnapshot.forEach(async (docSnap) => {
+ 
+              await deleteDoc(doc(db, "auditLogs", docSnap.id));
+ 
             });
+ 
+          } catch (error) {
+ 
+            console.error("Error deleting audit logs:", error);
+ 
           }
-        });
-        if (currentGroup) groupedLogs.push(currentGroup);
-
-        // Sort by most recent first
-        groupedLogs.sort((a, b) => b.lastTimestamp - a.lastTimestamp);
-        auditLogContainer.innerHTML = "";
-        groupedLogs.forEach((group) => {
-          const dateStr = new Date(group.lastTimestamp * 1000).toLocaleString();
-          let actionText = "";
-          if (group.key.action === "add") actionText = "add marker";
-          else if (group.key.action === "delete") actionText = "delete marker";
-          else if (group.key.action === "delete_all")
-            actionText = "delete all markers";
-          else actionText = group.key.action;
-          let entryHTML = `[${dateStr}] <b>${group.key.user}</b> ${actionText}`;
-          if (group.key.markerType)
-            entryHTML += ` <b>[${group.key.markerType}]</b>`;
-          if (group.count > 1) entryHTML += ` (<b>x${group.count}</b>)`;
-          const entry = document.createElement("div");
-          entry.innerHTML = entryHTML;
-          auditLogContainer.appendChild(entry);
-        });
+ 
+        }
+ 
       });
+ 
+      document.getElementById("minimize-audit").addEventListener("click", () => {
+ 
+        const auditLogDiv = document.getElementById("audit-log");
+ 
+        if (auditLogDiv.style.display === "none") {
+ 
+          auditLogDiv.style.display = "block";
+ 
+          document.getElementById("minimize-audit").textContent = "➖";
+ 
+        } else {
+ 
+          auditLogDiv.style.display = "none";
+ 
+          document.getElementById("minimize-audit").textContent = "➕";
+ 
+        }
+ 
+      });
+ 
     }
+ 
 
-    function setupDeleteAll() {
-      document
-        .getElementById("delete-all")
-        .addEventListener("click", async () => {
-          if (confirm("Delete all markers and lines?")) {
-            try {
-              // Delete all markers
-              const markersSnapshot = await getDocs(collection(db, "markers"));
-              markersSnapshot.forEach(async (docSnap) => {
-                await deleteDoc(doc(db, "markers", docSnap.id));
-              });
-
-              // Delete all lines
-              const linesSnapshot = await getDocs(collection(db, "lines"));
-              linesSnapshot.forEach(async (docSnap) => {
-                await deleteDoc(doc(db, "lines", docSnap.id));
-              });
-
-              recordAuditLog("delete_all", {
-                count: markersSnapshot.size + linesSnapshot.size
-              });
-            } catch (error) {
-              console.error("Error deleting all markers/lines:", error);
-            }
-          }
-        });
-    }
-
-    function displayErrorOverlay(message) {
-      const overlay = document.getElementById("error-overlay");
-      overlay.textContent = message;
-      overlay.style.display = "flex";
-      console.warn("Error overlay activated:", message);
-    }
-
+ 
     function getSVGPoint(e) {
+ 
       const pt = svgRoot.createSVGPoint();
+ 
       pt.x = e.clientX;
+ 
       pt.y = e.clientY;
+ 
       return pt.matrixTransform(panLayer.getScreenCTM().inverse());
+ 
     }
+ 
+
+ 
+    function setupDragAndDrop() {
+ 
+      svgRoot.addEventListener("dragover", (e) => {
+ 
+        e.preventDefault();
+ 
+        e.dataTransfer.dropEffect = "move";
+ 
+      });
+ 
+
+ 
+      svgRoot.addEventListener("drop", async (e) => {
+ 
+
+        // Do not process drop events if line tool is active
+ 
+        if (!isMapReady || activeTool === "line") return;
+ 
+        e.preventDefault();
+ 
+
+ 
+        const type = e.dataTransfer.getData("text/plain");
+ 
+        const cursorPos = getSVGPoint(e);
+ 
+        await addMarkerToFirestore(type, cursorPos.x, cursorPos.y);
+ 
+      });
+ 
+    }
+ 
+
+ 
+
+    // Set up line drawing using click events:
+ 
+
+    // - When the line tool is active, the first click sets the start point.
+ 
+
+    // - The second click sets the end point and completes the line.
+ 
+
+    // Setup click-based line drawing with two clicks:
+ 
+
+    //  - First click sets the start point and creates a group for the line and its arrow.
+ 
+
+    //  - Second click sets the end point, updates the line, and creates an arrow at the midpoint.
+ 
+    function setupLineDrawing() {
+ 
+      svgRoot.addEventListener("click", (e) => {
+ 
+        if (activeTool !== "line") return;
+ 
+        e.preventDefault();
+ 
+        const pt = getSVGPoint(e);
+ 
+        if (lineDrawingState === 0) {
+ 
+
+          // First click: Set start point
+ 
+
+          currentLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+ 
+
+          currentLine.setAttribute("x1", pt.x);
+ 
+
+          currentLine.setAttribute("y1", pt.y);
+ 
+
+          currentLine.setAttribute("x2", pt.x);
+ 
+
+          currentLine.setAttribute("y2", pt.y);
+ 
+
+          // First click: Create group and line element
+ 
+
+          currentLineGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+ 
+
+          currentLineGroup.classList.add("line-group");
+ 
+
+          // Add deletion listener to the entire group
+ 
+
+          currentLineGroup.addEventListener("click", (ev) => {
+ 
+
+            // Prevent click propagation to the map
+ 
+
+            ev.stopPropagation();
+ 
+
+            if (confirm("Delete this line?")) {
+ 
+
+              currentLineGroup.remove();
+ 
+
+            }
+ 
+
+          });
+ 
+
+          // Create the line element
+ 
+
+          const lineEl = document.createElementNS("http://www.w3.org/2000/svg", "line");
+ 
+
+          lineEl.setAttribute("x1", pt.x);
+ 
+
+          lineEl.setAttribute("y1", pt.y);
+ 
+
+          lineEl.setAttribute("x2", pt.x);
+ 
+
+          lineEl.setAttribute("y2", pt.y);
+ 
+          const lineColor = prompt("Enter line color (e.g., red or #ff0000):") || "white";
+ 
+
+          currentLine.setAttribute("stroke", lineColor);
+ 
+
+          currentLine.setAttribute("stroke-width", "2");
+ 
+
+          lineLayer.appendChild(currentLine);
+ 
+
+          lineEl.setAttribute("stroke", lineColor);
+ 
+
+          lineEl.setAttribute("stroke-width", "2");
+ 
+
+          // Save the line element inside the group for later reference
+ 
+
+          currentLineGroup.lineEl = lineEl;
+ 
+
+          currentLineGroup.lineColor = lineColor;
+ 
+
+          currentLineGroup.startPoint = { x: pt.x, y: pt.y };
+ 
+
+          currentLineGroup.appendChild(lineEl);
+ 
+
+          lineLayer.appendChild(currentLineGroup);
+ 
+          lineDrawingState = 1;
+ 
+        } else if (lineDrawingState === 1) {
+ 
+          // Second click: Complete the line
+ 
+
+          currentLine.setAttribute("x2", pt.x);
+ 
+
+          currentLine.setAttribute("y2", pt.y);
+ 
+
+          // Reset tool and re-enable markers
+ 
+
+          const lineEl = currentLineGroup.lineEl;
+ 
+
+          lineEl.setAttribute("x2", pt.x);
+ 
+
+          lineEl.setAttribute("y2", pt.y);
+ 
+
+          // Compute midpoint and angle
+ 
+
+          const x1 = currentLineGroup.startPoint.x;
+ 
+
+          const y1 = currentLineGroup.startPoint.y;
+ 
+
+          const x2 = pt.x;
+ 
+
+          const y2 = pt.y;
+ 
+
+          const midX = (x1 + x2) / 2;
+ 
+
+          const midY = (y1 + y2) / 2;
+ 
+
+          const angle = Math.atan2(y2 - y1, x2 - x1) * (180 / Math.PI);
+ 
+
+          // Create arrow polygon (triangle) with points "0,-5 10,0 0,5"
+ 
+
+          const arrow = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+ 
+
+          arrow.setAttribute("points", "0,-5 10,0 0,5");
+ 
+
+          arrow.setAttribute("fill", currentLineGroup.lineColor);
+ 
+
+          // Position the arrow at the midpoint and rotate it so that it points toward the end point
+ 
+
+          arrow.setAttribute("transform", `translate(${midX},${midY}) rotate(${angle})`);
+ 
+
+          currentLineGroup.appendChild(arrow);
+ 
+
+          // Reset the line drawing state and re-enable markers
+ 
+          activeTool = null;
+ 
+          lineDrawingState = 0;
+ 
+
+          currentLine = null;
+ 
+
+          currentLineGroup = null;
+ 
+          markerLayer.style.pointerEvents = "auto";
+ 
+
+          // Reset visual indicator on toolbox
+ 
+          document.querySelectorAll(".tool").forEach(t => t.style.borderColor = "rgba(223,197,136,0.5)");
+ 
+        }
+ 
+      });
+ 
+    }
+ 
+
+ 
+    async function addMarkerToFirestore(type, x, y) {
+ 
+      let markerData = { type, x, y, timestamp: serverTimestamp() };
+ 
+      if (["marker", "citadel", "torch", "cave", "sword", "spear", "bow"].includes(type)) {
+ 
+        markerData.text = prompt("Enter marker text:") || "";
+ 
+        markerData.color = prompt("Enter marker color (e.g., red or #ff0000):") || "black";
+ 
+        if (type === "marker" && markerData.text === "") {
+ 
+          markerData.text = "M";
+ 
+        }
+ 
+      }
+ 
+      try {
+ 
+        const docRef = await addDoc(collection(db, "markers"), markerData);
+ 
+        recordAuditLog("add", { markerId: docRef.id, markerType: type });
+ 
+      } catch (error) {
+ 
+        console.error("Error adding marker:", error);
+ 
+      }
+ 
+    }
+ 
+
+ 
+    function listenForMarkers() {
+ 
+      let snapshotReceived = false;
+ 
+      const markersQuery = query(collection(db, "markers"), orderBy("timestamp"));
+ 
+      const unsubscribe = onSnapshot(markersQuery, (snapshot) => {
+ 
+        snapshotReceived = true;
+ 
+        while (markerLayer.firstChild) {
+ 
+          markerLayer.removeChild(markerLayer.firstChild);
+ 
+        }
+ 
+        snapshot.forEach((docSnap) => {
+ 
+          createMarkerElement(docSnap.id, docSnap.data());
+ 
+        });
+ 
+      }, (error) => {
+ 
+        console.error("Firestore connection error:", error);
+ 
+        displayErrorOverlay("Firestore connection failed.");
+ 
+      });
+ 
+
+ 
+      setTimeout(() => {
+ 
+        if (!snapshotReceived) {
+ 
+          console.error("No Firestore snapshot received within timeout.");
+ 
+          displayErrorOverlay("Firestore connection failed.");
+ 
+          unsubscribe();
+ 
+        }
+ 
+      }, 5000);
+ 
+    }
+ 
+
+ 
+    function createMarkerElement(id, data) {
+ 
+      let markerEl = document.createElementNS("http://www.w3.org/2000/svg", "g");
+ 
+      markerEl.setAttribute("data-marker", "true");
+ 
+
+ 
+      let imgSrc, imgWidth, imgHeight, imgXOffset, imgYOffset, textXOffset;
+ 
+      if (data.type === "marker") {
+ 
+        imgSrc = "https://regnumsolis.com/planner/images/marker.svg";
+ 
+        imgWidth = 40;
+ 
+        imgHeight = 40;
+ 
+        imgXOffset = -20;
+ 
+        imgYOffset = -20;
+ 
+        textXOffset = 20;
+ 
+      } else if (data.type === "citadel") {
+ 
+        imgSrc = "https://regnumsolis.com/planner/images/citadel.svg";
+ 
+        imgWidth = 30;
+ 
+        imgHeight = 30;
+ 
+        imgXOffset = -15;
+ 
+        imgYOffset = -15;
+ 
+        textXOffset = 15;
+ 
+      } else if (data.type === "torch") {
+ 
+        imgSrc = "https://regnumsolis.com/planner/images/torch.svg";
+ 
+        imgWidth = 30;
+ 
+        imgHeight = 30;
+ 
+        imgXOffset = -15;
+ 
+        imgYOffset = -15;
+ 
+        textXOffset = 15;
+ 
+      } else if (data.type === "cave") {
+ 
+        imgSrc = "https://regnumsolis.com/planner/images/cave.svg";
+ 
+        imgWidth = 30;
+ 
+        imgHeight = 30;
+ 
+        imgXOffset = -15;
+ 
+        imgYOffset = -15;
+ 
+        textXOffset = 15;
+ 
+      } else if (data.type === "sword") {
+ 
+        imgSrc = "https://regnumsolis.com/planner/images/sword.svg";
+ 
+        imgWidth = 30;
+ 
+        imgHeight = 30;
+ 
+        imgXOffset = -15;
+ 
+        imgYOffset = -15;
+ 
+        textXOffset = 15;
+ 
+      } else if (data.type === "spear") {
+ 
+        imgSrc = "https://regnumsolis.com/planner/images/spear.svg";
+ 
+        imgWidth = 30;
+ 
+        imgHeight = 30;
+ 
+        imgXOffset = -15;
+ 
+        imgYOffset = -15;
+ 
+        textXOffset = 15;
+ 
+      } else if (data.type === "bow") {
+ 
+        imgSrc = "https://regnumsolis.com/planner/images/bow.svg";
+ 
+        imgWidth = 30;
+ 
+        imgHeight = 30;
+ 
+        imgXOffset = -15;
+ 
+        imgYOffset = -15;
+ 
+        textXOffset = 15;
+ 
+      }
+ 
+
+ 
+      const imgEl = document.createElementNS("http://www.w3.org/2000/svg", "image");
+ 
+      imgEl.setAttributeNS("http://www.w3.org/1999/xlink", "href", imgSrc);
+ 
+      imgEl.setAttribute("width", imgWidth);
+ 
+      imgEl.setAttribute("height", imgHeight);
+ 
+      imgEl.setAttribute("x", data.x + imgXOffset);
+ 
+      imgEl.setAttribute("y", data.y + imgYOffset);
+ 
+      markerEl.appendChild(imgEl);
+ 
+
+ 
+      const textEl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+ 
+      textEl.textContent = data.text;
+ 
+      textEl.setAttribute("fill", data.color);
+ 
+      textEl.setAttribute("font-size", data.type === "marker" ? "16" : "14");
+ 
+      textEl.setAttribute("x", data.x + textXOffset);
+ 
+      textEl.setAttribute("y", data.y);
+ 
+      textEl.setAttribute("text-anchor", "start");
+ 
+      textEl.setAttribute("dominant-baseline", "middle");
+ 
+      textEl.style.fontFamily = "'Bebas Neue', sans-serif";
+ 
+      markerEl.appendChild(textEl);
+ 
+
+ 
+      requestAnimationFrame(() => {
+ 
+        const bbox = textEl.getBBox();
+ 
+        const textLength = textEl.getComputedTextLength();
+ 
+        const rectEl = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+ 
+        rectEl.setAttribute("x", bbox.x);
+ 
+        rectEl.setAttribute("y", bbox.y);
+ 
+        rectEl.setAttribute("width", textLength);
+ 
+        rectEl.setAttribute("height", bbox.height);
+ 
+        rectEl.setAttribute("fill", "#1e1e1e");
+ 
+        rectEl.setAttribute("opacity", "0.35");
+ 
+        markerEl.insertBefore(rectEl, textEl);
+ 
+      });
+ 
+
+ 
+      markerEl.classList.add("marker");
+ 
+      markerEl.dataset.id = id;
+ 
+      markerEl.addEventListener("click", async (e) => {
+ 
+        e.stopPropagation();
+ 
+
+        if (activeTool === "line") return; // Disable marker clicks when line tool is active
+ 
+
+        if (activeTool === "line") return;
+ 
+        if (confirm("Delete this marker?")) {
+ 
+          try {
+ 
+            await deleteDoc(doc(db, "markers", id));
+ 
+            recordAuditLog("delete", { markerId: id, markerType: data.type });
+ 
+          } catch (error) {
+ 
+            console.error("Error deleting marker:", error);
+ 
+          }
+ 
+        }
+ 
+      });
+ 
+      markerLayer.appendChild(markerEl);
+ 
+    }
+ 
+
+ 
+    function recordAuditLog(action, details) {
+ 
+      const user = auth.currentUser;
+ 
+      if (!user) return;
+ 
+      const logData = {
+ 
+        action,
+ 
+        details,
+ 
+        user: user.email,
+ 
+        timestamp: serverTimestamp()
+ 
+      };
+ 
+      addDoc(collection(db, "auditLogs"), logData)
+ 
+        .catch(error => console.error("Error writing audit log:", error));
+ 
+    }
+ 
+
+ 
+    function listenForAuditLogs() {
+ 
+      const auditLogContainer = document.getElementById("audit-log");
+ 
+      const auditQuery = query(collection(db, "auditLogs"), orderBy("timestamp", "asc"));
+ 
+      onSnapshot(auditQuery, (snapshot) => {
+ 
+        const logs = [];
+ 
+        snapshot.forEach((docSnap) => {
+ 
+          const log = docSnap.data();
+ 
+          const ts = log.timestamp ? log.timestamp.seconds : 0;
+ 
+          logs.push({ timestamp: ts, log });
+ 
+        });
+ 
+
+ 
+        const groupedLogs = [];
+ 
+        const groupingThreshold = 300;
+ 
+        let currentGroup = null;
+ 
+
+ 
+        logs.forEach(item => {
+ 
+          const { timestamp, log } = item;
+ 
+          const applicable = (log.action === "add" || log.action === "delete") && log.details && log.details.markerType;
+ 
+          if (applicable) {
+ 
+            if (
+ 
+              currentGroup &&
+ 
+              currentGroup.key.user === log.user &&
+ 
+              currentGroup.key.action === log.action &&
+ 
+              currentGroup.key.markerType === log.details.markerType
+ 
+            ) {
+ 
+              if (timestamp - currentGroup.lastTimestamp <= groupingThreshold) {
+ 
+                currentGroup.count += 1;
+ 
+                currentGroup.lastTimestamp = timestamp;
+ 
+              } else {
+ 
+                groupedLogs.push(currentGroup);
+ 
+                currentGroup = {
+ 
+                  key: { user: log.user, action: log.action, markerType: log.details.markerType },
+ 
+                  count: 1,
+ 
+                  timestamp: timestamp,
+ 
+                  lastTimestamp: timestamp
+ 
+                };
+ 
+              }
+ 
+            } else {
+ 
+              if (currentGroup) {
+ 
+                groupedLogs.push(currentGroup);
+ 
+              }
+ 
+              currentGroup = {
+ 
+                key: { user: log.user, action: log.action, markerType: log.details.markerType },
+ 
+                count: 1,
+ 
+                timestamp: timestamp,
+ 
+                lastTimestamp: timestamp
+ 
+              };
+ 
+            }
+ 
+          } else {
+ 
+            if (currentGroup) {
+ 
+              groupedLogs.push(currentGroup);
+ 
+              currentGroup = null;
+ 
+            }
+ 
+            groupedLogs.push({
+ 
+              key: { user: log.user, action: log.action, markerType: (log.details && log.details.markerType) ? log.details.markerType : null },
+ 
+              count: 1,
+ 
+              timestamp: timestamp,
+ 
+              lastTimestamp: timestamp
+ 
+            });
+ 
+          }
+ 
+        });
+ 
+        if (currentGroup) groupedLogs.push(currentGroup);
+ 
+
+ 
+        groupedLogs.sort((a, b) => b.lastTimestamp - a.lastTimestamp);
+ 
+        auditLogContainer.innerHTML = "";
+ 
+        groupedLogs.forEach(group => {
+ 
+          const dateStr = new Date(group.lastTimestamp * 1000).toLocaleString();
+ 
+          let actionText = "";
+ 
+          if (group.key.action === "add") actionText = "add marker";
+ 
+          else if (group.key.action === "delete") actionText = "delete marker";
+ 
+          else if (group.key.action === "delete_all") actionText = "delete all markers";
+ 
+          else actionText = group.key.action;
+ 
+          let entryHTML = `[${dateStr}] <b>${group.key.user}</b> ${actionText}`;
+ 
+          if (group.key.markerType) entryHTML += ` <b>[${group.key.markerType}]</b>`;
+ 
+          if (group.count > 1) entryHTML += ` (<b>x${group.count}</b>)`;
+ 
+          const entry = document.createElement("div");
+ 
+          entry.innerHTML = entryHTML;
+ 
+          auditLogContainer.appendChild(entry);
+ 
+        });
+ 
+      });
+ 
+    }
+ 
+
+ 
+    function setupDeleteAll() {
+ 
+      document.getElementById("delete-all").addEventListener("click", async () => {
+ 
+        if (confirm("Delete all markers?")) {
+ 
+          try {
+ 
+
+            // Delete markers from Firestore
+ 
+            const markersSnapshot = await getDocs(collection(db, "markers"));
+ 
+            markersSnapshot.forEach(async (docSnap) => {
+ 
+              await deleteDoc(doc(db, "markers", docSnap.id));
+ 
+            });
+ 
+            recordAuditLog("delete_all", { count: markersSnapshot.size });
+ 
+
+            // Also remove all drawn lines
+ 
+
+            lineLayer.innerHTML = "";
+ 
+          } catch (error) {
+ 
+            console.error("Error deleting all markers:", error);
+ 
+          }
+ 
+        }
+ 
+      });
+ 
+    }
+ 
+
+ 
+    function displayErrorOverlay(message) {
+ 
+      const overlay = document.getElementById("error-overlay");
+ 
+      overlay.textContent = message;
+ 
+      overlay.style.display = "flex";
+ 
+      console.warn("Error overlay activated:", message);
+ 
+    }
+ 
   </script>
+ 
 </body>
+ 
 </html>
