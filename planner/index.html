@@ -155,6 +155,30 @@
       transform: scale(1.05);
       box-shadow: 0 4px 15px rgba(223,197,136,0.9);
     }
+    /* New style for map switch buttons */
+    #map-switch-controls {
+      position: fixed;
+      top: 300px;
+      right: 20px;
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    #map-switch-controls button {
+      padding: 8px;
+      border: none;
+      border-radius: 4px;
+      background: rgba(223,197,136,0.8);
+      color: white;
+      cursor: pointer;
+      transition: transform 0.3s, box-shadow 0.3s;
+      box-shadow: 0 4px 15px rgba(223,197,136,0.5);
+    }
+    #map-switch-controls button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 15px rgba(223,197,136,0.9);
+    }
     #map-container {
       width: 100vw;
       height: calc(100vh - 60px);
@@ -285,6 +309,12 @@
       <button id="zoom-out">Zoom Out</button>
       <button id="reset-zoom">Reset</button>
     </div>
+    
+    <!-- New Map Switch Controls -->
+    <div id="map-switch-controls">
+      <button id="tactical-terrain">Tactical Terrain</button>
+      <button id="visibility-terrain">Visibility Terrain</button>
+    </div>
 
     <div id="map-container">
       <div id="map-svg-container"></div>
@@ -337,6 +367,7 @@
       setupLogin();
       setupToolbox();
       setupAuditControls();
+      setupMapSwitchControls();
     });
 
     function setupLogin() {
@@ -374,10 +405,19 @@
       });
     }
 
+    // Updated to use switchMap for initial load.
     function initializeMap() {
-      const container = document.getElementById("map-svg-container");
+      switchMap("https://regnumsolis.com/planner/images/map.svg");
+    }
 
-      fetch("https://regnumsolis.com/planner/images/map.svg")
+    // New function to switch maps.
+    function switchMap(url) {
+      if (panZoomInstance) {
+        panZoomInstance.destroy();
+      }
+      isMapReady = false;
+      const container = document.getElementById("map-svg-container");
+      fetch(url)
         .then(response => response.text())
         .then(svgText => {
           container.innerHTML = svgText;
@@ -393,6 +433,15 @@
           console.error("Error loading SVG:", error);
           displayErrorOverlay("Error loading map data.");
         });
+    }
+
+    function setupMapSwitchControls() {
+      document.getElementById("tactical-terrain").addEventListener("click", () => {
+        switchMap("https://regnumsolis.com/planner/images/map.svg");
+      });
+      document.getElementById("visibility-terrain").addEventListener("click", () => {
+        switchMap("https://regnumsolis.com/planner/images/darkmap.svg");
+      });
     }
 
     function setupPanZoomLayers() {
@@ -631,13 +680,11 @@
       });
     }
 
-    // Updated createMarkerElement: text is now positioned immediately at the right edge of the icon.
     function createMarkerElement(id, data) {
       let markerEl = document.createElementNS("http://www.w3.org/2000/svg", "g");
       markerEl.setAttribute("data-marker", "true");
 
       let imgSrc, imgWidth, imgHeight, imgXOffset, imgYOffset, fontSize;
-      // For each marker type, base values are scaled by a factor of 1.7.
       if (data.type === "marker") {
         imgSrc = "https://regnumsolis.com/planner/images/marker.svg";
         imgWidth = 30 * 1.7;   
@@ -688,7 +735,6 @@
         imgYOffset = -15 * 1.7;
         fontSize = 14 * 1.7;
       }
-      // Compute the text's x-offset so it starts exactly at the right edge of the icon.
       let textXOffset = imgXOffset + imgWidth;
 
       const imgEl = document.createElementNS("http://www.w3.org/2000/svg", "image");
@@ -703,7 +749,6 @@
       textEl.textContent = data.text;
       textEl.setAttribute("fill", data.color);
       textEl.setAttribute("font-size", fontSize);
-      // Place text immediately to the right of the marker icon.
       textEl.setAttribute("x", data.x + textXOffset);
       textEl.setAttribute("y", data.y);
       textEl.setAttribute("text-anchor", "start");
@@ -711,7 +756,6 @@
       textEl.style.fontFamily = "'Bebas Neue', sans-serif";
       markerEl.appendChild(textEl);
 
-      // Optional: Add a background rectangle behind the text for improved legibility.
       requestAnimationFrame(() => {
         const bbox = textEl.getBBox();
         const textLength = textEl.getComputedTextLength();
