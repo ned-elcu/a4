@@ -93,7 +93,7 @@
   
   <div id="app">
     <div id="toolbox">
-      <!-- Text Marker Tool with background image (Removed the extra "M") -->
+      <!-- Text Marker Tool -->
       <div class="tool" draggable="true" data-type="marker" title="Text Marker">
         <img src="https://regnumsolis.com/planner/images/marker.svg" alt="Marker Background" style="width:50px;height:50px;">
       </div>
@@ -290,7 +290,8 @@
       }
       try {
         const docRef = await addDoc(collection(db, "markers"), markerData);
-        recordAuditLog("add", { markerId: docRef.id });
+        // Record marker type in the audit log
+        recordAuditLog("add", { markerId: docRef.id, markerType: type });
       } catch (error) {
         console.error("Error adding marker:", error);
       }
@@ -388,7 +389,8 @@
         if (confirm("Delete this marker?")) {
           try {
             await deleteDoc(doc(db, "markers", id));
-            recordAuditLog("delete", { markerId: id });
+            // Record deletion along with marker type
+            recordAuditLog("delete", { markerId: id, markerType: data.type });
           } catch (error) {
             console.error("Error deleting marker:", error);
           }
@@ -418,8 +420,24 @@
         snapshot.forEach((docSnap) => {
           const log = docSnap.data();
           const date = log.timestamp ? new Date(log.timestamp.seconds * 1000).toLocaleString() : "";
+          let actionText = "";
+          if(log.action === "delete_all"){
+            actionText = "delete all markers";
+          } else if(log.action === "add"){
+            actionText = "add marker";
+          } else if(log.action === "delete"){
+            actionText = "delete marker";
+          } else {
+            actionText = log.action;
+          }
+          
+          let entryHTML = `[${date}] <b>${log.user}</b> ${actionText}`;
+          if(log.details && log.details.markerType) {
+            entryHTML += ` <b>[${log.details.markerType}]</b>`;
+          }
+          // For delete_all or other actions without markerType details, you may adjust further if needed.
           const entry = document.createElement("div");
-          entry.textContent = `[${date}] ${log.user} ${log.action} marker (${JSON.stringify(log.details)})`;
+          entry.innerHTML = entryHTML;
           auditLogContainer.appendChild(entry);
         });
       });
