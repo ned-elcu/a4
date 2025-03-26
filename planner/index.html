@@ -96,6 +96,7 @@
     let panZoomInstance;
     let svgRoot;
     let markerLayer;
+    let isMapReady = false;
 
     document.addEventListener("DOMContentLoaded", () => {
       setupLogin();
@@ -134,42 +135,53 @@
 
     function initializeMap() {
       const svgObject = document.getElementById("map-svg");
+      
+      const handleSVGLoad = () => {
+        try {
+          svgRoot = svgObject.contentDocument.documentElement;
+          
+          // Create pan/zoom layer
+          const panLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
+          panLayer.id = "pan-zoom-layer";
+          while (svgRoot.firstChild) panLayer.appendChild(svgRoot.firstChild);
+          svgRoot.appendChild(panLayer);
 
-      svgObject.addEventListener("load", () => {
-        svgRoot = svgObject.contentDocument.documentElement;
-        const panLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
-        panLayer.setAttribute("id", "pan-zoom-layer");
-        while (svgRoot.firstChild) panLayer.appendChild(svgRoot.firstChild);
-        svgRoot.appendChild(panLayer);
-        
-        markerLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
-        markerLayer.setAttribute("id", "marker-layer");
-        svgRoot.appendChild(markerLayer);
+          // Create marker layer
+          markerLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
+          markerLayer.id = "marker-layer";
+          svgRoot.appendChild(markerLayer);
 
-        panZoomInstance = svgPanZoom(panLayer, {
-          zoomEnabled: true,
-          controlIconsEnabled: false,
-          minZoom: 0.5,
-          maxZoom: 5
-        });
-
-        const updateMarkersPosition = () => {
-          const pan = panZoomInstance.getPan();
-          const zoom = panZoomInstance.getZoom();
-          markerLayer.querySelectorAll(".marker").forEach(marker => {
-            const origX = parseFloat(marker.getAttribute("data-x"));
-            const origY = parseFloat(marker.getAttribute("data-y"));
-            marker.setAttribute("transform", `translate(${pan.x + zoom * origX}, ${pan.y + zoom * origY})`);
+          // Initialize pan/zoom
+          panZoomInstance = svgPanZoom(panLayer, {
+            zoomEnabled: true,
+            controlIconsEnabled: false,
+            minZoom: 0.5,
+            maxZoom: 5,
+            beforePan: (oldPan, newPan) => {
+              return { x: newPan.x, y: newPan.y };
+            }
           });
-        };
 
-        panZoomInstance.setOnZoom(updateMarkersPosition);
-        panZoomInstance.setOnPan(updateMarkersPosition);
-        setupDragAndDrop();
-        listenForMarkers();
-        updateMarkersPosition();
-      });
+          // Set up interactions
+          setupDragAndDrop();
+          setupZoomControls();
+          listenForMarkers();
+          updateMarkersPosition();
+          isMapReady = true;
 
+        } catch (error) {
+          console.error("Map initialization error:", error);
+        }
+      };
+
+      if (svgObject.contentDocument && svgObject.contentDocument.readyState === "complete") {
+        handleSVGLoad();
+      } else {
+        svgObject.addEventListener("load", handleSVGLoad);
+      }
+    }
+
+    function setupZoomControls() {
       document.getElementById("zoom-in").addEventListener("click", () => panZoomInstance.zoomIn());
       document.getElementById("zoom-out").addEventListener("click", () => panZoomInstance.zoomOut());
       document.getElementById("reset-zoom").addEventListener("click", () => panZoomInstance.resetZoom());
@@ -179,27 +191,32 @@
       document.querySelectorAll(".tool").forEach((tool) => {
         tool.addEventListener("dragstart", (e) => {
           e.dataTransfer.setData("text/plain", tool.getAttribute("data-type"));
-          e.dataTransfer.effectAllowed = "move";
         });
       });
     }
 
     function setupDragAndDrop() {
+      // Handle dragover
       svgRoot.addEventListener("dragover", (e) => {
         e.preventDefault();
         e.dataTransfer.dropEffect = "move";
       });
 
+      // Handle drop
       svgRoot.addEventListener("drop", async (e) => {
+        if (!isMapReady) return;
         e.preventDefault();
+
         const markerType = e.dataTransfer.getData("text/plain");
-        const pt = svgRoot.createSVGPoint();
-        pt.x = e.clientX;
-        pt.y = e.clientY;
+        const bbox = svgRoot.getBoundingClientRect();
         
-        // Fixed coordinate calculation
-        const screenCTM = svgRoot.getScreenCTM().inverse();
-        const svgPoint = pt.matrixTransform(screenCTM);
+        // Calculate accurate position
+        const pt = svgRoot.createSVGPoint();
+        pt.x = e.clientX - bbox.left;
+        pt.y = e.clientY - bbox.top;
+        const svgPoint = pt.matrixTransform(svgRoot.getScreenCTM().inverse());
+        
+        // Adjust for current view
         const zoom = panZoomInstance.getZoom();
         const pan = panZoomInstance.getPan();
         const originalX = (svgPoint.x - pan.x) / zoom;
@@ -216,7 +233,7 @@
         markerData.color = prompt("Enter marker color (e.g., red or #ff0000):") || "black";
       }
       try { await addDoc(collection(db, "markers"), markerData); }
-      catch (error) { console.error("Error adding marker: ", error); }
+      catch (error) { console.error("Error adding marker:", error); }
     }
 
     function listenForMarkers() {
@@ -249,14 +266,17 @@
       markerEl.setAttribute("data-x", data.x);
       markerEl.setAttribute("data-y", data.y);
 
-      const pan = panZoomInstance.getPan();
-      const zoom = panZoomInstance.getZoom();
-      markerEl.setAttribute("transform", `translate(${pan.x + zoom * data.x}, ${pan.y + zoom * data.y})`);
+      const updatePosition = () => {
+        const pan = panZoomInstance.getPan();
+        const zoom = panZoomInstance.getZoom();
+        markerEl.setAttribute("transform", `translate(${pan.x + zoom * data.x}, ${pan.y + zoom * data.y})`);
+      };
+      updatePosition();
 
       markerEl.addEventListener("click", async () => {
         if (confirm("Delete this marker?")) {
           try { await deleteDoc(doc(db, "markers", id)); }
-          catch (error) { console.error("Error deleting marker: ", error); }
+          catch (error) { console.error("Error deleting marker:", error); }
         }
       });
       markerLayer.appendChild(markerEl);
