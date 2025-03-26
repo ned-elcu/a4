@@ -28,8 +28,9 @@
       width: 50px; height: 50px; border: 1px solid #ccc; background: #fff;
       display: flex; align-items: center; justify-content: center; cursor: grab;
       border-radius: 5px; user-select: none;
+      position: relative;
     }
-    .tool img { max-width: 40px; max-height: 40px; }
+    .tool img { max-width: 100%; max-height: 100%; }
     #zoom-controls {
       position: fixed; top: 10px; right: 10px; z-index: 20;
       display: flex; flex-direction: column; gap: 5px;
@@ -61,14 +62,18 @@
   
   <div id="app">
     <div id="toolbox">
+      <!-- Text Marker Tool with background image -->
       <div class="tool" draggable="true" data-type="marker" title="Text Marker">
-        <span style="font-size:24px;">M</span>
+        <img src="https://regnumsolis.com/planner/images/marker.svg" alt="Marker Background" style="width:50px;height:50px;">
+        <span style="font-size:24px; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%);">M</span>
       </div>
+      <!-- Citadel Marker Tool -->
       <div class="tool" draggable="true" data-type="citadel" title="Citadel">
-        <img src="https://via.placeholder.com/40?text=C" alt="Citadel">
+        <img src="https://regnumsolis.com/planner/images/citadel.svg" alt="Citadel">
       </div>
+      <!-- Torch Marker Tool -->
       <div class="tool" draggable="true" data-type="torch" title="Torch">
-        <img src="https://via.placeholder.com/40?text=T" alt="Torch">
+        <img src="https://regnumsolis.com/planner/images/torch.svg" alt="Torch">
       </div>
     </div>
     <div id="zoom-controls">
@@ -145,7 +150,7 @@
 
     function initializeMap() {
       const container = document.getElementById("map-svg-container");
-      
+
       fetch("https://regnumsolis.com/planner/images/map.svg")
         .then(response => response.text())
         .then(svgText => {
@@ -181,12 +186,21 @@
       markerLayer.id = "marker-layer";
       panLayer.appendChild(markerLayer);
 
+      // Initialize panZoom with a beforeMouseDown hook to prevent pan when clicking markers
       panZoomInstance = svgPanZoom(svgRoot, {
         zoomEnabled: true,
         panEnabled: true,
         controlIconsEnabled: false,
         minZoom: 0.5,
-        maxZoom: 5
+        maxZoom: 5,
+        beforeMouseDown: function(e) {
+          // If the clicked element (or its parent) is a marker, do not trigger pan.
+          if (e.target.getAttribute("data-marker") === "true" ||
+              (e.target.parentNode && e.target.parentNode.getAttribute("data-marker") === "true")) {
+            return false;
+          }
+          return true;
+        }
       });
     }
 
@@ -234,9 +248,9 @@
         markerData.text = prompt("Enter marker text:") || "M";
         markerData.color = prompt("Enter marker color (e.g., red or #ff0000):") || "black";
       }
-      try { 
-        await addDoc(collection(db, "markers"), markerData); 
-      } catch (error) { 
+      try {
+        await addDoc(collection(db, "markers"), markerData);
+      } catch (error) {
         console.error("Error adding marker:", error);
       }
     }
@@ -271,17 +285,41 @@
     function createMarkerElement(id, data) {
       let markerEl;
       if (data.type === "marker") {
-        markerEl = document.createElementNS("http://www.w3.org/2000/svg", "text");
-        markerEl.textContent = data.text;
-        markerEl.setAttribute("fill", data.color);
-        markerEl.setAttribute("font-size", "16");
-        markerEl.setAttribute("x", data.x);
-        markerEl.setAttribute("y", data.y);
+        // Create a group element for text marker
+        markerEl = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        // Add a data attribute to identify marker elements
+        markerEl.setAttribute("data-marker", "true");
+
+        // Background image for text marker
+        const bgImage = document.createElementNS("http://www.w3.org/2000/svg", "image");
+        bgImage.setAttributeNS("http://www.w3.org/1999/xlink", "href", "https://regnumsolis.com/planner/images/marker.svg");
+        bgImage.setAttribute("width", "40");
+        bgImage.setAttribute("height", "40");
+        bgImage.setAttribute("x", data.x - 20);
+        bgImage.setAttribute("y", data.y - 20);
+        // No need for pointer-events on children; the group handles clicks.
+        markerEl.appendChild(bgImage);
+
+        // Text element on top of the background
+        const textEl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        textEl.textContent = data.text;
+        textEl.setAttribute("fill", data.color);
+        textEl.setAttribute("font-size", "16");
+        textEl.setAttribute("x", data.x);
+        textEl.setAttribute("y", data.y);
+        textEl.setAttribute("text-anchor", "middle");
+        textEl.setAttribute("dominant-baseline", "middle");
+        markerEl.appendChild(textEl);
       } else {
+        // For citadel and torch markers, create an image element
         markerEl = document.createElementNS("http://www.w3.org/2000/svg", "image");
-        const markerSrc = data.type === "citadel" 
-          ? "https://via.placeholder.com/30?text=C" 
-          : "https://via.placeholder.com/30?text=T";
+        markerEl.setAttribute("data-marker", "true");
+        let markerSrc = "";
+        if (data.type === "citadel") {
+          markerSrc = "https://regnumsolis.com/planner/images/citadel.svg";
+        } else if (data.type === "torch") {
+          markerSrc = "https://regnumsolis.com/planner/images/torch.svg";
+        }
         markerEl.setAttributeNS("http://www.w3.org/1999/xlink", "href", markerSrc);
         markerEl.setAttribute("width", "30");
         markerEl.setAttribute("height", "30");
@@ -291,11 +329,13 @@
 
       markerEl.classList.add("marker");
       markerEl.dataset.id = id;
-      markerEl.addEventListener("click", async () => {
+      // Click handler for deletion; stop propagation so pan/zoom doesn't intercept.
+      markerEl.addEventListener("click", async (e) => {
+        e.stopPropagation();
         if (confirm("Delete this marker?")) {
-          try { 
-            await deleteDoc(doc(db, "markers", id)); 
-          } catch (error) { 
+          try {
+            await deleteDoc(doc(db, "markers", id));
+          } catch (error) {
             console.error("Error deleting marker:", error);
           }
         }
