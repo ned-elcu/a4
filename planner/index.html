@@ -297,7 +297,6 @@
       </div>
       <!-- Line Draw Tool -->
       <div class="tool" data-type="line" title="Line Draw">
-        <!-- Replace with an actual icon if available -->
         <img src="https://regnumsolis.com/planner/images/line.svg" alt="Line Draw" onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2250%22 height=%2250%22><text x=%220%22 y=%2230%22 fill=%22white%22 font-size=%2230%22>―</text></svg>'">
       </div>
     </div>
@@ -353,9 +352,8 @@
 
     // Variables for line drawing
     let activeTool = null;
-    let isDrawingLine = false;
+    let lineDrawingState = 0; // 0 = not started, 1 = start point set
     let currentLine = null;
-    let lineStartPoint = null;
 
     document.addEventListener("DOMContentLoaded", () => {
       setupLogin();
@@ -408,7 +406,7 @@
           setupPanZoomLayers();
           setupZoomControls();
           setupDragAndDrop();
-          setupLineDrawing(); // Initialize line drawing events
+          setupLineDrawing();
           listenForMarkers();
           isMapReady = true;
         })
@@ -448,7 +446,8 @@
         minZoom: 0.5,
         maxZoom: 5,
         beforeMouseDown: function(e) {
-          // Prevent panning if clicking on a marker
+          // Prevent panning if clicking on a marker (unless line tool is active)
+          if (activeTool === "line") return false;
           if (e.target.getAttribute("data-marker") === "true" ||
               (e.target.parentNode && e.target.parentNode.getAttribute("data-marker") === "true")) {
             return false;
@@ -468,10 +467,13 @@
       document.querySelectorAll(".tool").forEach((tool) => {
         const type = tool.dataset.type;
         if (type === "line") {
-          // For line tool, use click to activate instead of drag
+          // Activate line tool on click (do not use drag)
           tool.addEventListener("click", () => {
             activeTool = "line";
-            // Optionally provide a visual indicator for active state
+            lineDrawingState = 0;
+            // Disable marker interactivity while drawing a line
+            markerLayer.style.pointerEvents = "none";
+            // Visual indicator for active tool
             document.querySelectorAll(".tool").forEach(t => t.style.borderColor = "rgba(223,197,136,0.5)");
             tool.style.borderColor = "red";
           });
@@ -522,7 +524,7 @@
       });
 
       svgRoot.addEventListener("drop", async (e) => {
-        // Only process drop events if not in line drawing mode
+        // Do not process drop events if line tool is active
         if (!isMapReady || activeTool === "line") return;
         e.preventDefault();
 
@@ -532,38 +534,38 @@
       });
     }
 
-    // Set up events for drawing lines when the "line" tool is active
+    // Set up line drawing using click events:
+    // - When the line tool is active, the first click sets the start point.
+    // - The second click sets the end point and completes the line.
     function setupLineDrawing() {
-      svgRoot.addEventListener("mousedown", (e) => {
+      svgRoot.addEventListener("click", (e) => {
         if (activeTool !== "line") return;
         e.preventDefault();
-        isDrawingLine = true;
-        lineStartPoint = getSVGPoint(e);
-        // Create new line element and add it to the lineLayer
-        currentLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        currentLine.setAttribute("x1", lineStartPoint.x);
-        currentLine.setAttribute("y1", lineStartPoint.y);
-        currentLine.setAttribute("x2", lineStartPoint.x);
-        currentLine.setAttribute("y2", lineStartPoint.y);
-        currentLine.setAttribute("stroke", prompt("Enter line color (e.g., red or #ff0000):") || "white");
-        currentLine.setAttribute("stroke-width", "2");
-        lineLayer.appendChild(currentLine);
-      });
-
-      svgRoot.addEventListener("mousemove", (e) => {
-        if (!isDrawingLine || !currentLine) return;
         const pt = getSVGPoint(e);
-        currentLine.setAttribute("x2", pt.x);
-        currentLine.setAttribute("y2", pt.y);
-      });
-
-      svgRoot.addEventListener("mouseup", (e) => {
-        if (!isDrawingLine) return;
-        isDrawingLine = false;
-        currentLine = null;
-        // Reset active tool and visual indicator
-        activeTool = null;
-        document.querySelectorAll(".tool").forEach(t => t.style.borderColor = "rgba(223,197,136,0.5)");
+        if (lineDrawingState === 0) {
+          // First click: Set start point
+          currentLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+          currentLine.setAttribute("x1", pt.x);
+          currentLine.setAttribute("y1", pt.y);
+          currentLine.setAttribute("x2", pt.x);
+          currentLine.setAttribute("y2", pt.y);
+          const lineColor = prompt("Enter line color (e.g., red or #ff0000):") || "white";
+          currentLine.setAttribute("stroke", lineColor);
+          currentLine.setAttribute("stroke-width", "2");
+          lineLayer.appendChild(currentLine);
+          lineDrawingState = 1;
+        } else if (lineDrawingState === 1) {
+          // Second click: Complete the line
+          currentLine.setAttribute("x2", pt.x);
+          currentLine.setAttribute("y2", pt.y);
+          // Reset tool and re-enable markers
+          activeTool = null;
+          lineDrawingState = 0;
+          currentLine = null;
+          markerLayer.style.pointerEvents = "auto";
+          // Reset visual indicator on toolbox
+          document.querySelectorAll(".tool").forEach(t => t.style.borderColor = "rgba(223,197,136,0.5)");
+        }
       });
     }
 
@@ -701,6 +703,7 @@
       markerEl.dataset.id = id;
       markerEl.addEventListener("click", async (e) => {
         e.stopPropagation();
+        if (activeTool === "line") return; // Disable marker clicks when line tool is active
         if (confirm("Delete this marker?")) {
           try {
             await deleteDoc(doc(db, "markers", id));
@@ -738,7 +741,7 @@
         });
 
         const groupedLogs = [];
-        const groupingThreshold = 300; // 5 minutes
+        const groupingThreshold = 300;
         let currentGroup = null;
 
         logs.forEach(item => {
