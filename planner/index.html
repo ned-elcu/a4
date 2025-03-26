@@ -2,99 +2,242 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Interactive Game Map</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Interactive Game Map - Regnum Solis</title>
   <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
-    body { margin: 0; font-family: Arial, sans-serif; background: #f4f4f4; }
+    /* Reset & Basic Styling */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: black;
+      color: white;
+      font-family: 'Bebas Neue', sans-serif;
+      overflow-x: hidden;
+    }
+    /* Animations */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes neonGlow {
+      0% {
+        text-shadow: 0 0 5px rgba(223, 197, 136, 0.8),
+                     0 0 10px rgba(223, 197, 136, 0.8),
+                     0 0 15px rgba(223, 197, 136, 0.8);
+      }
+      100% {
+        text-shadow: 0 0 20px rgba(223, 197, 136, 0.8),
+                     0 0 30px rgba(223, 197, 136, 0.8),
+                     0 0 40px rgba(223, 197, 136, 0.8);
+      }
+    }
+    /* Login Screen */
     #login-screen {
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      height: 100vh; background: #2c3e50; color: #ecf0f1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background: black;
+      animation: fadeIn 1s ease-out;
+      text-align: center;
     }
-    #login-screen input { margin: 5px; padding: 10px; font-size: 16px; width: 250px;
-      border: none; border-radius: 4px; }
+    #login-screen h2 {
+      font-size: 3em;
+      margin-bottom: 20px;
+      animation: neonGlow 1.5s infinite alternate ease-in-out;
+    }
+    #login-screen input {
+      margin: 5px;
+      padding: 10px;
+      font-size: 1.2em;
+      width: 250px;
+      border: none;
+      border-radius: 4px;
+      text-align: center;
+    }
     #login-screen button {
-      margin-top: 10px; padding: 10px 20px; font-size: 16px; border: none;
-      border-radius: 4px; background: #27ae60; color: #fff; cursor: pointer;
+      margin-top: 10px;
+      padding: 10px 20px;
+      font-size: 1.2em;
+      border: none;
+      border-radius: 4px;
+      background: linear-gradient(45deg, rgba(223,197,136,0.8), black);
+      color: white;
+      cursor: pointer;
+      transition: transform 0.3s, box-shadow 0.3s;
+      box-shadow: 0 4px 15px rgba(223,197,136,0.5);
     }
-    #login-screen button:hover { background: #2ecc71; }
-    #login-error { margin-top: 10px; color: #e74c3c; font-weight: bold; }
-    #app { display: none; height: 100vh; position: relative; }
+    #login-screen button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 15px rgba(223,197,136,0.9);
+    }
+    #login-error {
+      margin-top: 10px;
+      color: #e74c3c;
+      font-weight: bold;
+    }
+    /* App Container */
+    #app {
+      display: none;
+      height: 100vh;
+      position: relative;
+      animation: fadeIn 1s ease-out;
+    }
+    /* Toolbox */
     #toolbox {
-      position: fixed; top: 10px; left: 10px; background: rgba(255,255,255,0.95);
-      padding: 10px; border-radius: 5px; box-shadow: 0px 0px 10px rgba(0,0,0,0.3);
-      z-index: 20; display: flex; flex-direction: column; gap: 10px;
+      position: fixed;
+      top: 90px;
+      left: 20px;
+      background: rgba(0,0,0,0.8);
+      padding: 10px;
+      border: 1px solid rgba(223,197,136,0.5);
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(223,197,136,0.5);
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
     .tool {
-      width: 50px; height: 50px; border: 1px solid #ccc; background: #fff;
-      display: flex; align-items: center; justify-content: center; cursor: grab;
-      border-radius: 5px; user-select: none;
-      position: relative;
+      width: 50px;
+      height: 50px;
+      border: 1px solid rgba(223,197,136,0.5);
+      background: rgba(0,0,0,0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: grab;
+      border-radius: 5px;
+      user-select: none;
+      transition: transform 0.3s;
     }
-    .tool img { max-width: 100%; max-height: 100%; }
+    .tool:hover {
+      transform: scale(1.1);
+    }
+    .tool img {
+      max-width: 100%;
+      max-height: 100%;
+    }
+    /* Zoom Controls */
     #zoom-controls {
-      position: fixed; top: 10px; right: 10px; z-index: 20;
-      display: flex; flex-direction: column; gap: 5px;
+      position: fixed;
+      top: 90px;
+      right: 20px;
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
     }
     #zoom-controls button {
-      padding: 8px; border: none; border-radius: 4px;
-      background: #3498db; color: #fff; cursor: pointer;
+      padding: 8px;
+      border: none;
+      border-radius: 4px;
+      background: linear-gradient(45deg, rgba(223,197,136,0.8), black);
+      color: white;
+      cursor: pointer;
+      transition: transform 0.3s, box-shadow 0.3s;
+      box-shadow: 0 4px 15px rgba(223,197,136,0.5);
     }
-    #zoom-controls button:hover { background: #2980b9; }
-    #map-container { width: 100vw; height: 100vh; overflow: hidden; }
-    #map-svg-container { width: 100%; height: 100%; }
-    .marker:hover { opacity: 0.8; cursor: pointer; }
+    #zoom-controls button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 15px rgba(223,197,136,0.9);
+    }
+    /* Map Container */
+    #map-container {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+    #map-svg-container {
+      width: 100%;
+      height: 100%;
+    }
+    .marker:hover {
+      opacity: 0.8;
+      cursor: pointer;
+    }
+    /* Error Overlay */
     #error-overlay {
-      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0, 0, 0, 0.8); color: #fff;
-      display: none; align-items: center; justify-content: center;
-      z-index: 50; font-size: 20px; text-align: center; padding: 20px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.9);
+      color: #ecf0f1;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      font-size: 1.5em;
+      text-align: center;
+      padding: 20px;
     }
-    /* Admin panel styling */
+    /* Admin Panel */
     #admin-panel {
       position: fixed;
-      bottom: 10px;
-      right: 10px;
-      width: 300px;
-      background: rgba(255,255,255,0.95);
+      bottom: 20px;
+      right: 20px;
+      width: 320px;
+      background: rgba(0, 0, 0, 0.9);
+      border: 1px solid rgba(223,197,136,0.5);
       border-radius: 5px;
-      box-shadow: 0px 0px 10px rgba(0,0,0,0.3);
+      box-shadow: 0 0 10px rgba(223,197,136,0.5);
       padding: 10px;
       z-index: 30;
       display: none;
+      animation: fadeIn 1s ease-out;
     }
     #admin-panel h3 {
       margin-top: 0;
+      font-size: 1.8em;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      border-bottom: 1px solid rgba(223,197,136,0.5);
+      padding-bottom: 5px;
+      margin-bottom: 10px;
     }
     #admin-panel h3 span.icon {
       cursor: pointer;
       margin-left: 5px;
-      font-size: 18px;
+      font-size: 1.2em;
     }
     #audit-log {
-      font-size: 12px;
+      font-size: 0.9em;
       height: 200px;
       overflow-y: auto;
       margin-bottom: 10px;
-      border-top: 1px solid #ccc;
+      border-top: 1px solid rgba(223,197,136,0.5);
       padding-top: 5px;
     }
     #delete-all {
-      padding: 6px;
+      padding: 8px;
       border: none;
       border-radius: 4px;
-      background: #e74c3c;
-      color: #fff;
+      background: linear-gradient(45deg, rgba(223,197,136,0.8), black);
+      color: white;
       cursor: pointer;
       width: 100%;
+      transition: transform 0.3s, box-shadow 0.3s;
+      box-shadow: 0 4px 15px rgba(223,197,136,0.5);
     }
-    #delete-all:hover { background: #c0392b; }
+    #delete-all:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 15px rgba(223,197,136,0.9);
+    }
   </style>
 </head>
 <body>
+  <!-- Login Screen -->
   <div id="login-screen">
     <h2>Login</h2>
     <input id="email" type="email" placeholder="Email" />
@@ -103,11 +246,13 @@
     <div id="login-error"></div>
   </div>
   
+  <!-- Main App -->
   <div id="app">
+    <!-- Toolbox -->
     <div id="toolbox">
       <!-- Text Marker Tool -->
       <div class="tool" draggable="true" data-type="marker" title="Text Marker">
-        <img src="https://regnumsolis.com/planner/images/marker.svg" alt="Marker Background" style="width:50px;height:50px;">
+        <img src="https://regnumsolis.com/planner/images/marker.svg" alt="Marker Background">
       </div>
       <!-- Citadel Marker Tool -->
       <div class="tool" draggable="true" data-type="citadel" title="Citadel">
@@ -118,11 +263,13 @@
         <img src="https://regnumsolis.com/planner/images/torch.svg" alt="Torch">
       </div>
     </div>
+    <!-- Zoom Controls -->
     <div id="zoom-controls">
       <button id="zoom-in">Zoom In</button>
       <button id="zoom-out">Zoom Out</button>
       <button id="reset-zoom">Reset</button>
     </div>
+    <!-- Map Container -->
     <div id="map-container">
       <div id="map-svg-container"></div>
     </div>
@@ -140,6 +287,7 @@
     </div>
   </div>
 
+  <!-- Error Overlay -->
   <div id="error-overlay">Database connection failed. The app cannot be used at this time.</div>
 
   <script type="module">
@@ -459,10 +607,9 @@
         .catch(error => console.error("Error writing audit log:", error));
     }
 
-    // Listen for audit log changes and group events that occur within 5 minutes of each other (for add and delete marker events)
+    // Listen for audit log changes and group events occurring within 5 minutes
     function listenForAuditLogs() {
       const auditLogContainer = document.getElementById("audit-log");
-      // Order logs ascending so we can group consecutive ones
       const auditQuery = query(collection(db, "auditLogs"), orderBy("timestamp", "asc"));
       onSnapshot(auditQuery, (snapshot) => {
         const logs = [];
@@ -472,9 +619,9 @@
           logs.push({ timestamp: ts, log });
         });
 
-        // Group events only for "add" and "delete" when markerType is defined.
+        // Group events for "add" and "delete" with markerType defined
         const groupedLogs = [];
-        const groupingThreshold = 300; // 5 minutes in seconds
+        const groupingThreshold = 300; // 5 minutes
         let currentGroup = null;
 
         logs.forEach(item => {
@@ -516,44 +663,28 @@
               currentGroup = null;
             }
             groupedLogs.push({
-              key: {
-                user: log.user,
-                action: log.action,
-                markerType: (log.details && log.details.markerType) ? log.details.markerType : null
-              },
+              key: { user: log.user, action: log.action, markerType: (log.details && log.details.markerType) ? log.details.markerType : null },
               count: 1,
               timestamp: timestamp,
               lastTimestamp: timestamp
             });
           }
         });
-        if (currentGroup) {
-          groupedLogs.push(currentGroup);
-        }
+        if (currentGroup) groupedLogs.push(currentGroup);
 
-        // Sort grouped logs descending by lastTimestamp for display.
+        // Sort for display (most recent first)
         groupedLogs.sort((a, b) => b.lastTimestamp - a.lastTimestamp);
-
         auditLogContainer.innerHTML = "";
         groupedLogs.forEach(group => {
           const dateStr = new Date(group.lastTimestamp * 1000).toLocaleString();
           let actionText = "";
-          if (group.key.action === "add") {
-            actionText = "add marker";
-          } else if (group.key.action === "delete") {
-            actionText = "delete marker";
-          } else if (group.key.action === "delete_all") {
-            actionText = "delete all markers";
-          } else {
-            actionText = group.key.action;
-          }
+          if (group.key.action === "add") actionText = "add marker";
+          else if (group.key.action === "delete") actionText = "delete marker";
+          else if (group.key.action === "delete_all") actionText = "delete all markers";
+          else actionText = group.key.action;
           let entryHTML = `[${dateStr}] <b>${group.key.user}</b> ${actionText}`;
-          if (group.key.markerType) {
-            entryHTML += ` <b>[${group.key.markerType}]</b>`;
-          }
-          if (group.count > 1) {
-            entryHTML += ` (<b>x${group.count}</b>)`;
-          }
+          if (group.key.markerType) entryHTML += ` <b>[${group.key.markerType}]</b>`;
+          if (group.count > 1) entryHTML += ` (<b>x${group.count}</b>)`;
           const entry = document.createElement("div");
           entry.innerHTML = entryHTML;
           auditLogContainer.appendChild(entry);
