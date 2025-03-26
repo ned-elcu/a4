@@ -631,61 +631,68 @@
       });
     }
 
-    // Updated createMarkerElement to scale marker dimensions by 10x
+    // Updated createMarkerElement to scale marker dimensions by 4x
     function createMarkerElement(id, data) {
       let markerEl = document.createElementNS("http://www.w3.org/2000/svg", "g");
       markerEl.setAttribute("data-marker", "true");
 
-      let imgSrc, imgWidth, imgHeight, imgXOffset, imgYOffset, textXOffset;
+      let imgSrc, imgWidth, imgHeight, imgXOffset, imgYOffset, textXOffset, fontSize;
       if (data.type === "marker") {
         imgSrc = "https://regnumsolis.com/planner/images/marker.svg";
-        imgWidth = 40 * 10;      // 400
-        imgHeight = 40 * 10;     // 400
-        imgXOffset = -20 * 10;   // -200
-        imgYOffset = -20 * 10;   // -200
-        textXOffset = 20 * 10;   // 200
+        imgWidth = 40 * 4;      // 160
+        imgHeight = 40 * 4;     // 160
+        imgXOffset = -20 * 4;   // -80
+        imgYOffset = -20 * 4;   // -80
+        textXOffset = 20 * 4;   // 80
+        fontSize = "16" * 4;    // 64
       } else if (data.type === "citadel") {
         imgSrc = "https://regnumsolis.com/planner/images/citadel.svg";
-        imgWidth = 30 * 10;      // 300
-        imgHeight = 30 * 10;     // 300
-        imgXOffset = -15 * 10;   // -150
-        imgYOffset = -15 * 10;   // -150
-        textXOffset = 15 * 10;   // 150
+        imgWidth = 30 * 4;      // 120
+        imgHeight = 30 * 4;     // 120
+        imgXOffset = -15 * 4;   // -60
+        imgYOffset = -15 * 4;   // -60
+        textXOffset = 15 * 4;   // 60
+        fontSize = "14" * 4;    // 56
       } else if (data.type === "torch") {
         imgSrc = "https://regnumsolis.com/planner/images/torch.svg";
-        imgWidth = 30 * 10;
-        imgHeight = 30 * 10;
-        imgXOffset = -15 * 10;
-        imgYOffset = -15 * 10;
-        textXOffset = 15 * 10;
+        imgWidth = 30 * 4;
+        imgHeight = 30 * 4;
+        imgXOffset = -15 * 4;
+        imgYOffset = -15 * 4;
+        textXOffset = 15 * 4;
+        fontSize = "14" * 4;
       } else if (data.type === "cave") {
         imgSrc = "https://regnumsolis.com/planner/images/cave.svg";
-        imgWidth = 30 * 10;
-        imgHeight = 30 * 10;
-        imgXOffset = -15 * 10;
-        imgYOffset = -15 * 10;
-        textXOffset = 15 * 10;
+        imgWidth = 30 * 4;
+        imgHeight = 30 * 4;
+        imgXOffset = -15 * 4;
+        imgYOffset = -15 * 4;
+        textXOffset = 15 * 4;
+        fontSize = "14" * 4;
       } else if (data.type === "sword") {
         imgSrc = "https://regnumsolis.com/planner/images/sword.svg";
-        imgWidth = 30 * 10;
-        imgHeight = 30 * 10;
-        imgXOffset = -15 * 10;
-        imgYOffset = -15 * 10;
-        textXOffset = 15 * 10;
+        imgWidth = 30 * 4;
+        imgHeight = 30 * 4;
+        imgXOffset = -15 * 4;
+        imgYOffset = -15 * 4;
+        textXOffset = 15 * 4;
+        fontSize = "14" * 4;
       } else if (data.type === "spear") {
         imgSrc = "https://regnumsolis.com/planner/images/spear.svg";
-        imgWidth = 30 * 10;
-        imgHeight = 30 * 10;
-        imgXOffset = -15 * 10;
-        imgYOffset = -15 * 10;
-        textXOffset = 15 * 10;
+        imgWidth = 30 * 4;
+        imgHeight = 30 * 4;
+        imgXOffset = -15 * 4;
+        imgYOffset = -15 * 4;
+        textXOffset = 15 * 4;
+        fontSize = "14" * 4;
       } else if (data.type === "bow") {
         imgSrc = "https://regnumsolis.com/planner/images/bow.svg";
-        imgWidth = 30 * 10;
-        imgHeight = 30 * 10;
-        imgXOffset = -15 * 10;
-        imgYOffset = -15 * 10;
-        textXOffset = 15 * 10;
+        imgWidth = 30 * 4;
+        imgHeight = 30 * 4;
+        imgXOffset = -15 * 4;
+        imgYOffset = -15 * 4;
+        textXOffset = 15 * 4;
+        fontSize = "14" * 4;
       }
 
       const imgEl = document.createElementNS("http://www.w3.org/2000/svg", "image");
@@ -699,7 +706,7 @@
       const textEl = document.createElementNS("http://www.w3.org/2000/svg", "text");
       textEl.textContent = data.text;
       textEl.setAttribute("fill", data.color);
-      textEl.setAttribute("font-size", data.type === "marker" ? "16" : "14");
+      textEl.setAttribute("font-size", fontSize);
       textEl.setAttribute("x", data.x + textXOffset);
       textEl.setAttribute("y", data.y);
       textEl.setAttribute("text-anchor", "start");
