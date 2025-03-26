@@ -63,10 +63,9 @@
   
   <div id="app">
     <div id="toolbox">
-      <!-- Text Marker Tool with background image -->
+      <!-- Text Marker Tool with background image (Removed the extra "M") -->
       <div class="tool" draggable="true" data-type="marker" title="Text Marker">
         <img src="https://regnumsolis.com/planner/images/marker.svg" alt="Marker Background" style="width:50px;height:50px;">
-        <span style="font-size:24px; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%);">M</span>
       </div>
       <!-- Citadel Marker Tool -->
       <div class="tool" draggable="true" data-type="citadel" title="Citadel">
@@ -294,7 +293,7 @@
         imgHeight = 40;
         imgXOffset = -20;
         imgYOffset = -20;
-        textXOffset = 20; // right by the icon (no extra gap)
+        textXOffset = 20; // position immediately right (no gap)
       } else if (data.type === "citadel") {
         imgSrc = "https://regnumsolis.com/planner/images/citadel.svg";
         imgWidth = 30;
@@ -332,18 +331,17 @@
       textEl.style.fontFamily = "'Bebas Neue', sans-serif";
       markerEl.appendChild(textEl);
 
-      // Insert a background rectangle behind the text after it's rendered
-      // Use requestAnimationFrame to ensure the text is in the DOM and rendered.
+      // Create background rectangle behind the text using the text's computed length
       requestAnimationFrame(() => {
         const bbox = textEl.getBBox();
+        const textLength = textEl.getComputedTextLength();
         const rectEl = document.createElementNS("http://www.w3.org/2000/svg", "rect");
         rectEl.setAttribute("x", bbox.x);
         rectEl.setAttribute("y", bbox.y);
-        rectEl.setAttribute("width", bbox.width);
+        rectEl.setAttribute("width", textLength);
         rectEl.setAttribute("height", bbox.height);
         rectEl.setAttribute("fill", "black");
         rectEl.setAttribute("opacity", "0.35");
-        // Insert the rectangle before the text element so it appears behind.
         markerEl.insertBefore(rectEl, textEl);
       });
 
