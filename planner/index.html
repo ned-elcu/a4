@@ -149,29 +149,29 @@
         svgRoot.setAttribute("height", "100%");
         svgRoot.setAttribute("preserveAspectRatio", "xMidYMid meet");
 
-        // Create layers
+        // Create a pan layer and move all original SVG content into it
         panLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
         panLayer.id = "pan-layer";
-        while (svgRoot.firstChild) panLayer.appendChild(svgRoot.firstChild);
+        while (svgRoot.firstChild) {
+          panLayer.appendChild(svgRoot.firstChild);
+        }
         svgRoot.appendChild(panLayer);
 
+        // Create marker layer inside the pan layer so markers move together with the map
         markerLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
         markerLayer.id = "marker-layer";
-        svgRoot.appendChild(markerLayer);
+        panLayer.appendChild(markerLayer);
 
-        // Initialize pan/zoom on the SVG root
+        // Initialize pan/zoom on the SVG root without manual marker repositioning
         panZoomInstance = svgPanZoom(svgRoot, {
           zoomEnabled: true,
           panEnabled: true,
           controlIconsEnabled: false,
           minZoom: 0.5,
-          maxZoom: 5,
-          beforePan: (oldPan, newPan) => ({ x: newPan.x, y: newPan.y }),
-          onPan: updateMarkersPosition,
-          onZoom: updateMarkersPosition
+          maxZoom: 5
         });
 
-        // Set up controls
+        // Set up controls and drag & drop
         setupZoomControls();
         setupDragAndDrop();
         listenForMarkers();
@@ -197,14 +197,16 @@
       });
     }
 
-    function setupDragAndDrop() {
-      const getSVGPoint = (e) => {
-        const pt = svgRoot.createSVGPoint();
-        pt.x = e.clientX;
-        pt.y = e.clientY;
-        return pt.matrixTransform(svgRoot.getScreenCTM().inverse());
-      };
+    // Get drop point relative to the pan layer rather than the entire svg
+    function getSVGPoint(e) {
+      const pt = svgRoot.createSVGPoint();
+      pt.x = e.clientX;
+      pt.y = e.clientY;
+      // Transform the point to the coordinate system of panLayer
+      return pt.matrixTransform(panLayer.getScreenCTM().inverse());
+    }
 
+    function setupDragAndDrop() {
       svgRoot.addEventListener("dragover", (e) => {
         e.preventDefault();
         e.dataTransfer.dropEffect = "move";
@@ -217,7 +219,7 @@
         const type = e.dataTransfer.getData("text/plain");
         const cursorPos = getSVGPoint(e);
         
-        // Store original coordinates directly
+        // Store the original untransformed coordinates directly
         await addMarkerToFirestore(type, cursorPos.x, cursorPos.y);
       });
     }
@@ -228,27 +230,22 @@
         markerData.text = prompt("Enter marker text:") || "M";
         markerData.color = prompt("Enter marker color (e.g., red or #ff0000):") || "black";
       }
-      try { await addDoc(collection(db, "markers"), markerData); }
-      catch (error) { console.error("Error adding marker:", error); }
+      try { 
+        await addDoc(collection(db, "markers"), markerData); 
+      }
+      catch (error) { 
+        console.error("Error adding marker:", error); 
+      }
     }
 
     function listenForMarkers() {
       const markersQuery = query(collection(db, "markers"), orderBy("timestamp"));
       onSnapshot(markersQuery, (snapshot) => {
-        markerLayer.querySelectorAll(".marker").forEach((marker) => marker.remove());
+        // Clear existing markers
+        while (markerLayer.firstChild) {
+          markerLayer.removeChild(markerLayer.firstChild);
+        }
         snapshot.forEach((docSnap) => createMarkerElement(docSnap.id, docSnap.data()));
-      });
-    }
-
-    function updateMarkersPosition() {
-      if (!isMapReady) return;
-      const zoom = panZoomInstance.getZoom();
-      const pan = panZoomInstance.getPan();
-      
-      markerLayer.querySelectorAll(".marker").forEach(marker => {
-        const x = parseFloat(marker.dataset.x);
-        const y = parseFloat(marker.dataset.y);
-        marker.setAttribute("transform", `translate(${pan.x + x * zoom}, ${pan.y + y * zoom})`);
       });
     }
 
@@ -259,6 +256,9 @@
         markerEl.textContent = data.text;
         markerEl.setAttribute("fill", data.color);
         markerEl.setAttribute("font-size", "16");
+        // Position text markers using x and y attributes
+        markerEl.setAttribute("x", data.x);
+        markerEl.setAttribute("y", data.y);
       } else {
         markerEl = document.createElementNS("http://www.w3.org/2000/svg", "image");
         const markerSrc = data.type === "citadel" 
@@ -267,18 +267,23 @@
         markerEl.setAttributeNS("http://www.w3.org/1999/xlink", "href", markerSrc);
         markerEl.setAttribute("width", "30");
         markerEl.setAttribute("height", "30");
+        // For images, adjust x and y to center the icon if needed
+        markerEl.setAttribute("x", data.x - 15);
+        markerEl.setAttribute("y", data.y - 15);
       }
 
       markerEl.classList.add("marker");
       markerEl.dataset.id = id;
-      markerEl.dataset.x = data.x;
-      markerEl.dataset.y = data.y;
-      updateMarkersPosition();
 
+      // Allow deletion of a marker on click
       markerEl.addEventListener("click", async () => {
         if (confirm("Delete this marker?")) {
-          try { await deleteDoc(doc(db, "markers", id)); }
-          catch (error) { console.error("Error deleting marker:", error); }
+          try { 
+            await deleteDoc(doc(db, "markers", id)); 
+          }
+          catch (error) { 
+            console.error("Error deleting marker:", error); 
+          }
         }
       });
       markerLayer.appendChild(markerEl);
