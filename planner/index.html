@@ -7,6 +7,7 @@
   <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap">
   <style>
+    /* Reset and base styles */
     * {
       box-sizing: border-box;
       margin: 0;
@@ -15,11 +16,29 @@
     html, body {
       width: 100%;
       height: 100%;
-      background: #1e1e1e;
+      /* Make background transparent so the canvas shows through */
+      background: transparent;
       color: white;
       font-family: 'Bebas Neue', sans-serif;
-      overflow-x: hidden;
+      overflow: hidden;
+      position: relative;
     }
+    /* Background container and canvas for animated waves */
+    #background-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1; /* Behind all other elements */
+    }
+    #waveCanvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+    
+    /* Animations */
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
@@ -36,15 +55,19 @@
                      0 0 40px rgba(223,197,136,0.8);
       }
     }
+    
+    /* Login screen */
     #login-screen {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       height: 100vh;
-      background: #1e1e1e;
+      background: rgba(30,30,30,0.9);
       animation: fadeIn 1s ease-out;
       text-align: center;
+      position: relative;
+      z-index: 1;
     }
     #login-screen img.logo {
       max-width: 600px;
@@ -85,20 +108,24 @@
       color: #e74c3c;
       font-weight: bold;
     }
+    
+    /* Main app container */
     #app {
       display: none;
       height: 100vh;
       position: relative;
       animation: fadeIn 1s ease-out;
+      z-index: 1;
     }
     #header-logo {
       text-align: center;
       padding: 10px 0;
-      background: #1e1e1e;
+      background: rgba(30,30,30,0.9);
     }
     #header-logo img {
       max-width: 600px;
     }
+    /* Toolbox */
     #toolbox {
       position: fixed;
       top: 160px;
@@ -132,6 +159,7 @@
       max-width: 100%;
       max-height: 100%;
     }
+    /* Zoom Controls */
     #zoom-controls {
       position: fixed;
       top: 160px;
@@ -155,7 +183,7 @@
       transform: scale(1.05);
       box-shadow: 0 4px 15px rgba(223,197,136,0.9);
     }
-    /* New style for map switch buttons */
+    /* Map Switch Controls */
     #map-switch-controls {
       position: fixed;
       top: 300px;
@@ -179,6 +207,7 @@
       transform: scale(1.05);
       box-shadow: 0 4px 15px rgba(223,197,136,0.9);
     }
+    /* Map container */
     #map-container {
       width: 100vw;
       height: calc(100vh - 60px);
@@ -192,6 +221,7 @@
       opacity: 0.8;
       cursor: pointer;
     }
+    /* Error overlay */
     #error-overlay {
       position: fixed;
       top: 0;
@@ -208,6 +238,7 @@
       text-align: center;
       padding: 20px;
     }
+    /* Admin panel */
     #admin-panel {
       position: fixed;
       bottom: 20px;
@@ -263,6 +294,12 @@
   </style>
 </head>
 <body>
+  <!-- Animated waves background -->
+  <div id="background-container">
+    <canvas id="waveCanvas"></canvas>
+  </div>
+
+  <!-- Login Screen -->
   <div id="login-screen">
     <img class="logo" src="https://regnumsolis.com/planner/images/longlogo.svg" alt="Long Logo">
     <h2>Login</h2>
@@ -272,6 +309,7 @@
     <div id="login-error"></div>
   </div>
 
+  <!-- Main App -->
   <div id="app">
     <div id="header-logo">
       <img src="https://regnumsolis.com/planner/images/longlogo.svg" alt="Long Logo">
@@ -310,7 +348,6 @@
       <button id="reset-zoom">Reset</button>
     </div>
     
-    <!-- Map Switch Controls: Markers and lines remain intact -->
     <div id="map-switch-controls">
       <button id="tactical-terrain">Tactical Terrain</button>
       <button id="visibility-terrain">Visibility Terrain</button>
@@ -595,7 +632,7 @@
           const midY = (y1 + y2) / 2;
           const angle = Math.atan2(y2 - y1, x2 - x1) * (180 / Math.PI);
 
-          // Scale arrow polygon by 60% (from original arrow scaled by 30%)
+          // Arrow polygon scaled by 60%: "0,-8 16,0 0,8"
           const arrow = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
           arrow.setAttribute("points", "0,-8 16,0 0,8");
           arrow.setAttribute("fill", currentLineGroup.lineColor);
@@ -688,11 +725,11 @@
 
       let imgSrc, imgWidth, imgHeight, imgXOffset, imgYOffset, fontSize;
       if (data.type === "marker") {
-        // For marker, center the image (assume width = 30*1.7 = 51)
+        // For marker, center the image (assume width = 30*1.7)
         imgSrc = "https://regnumsolis.com/planner/images/marker.svg";
         imgWidth = 30 * 1.7;
         imgHeight = 30 * 1.7;
-        imgXOffset = -(imgWidth / 2); // center horizontally
+        imgXOffset = -(imgWidth / 2);
         imgYOffset = -20 * 1.7;
         fontSize = 16 * 1.7;
       } else if (data.type === "citadel") {
@@ -760,7 +797,7 @@
       textEl.style.fontFamily = "'Bebas Neue', sans-serif";
       markerEl.appendChild(textEl);
 
-      // Double down on the text background opacity (0.35 * 1.8 = 0.63)
+      // Double down on the text background opacity to 0.63.
       requestAnimationFrame(() => {
         const bbox = textEl.getBBox();
         const textLength = textEl.getComputedTextLength();
@@ -802,11 +839,11 @@
       line.setAttribute("x2", data.x2);
       line.setAttribute("y2", data.y2);
       line.setAttribute("stroke", data.color);
-      // Increase stroke width by 60 (from 2 to 3.2)
+      // Increase stroke width by 60% (from 2 to 3.2)
       line.setAttribute("stroke-width", "3.2");
 
       const arrow = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-      // Arrow points scaled by 60%: "0,-8 16,0 0,8"
+      // Arrow points scaled by 60%
       arrow.setAttribute("points", "0,-8 16,0 0,8");
       arrow.setAttribute("fill", data.color);
       arrow.setAttribute("transform", `translate(${data.midX},${data.midY}) rotate(${data.angle})`);
@@ -969,6 +1006,55 @@
       overlay.style.display = "flex";
       console.warn("Error overlay activated:", message);
     }
+  </script>
+  <script>
+    // Animated waves background script
+    const canvas = document.getElementById('waveCanvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    
+    function resize() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+    
+    let phase = 0;
+    const numWaves = 20;
+    const amplitude = 20;
+    const wavelength = width / 2;
+    const speed = 0.003;
+    
+    function animate() {
+      ctx.clearRect(0, 0, width, height);
+      
+      // Create vertical gradient background
+      const bgGradient = ctx.createLinearGradient(0, 0, 0, height);
+      bgGradient.addColorStop(0, 'rgb(28,9,45)');
+      bgGradient.addColorStop(1, 'rgb(0,0,51)');
+      ctx.fillStyle = bgGradient;
+      ctx.fillRect(0, 0, width, height);
+      
+      // Draw wave lines
+      for (let i = 0; i < numWaves; i++) {
+        const yPos = ((i + 0.5) / numWaves) * height;
+        ctx.beginPath();
+        ctx.moveTo(0, yPos);
+        for (let x = 0; x <= width; x++) {
+          const offset = amplitude * Math.sin((x / wavelength) * Math.PI * 2 + phase + i);
+          ctx.lineTo(x, yPos + offset);
+        }
+        ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+      
+      phase += speed;
+      requestAnimationFrame(animate);
+    }
+    
+    animate();
   </script>
 </body>
 </html>
