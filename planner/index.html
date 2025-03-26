@@ -353,7 +353,7 @@
     // Variables for line drawing
     let activeTool = null;
     let lineDrawingState = 0; // 0 = not started, 1 = start point set
-    let currentLine = null;
+    let currentLineGroup = null; // will contain both the line and arrow
 
     document.addEventListener("DOMContentLoaded", () => {
       setupLogin();
@@ -446,7 +446,7 @@
         minZoom: 0.5,
         maxZoom: 5,
         beforeMouseDown: function(e) {
-          // Prevent panning if clicking on a marker (unless line tool is active)
+          // When line tool is active, disable panning
           if (activeTool === "line") return false;
           if (e.target.getAttribute("data-marker") === "true" ||
               (e.target.parentNode && e.target.parentNode.getAttribute("data-marker") === "true")) {
@@ -524,7 +524,6 @@
       });
 
       svgRoot.addEventListener("drop", async (e) => {
-        // Do not process drop events if line tool is active
         if (!isMapReady || activeTool === "line") return;
         e.preventDefault();
 
@@ -534,36 +533,67 @@
       });
     }
 
-    // Set up line drawing using click events:
-    // - When the line tool is active, the first click sets the start point.
-    // - The second click sets the end point and completes the line.
+    // Setup click-based line drawing with two clicks:
+    //  - First click sets the start point and creates a group for the line and its arrow.
+    //  - Second click sets the end point, updates the line, and creates an arrow at the midpoint.
     function setupLineDrawing() {
       svgRoot.addEventListener("click", (e) => {
         if (activeTool !== "line") return;
         e.preventDefault();
         const pt = getSVGPoint(e);
         if (lineDrawingState === 0) {
-          // First click: Set start point
-          currentLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
-          currentLine.setAttribute("x1", pt.x);
-          currentLine.setAttribute("y1", pt.y);
-          currentLine.setAttribute("x2", pt.x);
-          currentLine.setAttribute("y2", pt.y);
+          // First click: Create group and line element
+          currentLineGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+          currentLineGroup.classList.add("line-group");
+          // Add deletion listener to the entire group
+          currentLineGroup.addEventListener("click", (ev) => {
+            // Prevent click propagation to the map
+            ev.stopPropagation();
+            if (confirm("Delete this line?")) {
+              currentLineGroup.remove();
+            }
+          });
+          // Create the line element
+          const lineEl = document.createElementNS("http://www.w3.org/2000/svg", "line");
+          lineEl.setAttribute("x1", pt.x);
+          lineEl.setAttribute("y1", pt.y);
+          lineEl.setAttribute("x2", pt.x);
+          lineEl.setAttribute("y2", pt.y);
           const lineColor = prompt("Enter line color (e.g., red or #ff0000):") || "white";
-          currentLine.setAttribute("stroke", lineColor);
-          currentLine.setAttribute("stroke-width", "2");
-          lineLayer.appendChild(currentLine);
+          lineEl.setAttribute("stroke", lineColor);
+          lineEl.setAttribute("stroke-width", "2");
+          // Save the line element inside the group for later reference
+          currentLineGroup.lineEl = lineEl;
+          currentLineGroup.lineColor = lineColor;
+          currentLineGroup.startPoint = { x: pt.x, y: pt.y };
+          currentLineGroup.appendChild(lineEl);
+          lineLayer.appendChild(currentLineGroup);
           lineDrawingState = 1;
         } else if (lineDrawingState === 1) {
           // Second click: Complete the line
-          currentLine.setAttribute("x2", pt.x);
-          currentLine.setAttribute("y2", pt.y);
-          // Reset tool and re-enable markers
+          const lineEl = currentLineGroup.lineEl;
+          lineEl.setAttribute("x2", pt.x);
+          lineEl.setAttribute("y2", pt.y);
+          // Compute midpoint and angle
+          const x1 = currentLineGroup.startPoint.x;
+          const y1 = currentLineGroup.startPoint.y;
+          const x2 = pt.x;
+          const y2 = pt.y;
+          const midX = (x1 + x2) / 2;
+          const midY = (y1 + y2) / 2;
+          const angle = Math.atan2(y2 - y1, x2 - x1) * (180 / Math.PI);
+          // Create arrow polygon (triangle) with points "0,-5 10,0 0,5"
+          const arrow = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+          arrow.setAttribute("points", "0,-5 10,0 0,5");
+          arrow.setAttribute("fill", currentLineGroup.lineColor);
+          // Position the arrow at the midpoint and rotate it so that it points toward the end point
+          arrow.setAttribute("transform", `translate(${midX},${midY}) rotate(${angle})`);
+          currentLineGroup.appendChild(arrow);
+          // Reset the line drawing state and re-enable markers
           activeTool = null;
           lineDrawingState = 0;
-          currentLine = null;
+          currentLineGroup = null;
           markerLayer.style.pointerEvents = "auto";
-          // Reset visual indicator on toolbox
           document.querySelectorAll(".tool").forEach(t => t.style.borderColor = "rgba(223,197,136,0.5)");
         }
       });
@@ -703,7 +733,7 @@
       markerEl.dataset.id = id;
       markerEl.addEventListener("click", async (e) => {
         e.stopPropagation();
-        if (activeTool === "line") return; // Disable marker clicks when line tool is active
+        if (activeTool === "line") return;
         if (confirm("Delete this marker?")) {
           try {
             await deleteDoc(doc(db, "markers", id));
@@ -815,11 +845,14 @@
       document.getElementById("delete-all").addEventListener("click", async () => {
         if (confirm("Delete all markers?")) {
           try {
+            // Delete markers from Firestore
             const markersSnapshot = await getDocs(collection(db, "markers"));
             markersSnapshot.forEach(async (docSnap) => {
               await deleteDoc(doc(db, "markers", docSnap.id));
             });
             recordAuditLog("delete_all", { count: markersSnapshot.size });
+            // Also remove all drawn lines
+            lineLayer.innerHTML = "";
           } catch (error) {
             console.error("Error deleting all markers:", error);
           }
