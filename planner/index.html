@@ -40,6 +40,7 @@
     }
     #zoom-controls button:hover { background: #2980b9; }
     #map-container { width: 100vw; height: 100vh; overflow: hidden; }
+    #map-svg-container { width: 100%; height: 100%; }
     .marker:hover { opacity: 0.8; cursor: pointer; }
   </style>
 </head>
@@ -95,6 +96,7 @@
 
     let panZoomInstance;
     let svgRoot;
+    let panLayer;
     let markerLayer;
     let isMapReady = false;
 
@@ -137,25 +139,27 @@
       const container = document.getElementById("map-svg-container");
       
       try {
-        // Load SVG directly instead of using <object>
+        // Load and inject SVG
         const response = await fetch("https://regnumsolis.com/planner/images/map.svg");
         const svgText = await response.text();
         container.innerHTML = svgText;
         
         svgRoot = container.querySelector("svg");
-        
-        // Create pan/zoom layer
-        const panLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        svgRoot.setAttribute("width", "100%");
+        svgRoot.setAttribute("height", "100%");
+        svgRoot.setAttribute("preserveAspectRatio", "xMidYMid meet");
+
+        // Create layers
+        panLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
         panLayer.id = "pan-layer";
         while (svgRoot.firstChild) panLayer.appendChild(svgRoot.firstChild);
         svgRoot.appendChild(panLayer);
 
-        // Create marker layer
         markerLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
         markerLayer.id = "marker-layer";
         svgRoot.appendChild(markerLayer);
 
-        // Initialize pan/zoom
+        // Initialize pan/zoom on the SVG root
         panZoomInstance = svgPanZoom(svgRoot, {
           zoomEnabled: true,
           panEnabled: true,
@@ -175,7 +179,7 @@
 
       } catch (error) {
         console.error("Map initialization error:", error);
-        setTimeout(initializeMap, 1000); // Retry after 1 second
+        setTimeout(initializeMap, 1000);
       }
     }
 
@@ -194,33 +198,27 @@
     }
 
     function setupDragAndDrop() {
-      // Handle dragover
+      const getSVGPoint = (e) => {
+        const pt = svgRoot.createSVGPoint();
+        pt.x = e.clientX;
+        pt.y = e.clientY;
+        return pt.matrixTransform(svgRoot.getScreenCTM().inverse());
+      };
+
       svgRoot.addEventListener("dragover", (e) => {
         e.preventDefault();
         e.dataTransfer.dropEffect = "move";
       });
 
-      // Handle drop
       svgRoot.addEventListener("drop", async (e) => {
         if (!isMapReady) return;
         e.preventDefault();
 
         const type = e.dataTransfer.getData("text/plain");
-        const bbox = svgRoot.getBoundingClientRect();
+        const cursorPos = getSVGPoint(e);
         
-        // Get accurate cursor position
-        const pt = svgRoot.createSVGPoint();
-        pt.x = e.clientX - bbox.left;
-        pt.y = e.clientY - bbox.top;
-        const cursorPos = pt.matrixTransform(svgRoot.getScreenCTM().inverse());
-        
-        // Convert to original coordinates
-        const zoom = panZoomInstance.getZoom();
-        const pan = panZoomInstance.getPan();
-        const originalX = (cursorPos.x - pan.x) / zoom;
-        const originalY = (cursorPos.y - pan.y) / zoom;
-
-        await addMarkerToFirestore(type, originalX, originalY);
+        // Store original coordinates directly
+        await addMarkerToFirestore(type, cursorPos.x, cursorPos.y);
       });
     }
 
@@ -244,13 +242,13 @@
 
     function updateMarkersPosition() {
       if (!isMapReady) return;
-      const pan = panZoomInstance.getPan();
       const zoom = panZoomInstance.getZoom();
+      const pan = panZoomInstance.getPan();
       
       markerLayer.querySelectorAll(".marker").forEach(marker => {
         const x = parseFloat(marker.dataset.x);
         const y = parseFloat(marker.dataset.y);
-        marker.setAttribute("transform", `translate(${pan.x + zoom * x}, ${pan.y + zoom * y})`);
+        marker.setAttribute("transform", `translate(${pan.x + x * zoom}, ${pan.y + y * zoom})`);
       });
     }
 
@@ -275,7 +273,6 @@
       markerEl.dataset.id = id;
       markerEl.dataset.x = data.x;
       markerEl.dataset.y = data.y;
-
       updateMarkersPosition();
 
       markerEl.addEventListener("click", async () => {
