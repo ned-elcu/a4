@@ -16,7 +16,7 @@
     html, body {
       width: 100%;
       height: 100%;
-      background: #1e1e1e;
+      background: #1e1e1e; /* Modern dark gray background */
       color: white;
       font-family: 'Bebas Neue', sans-serif;
       overflow-x: hidden;
@@ -28,14 +28,14 @@
     }
     @keyframes neonGlow {
       0% {
-        text-shadow: 0 0 5px rgba(223, 197, 136, 0.8),
-                     0 0 10px rgba(223, 197, 136, 0.8),
-                     0 0 15px rgba(223, 197, 136, 0.8);
+        text-shadow: 0 0 5px rgba(223,197,136,0.8),
+                     0 0 10px rgba(223,197,136,0.8),
+                     0 0 15px rgba(223,197,136,0.8);
       }
       100% {
-        text-shadow: 0 0 20px rgba(223, 197, 136, 0.8),
-                     0 0 30px rgba(223, 197, 136, 0.8),
-                     0 0 40px rgba(223, 197, 136, 0.8);
+        text-shadow: 0 0 20px rgba(223,197,136,0.8),
+                     0 0 30px rgba(223,197,136,0.8),
+                     0 0 40px rgba(223,197,136,0.8);
       }
     }
     /* Login Screen */
@@ -69,7 +69,7 @@
       font-size: 1.2em;
       border: none;
       border-radius: 4px;
-      background: rgba(223,197,136,0.8);
+      background: rgba(223,197,136,0.8); /* Accent color without gradient */
       color: white;
       cursor: pointer;
       transition: transform 0.3s, box-shadow 0.3s;
@@ -78,6 +78,18 @@
     #login-screen button:hover {
       transform: scale(1.05);
       box-shadow: 0 4px 15px rgba(223,197,136,0.9);
+    }
+    #login-error {
+      margin-top: 10px;
+      color: #e74c3c;
+      font-weight: bold;
+    }
+    /* App Container */
+    #app {
+      display: none;
+      height: 100vh;
+      position: relative;
+      animation: fadeIn 1s ease-out;
     }
     /* Toolbox */
     #toolbox {
@@ -109,8 +121,21 @@
     .tool:hover {
       transform: scale(1.1);
     }
-    /* Buttons */
-    #zoom-controls button, #delete-all {
+    .tool img {
+      max-width: 100%;
+      max-height: 100%;
+    }
+    /* Zoom Controls */
+    #zoom-controls {
+      position: fixed;
+      top: 90px;
+      right: 20px;
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    #zoom-controls button {
       padding: 8px;
       border: none;
       border-radius: 4px;
@@ -120,13 +145,98 @@
       transition: transform 0.3s, box-shadow 0.3s;
       box-shadow: 0 4px 15px rgba(223,197,136,0.5);
     }
-    #zoom-controls button:hover, #delete-all:hover {
+    #zoom-controls button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 15px rgba(223,197,136,0.9);
+    }
+    /* Map Container */
+    #map-container {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+    #map-svg-container {
+      width: 100%;
+      height: 100%;
+    }
+    .marker:hover {
+      opacity: 0.8;
+      cursor: pointer;
+    }
+    /* Error Overlay */
+    #error-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(30,30,30,0.95);
+      color: #ecf0f1;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      font-size: 1.5em;
+      text-align: center;
+      padding: 20px;
+    }
+    /* Admin Panel */
+    #admin-panel {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 320px;
+      background: rgba(30,30,30,0.9);
+      border: 1px solid rgba(223,197,136,0.5);
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(223,197,136,0.5);
+      padding: 10px;
+      z-index: 30;
+      display: none;
+      animation: fadeIn 1s ease-out;
+    }
+    #admin-panel h3 {
+      margin-top: 0;
+      font-size: 1.8em;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(223,197,136,0.5);
+      padding-bottom: 5px;
+      margin-bottom: 10px;
+    }
+    #admin-panel h3 span.icon {
+      cursor: pointer;
+      margin-left: 5px;
+      font-size: 1.2em;
+    }
+    #audit-log {
+      font-size: 0.9em;
+      height: 200px;
+      overflow-y: auto;
+      margin-bottom: 10px;
+      border-top: 1px solid rgba(223,197,136,0.5);
+      padding-top: 5px;
+    }
+    #delete-all {
+      padding: 8px;
+      border: none;
+      border-radius: 4px;
+      background: rgba(223,197,136,0.8);
+      color: white;
+      cursor: pointer;
+      width: 100%;
+      transition: transform 0.3s, box-shadow 0.3s;
+      box-shadow: 0 4px 15px rgba(223,197,136,0.5);
+    }
+    #delete-all:hover {
       transform: scale(1.05);
       box-shadow: 0 4px 15px rgba(223,197,136,0.9);
     }
   </style>
 </head>
 <body>
+  <!-- Login Screen -->
   <div id="login-screen">
     <h2>Login</h2>
     <input id="email" type="email" placeholder="Email" />
@@ -134,5 +244,475 @@
     <button id="login-button">Login</button>
     <div id="login-error"></div>
   </div>
+  
+  <!-- Main App -->
+  <div id="app">
+    <!-- Toolbox -->
+    <div id="toolbox">
+      <!-- Text Marker Tool -->
+      <div class="tool" draggable="true" data-type="marker" title="Text Marker">
+        <img src="https://regnumsolis.com/planner/images/marker.svg" alt="Marker Background">
+      </div>
+      <!-- Citadel Marker Tool -->
+      <div class="tool" draggable="true" data-type="citadel" title="Citadel">
+        <img src="https://regnumsolis.com/planner/images/citadel.svg" alt="Citadel">
+      </div>
+      <!-- Torch Marker Tool -->
+      <div class="tool" draggable="true" data-type="torch" title="Torch">
+        <img src="https://regnumsolis.com/planner/images/torch.svg" alt="Torch">
+      </div>
+    </div>
+    <!-- Zoom Controls -->
+    <div id="zoom-controls">
+      <button id="zoom-in">Zoom In</button>
+      <button id="zoom-out">Zoom Out</button>
+      <button id="reset-zoom">Reset</button>
+    </div>
+    <!-- Map Container -->
+    <div id="map-container">
+      <div id="map-svg-container"></div>
+    </div>
+    <!-- Admin Panel -->
+    <div id="admin-panel">
+      <h3>
+        Audit log
+        <span>
+          <span id="delete-audit" class="icon" title="Delete all audit logs">🗑️</span>
+          <span id="minimize-audit" class="icon" title="Minimize audit log">➖</span>
+        </span>
+      </h3>
+      <div id="audit-log"></div>
+      <button id="delete-all">Delete All Markers</button>
+    </div>
+  </div>
+
+  <!-- Error Overlay -->
+  <div id="error-overlay">Database connection failed. The app cannot be used at this time.</div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, orderBy, query, onSnapshot, deleteDoc, doc, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAIws_FKV_CTaiHdnwc8WigDqRkyUCOjtE",
+      authDomain: "regnum-d3ddf.firebaseapp.com",
+      projectId: "regnum-d3ddf",
+      storageBucket: "regnum-d3ddf.firebasestorage.app",
+      messagingSenderId: "565532905074",
+      appId: "1:565532905074:web:a4cc38363376e49540fceb",
+      measurementId: "G-4RG5NP4FZ3"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    let panZoomInstance;
+    let svgRoot;
+    let panLayer;
+    let markerLayer;
+    let isMapReady = false;
+    const adminEmail = "gryves_dev@yahoo.com";
+
+    document.addEventListener("DOMContentLoaded", () => {
+      setupLogin();
+      setupToolbox();
+      setupAuditControls();
+    });
+
+    function setupLogin() {
+      document.getElementById("login-button").addEventListener("click", () => {
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value.trim();
+        const errorDiv = document.getElementById("login-error");
+
+        signInWithEmailAndPassword(auth, email, password)
+          .then(() => {
+            errorDiv.textContent = "";
+            document.getElementById("login-screen").style.display = "none";
+            document.getElementById("app").style.display = "block";
+            initializeMap();
+          })
+          .catch((error) => {
+            errorDiv.textContent = error.message;
+          });
+      });
+
+      onAuthStateChanged(auth, (user) => {
+        if (user) {
+          document.getElementById("login-screen").style.display = "none";
+          document.getElementById("app").style.display = "block";
+          initializeMap();
+          if (user.email === adminEmail) {
+            document.getElementById("admin-panel").style.display = "block";
+            listenForAuditLogs();
+            setupDeleteAll();
+          }
+        } else {
+          document.getElementById("login-screen").style.display = "flex";
+          document.getElementById("app").style.display = "none";
+        }
+      });
+    }
+
+    function initializeMap() {
+      const container = document.getElementById("map-svg-container");
+
+      fetch("https://regnumsolis.com/planner/images/map.svg")
+        .then(response => response.text())
+        .then(svgText => {
+          container.innerHTML = svgText;
+          setupPanZoomLayers();
+          setupZoomControls();
+          setupDragAndDrop();
+          listenForMarkers();
+          isMapReady = true;
+        })
+        .catch(error => {
+          console.error("Error loading SVG:", error);
+          displayErrorOverlay("Error loading map data.");
+        });
+    }
+
+    function setupPanZoomLayers() {
+      svgRoot = document.getElementById("map-svg-container").querySelector("svg");
+      svgRoot.setAttribute("width", "100%");
+      svgRoot.setAttribute("height", "100%");
+      svgRoot.setAttribute("preserveAspectRatio", "xMidYMid meet");
+
+      panLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      panLayer.id = "pan-layer";
+      while (svgRoot.firstChild) {
+        panLayer.appendChild(svgRoot.firstChild);
+      }
+      svgRoot.appendChild(panLayer);
+
+      markerLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      markerLayer.id = "marker-layer";
+      panLayer.appendChild(markerLayer);
+
+      panZoomInstance = svgPanZoom(svgRoot, {
+        zoomEnabled: true,
+        panEnabled: true,
+        controlIconsEnabled: false,
+        minZoom: 0.5,
+        maxZoom: 5,
+        beforeMouseDown: function(e) {
+          if (e.target.getAttribute("data-marker") === "true" ||
+              (e.target.parentNode && e.target.parentNode.getAttribute("data-marker") === "true")) {
+            return false;
+          }
+          return true;
+        }
+      });
+    }
+
+    function setupZoomControls() {
+      document.getElementById("zoom-in").addEventListener("click", () => panZoomInstance.zoomIn());
+      document.getElementById("zoom-out").addEventListener("click", () => panZoomInstance.zoomOut());
+      document.getElementById("reset-zoom").addEventListener("click", () => panZoomInstance.resetZoom());
+    }
+
+    function setupToolbox() {
+      document.querySelectorAll(".tool").forEach((tool) => {
+        tool.addEventListener("dragstart", (e) => {
+          e.dataTransfer.setData("text/plain", tool.dataset.type);
+        });
+      });
+    }
+
+    function setupAuditControls() {
+      // Delete audit logs on clicking the trash icon
+      document.getElementById("delete-audit").addEventListener("click", async () => {
+        if (confirm("Delete all audit logs?")) {
+          try {
+            const auditSnapshot = await getDocs(collection(db, "auditLogs"));
+            auditSnapshot.forEach(async (docSnap) => {
+              await deleteDoc(doc(db, "auditLogs", docSnap.id));
+            });
+          } catch (error) {
+            console.error("Error deleting audit logs:", error);
+          }
+        }
+      });
+      // Minimize audit log toggle
+      document.getElementById("minimize-audit").addEventListener("click", () => {
+        const auditLogDiv = document.getElementById("audit-log");
+        if (auditLogDiv.style.display === "none") {
+          auditLogDiv.style.display = "block";
+          document.getElementById("minimize-audit").textContent = "➖";
+        } else {
+          auditLogDiv.style.display = "none";
+          document.getElementById("minimize-audit").textContent = "➕";
+        }
+      });
+    }
+
+    function getSVGPoint(e) {
+      const pt = svgRoot.createSVGPoint();
+      pt.x = e.clientX;
+      pt.y = e.clientY;
+      return pt.matrixTransform(panLayer.getScreenCTM().inverse());
+    }
+
+    function setupDragAndDrop() {
+      svgRoot.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+      });
+
+      svgRoot.addEventListener("drop", async (e) => {
+        if (!isMapReady) return;
+        e.preventDefault();
+
+        const type = e.dataTransfer.getData("text/plain");
+        const cursorPos = getSVGPoint(e);
+        await addMarkerToFirestore(type, cursorPos.x, cursorPos.y);
+      });
+    }
+
+    async function addMarkerToFirestore(type, x, y) {
+      let markerData = { type, x, y, timestamp: serverTimestamp() };
+      if (type === "marker" || type === "citadel" || type === "torch") {
+        markerData.text = prompt("Enter marker text:") || "";
+        markerData.color = prompt("Enter marker color (e.g., red or #ff0000):") || "black";
+        if (type === "marker" && markerData.text === "") {
+          markerData.text = "M";
+        }
+      }
+      try {
+        const docRef = await addDoc(collection(db, "markers"), markerData);
+        // Record marker addition in the audit log
+        recordAuditLog("add", { markerId: docRef.id, markerType: type });
+      } catch (error) {
+        console.error("Error adding marker:", error);
+      }
+    }
+
+    function listenForMarkers() {
+      let snapshotReceived = false;
+      const markersQuery = query(collection(db, "markers"), orderBy("timestamp"));
+      const unsubscribe = onSnapshot(markersQuery, (snapshot) => {
+        snapshotReceived = true;
+        while (markerLayer.firstChild) {
+          markerLayer.removeChild(markerLayer.firstChild);
+        }
+        snapshot.forEach((docSnap) => {
+          createMarkerElement(docSnap.id, docSnap.data());
+        });
+      }, (error) => {
+        console.error("Firestore connection error:", error);
+        displayErrorOverlay("Firestore connection failed.");
+      });
+
+      setTimeout(() => {
+        if (!snapshotReceived) {
+          console.error("No Firestore snapshot received within timeout.");
+          displayErrorOverlay("Firestore connection failed.");
+          unsubscribe();
+        }
+      }, 5000);
+    }
+
+    function createMarkerElement(id, data) {
+      let markerEl = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      markerEl.setAttribute("data-marker", "true");
+
+      let imgSrc, imgWidth, imgHeight, imgXOffset, imgYOffset, textXOffset;
+      if (data.type === "marker") {
+        imgSrc = "https://regnumsolis.com/planner/images/marker.svg";
+        imgWidth = 40;
+        imgHeight = 40;
+        imgXOffset = -20;
+        imgYOffset = -20;
+        textXOffset = 20;
+      } else if (data.type === "citadel") {
+        imgSrc = "https://regnumsolis.com/planner/images/citadel.svg";
+        imgWidth = 30;
+        imgHeight = 30;
+        imgXOffset = -15;
+        imgYOffset = -15;
+        textXOffset = 15;
+      } else if (data.type === "torch") {
+        imgSrc = "https://regnumsolis.com/planner/images/torch.svg";
+        imgWidth = 30;
+        imgHeight = 30;
+        imgXOffset = -15;
+        imgYOffset = -15;
+        textXOffset = 15;
+      }
+
+      const imgEl = document.createElementNS("http://www.w3.org/2000/svg", "image");
+      imgEl.setAttributeNS("http://www.w3.org/1999/xlink", "href", imgSrc);
+      imgEl.setAttribute("width", imgWidth);
+      imgEl.setAttribute("height", imgHeight);
+      imgEl.setAttribute("x", data.x + imgXOffset);
+      imgEl.setAttribute("y", data.y + imgYOffset);
+      markerEl.appendChild(imgEl);
+
+      const textEl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      textEl.textContent = data.text;
+      textEl.setAttribute("fill", data.color);
+      textEl.setAttribute("font-size", data.type === "marker" ? "16" : "14");
+      textEl.setAttribute("x", data.x + textXOffset);
+      textEl.setAttribute("y", data.y);
+      textEl.setAttribute("text-anchor", "start");
+      textEl.setAttribute("dominant-baseline", "middle");
+      textEl.style.fontFamily = "'Bebas Neue', sans-serif";
+      markerEl.appendChild(textEl);
+
+      requestAnimationFrame(() => {
+        const bbox = textEl.getBBox();
+        const textLength = textEl.getComputedTextLength();
+        const rectEl = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        rectEl.setAttribute("x", bbox.x);
+        rectEl.setAttribute("y", bbox.y);
+        rectEl.setAttribute("width", textLength);
+        rectEl.setAttribute("height", bbox.height);
+        rectEl.setAttribute("fill", "#1e1e1e");
+        rectEl.setAttribute("opacity", "0.35");
+        markerEl.insertBefore(rectEl, textEl);
+      });
+
+      markerEl.classList.add("marker");
+      markerEl.dataset.id = id;
+      markerEl.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        if (confirm("Delete this marker?")) {
+          try {
+            await deleteDoc(doc(db, "markers", id));
+            // Record marker deletion in the audit log
+            recordAuditLog("delete", { markerId: id, markerType: data.type });
+          } catch (error) {
+            console.error("Error deleting marker:", error);
+          }
+        }
+      });
+      markerLayer.appendChild(markerEl);
+    }
+
+    // Record audit logs in Firestore
+    function recordAuditLog(action, details) {
+      const user = auth.currentUser;
+      if (!user) return;
+      const logData = {
+        action,
+        details,
+        user: user.email,
+        timestamp: serverTimestamp()
+      };
+      addDoc(collection(db, "auditLogs"), logData)
+        .catch(error => console.error("Error writing audit log:", error));
+    }
+
+    // Listen for audit log changes and group events occurring within 5 minutes
+    function listenForAuditLogs() {
+      const auditLogContainer = document.getElementById("audit-log");
+      const auditQuery = query(collection(db, "auditLogs"), orderBy("timestamp", "asc"));
+      onSnapshot(auditQuery, (snapshot) => {
+        const logs = [];
+        snapshot.forEach((docSnap) => {
+          const log = docSnap.data();
+          const ts = log.timestamp ? log.timestamp.seconds : 0;
+          logs.push({ timestamp: ts, log });
+        });
+
+        // Group events for "add" and "delete" with markerType defined
+        const groupedLogs = [];
+        const groupingThreshold = 300; // 5 minutes
+        let currentGroup = null;
+
+        logs.forEach(item => {
+          const { timestamp, log } = item;
+          const applicable = (log.action === "add" || log.action === "delete") && log.details && log.details.markerType;
+          if (applicable) {
+            if (
+              currentGroup &&
+              currentGroup.key.user === log.user &&
+              currentGroup.key.action === log.action &&
+              currentGroup.key.markerType === log.details.markerType
+            ) {
+              if (timestamp - currentGroup.lastTimestamp <= groupingThreshold) {
+                currentGroup.count += 1;
+                currentGroup.lastTimestamp = timestamp;
+              } else {
+                groupedLogs.push(currentGroup);
+                currentGroup = {
+                  key: { user: log.user, action: log.action, markerType: log.details.markerType },
+                  count: 1,
+                  timestamp: timestamp,
+                  lastTimestamp: timestamp
+                };
+              }
+            } else {
+              if (currentGroup) {
+                groupedLogs.push(currentGroup);
+              }
+              currentGroup = {
+                key: { user: log.user, action: log.action, markerType: log.details.markerType },
+                count: 1,
+                timestamp: timestamp,
+                lastTimestamp: timestamp
+              };
+            }
+          } else {
+            if (currentGroup) {
+              groupedLogs.push(currentGroup);
+              currentGroup = null;
+            }
+            groupedLogs.push({
+              key: { user: log.user, action: log.action, markerType: (log.details && log.details.markerType) ? log.details.markerType : null },
+              count: 1,
+              timestamp: timestamp,
+              lastTimestamp: timestamp
+            });
+          }
+        });
+        if (currentGroup) groupedLogs.push(currentGroup);
+
+        // Sort for display (most recent first)
+        groupedLogs.sort((a, b) => b.lastTimestamp - a.lastTimestamp);
+        auditLogContainer.innerHTML = "";
+        groupedLogs.forEach(group => {
+          const dateStr = new Date(group.lastTimestamp * 1000).toLocaleString();
+          let actionText = "";
+          if (group.key.action === "add") actionText = "add marker";
+          else if (group.key.action === "delete") actionText = "delete marker";
+          else if (group.key.action === "delete_all") actionText = "delete all markers";
+          else actionText = group.key.action;
+          let entryHTML = `[${dateStr}] <b>${group.key.user}</b> ${actionText}`;
+          if (group.key.markerType) entryHTML += ` <b>[${group.key.markerType}]</b>`;
+          if (group.count > 1) entryHTML += ` (<b>x${group.count}</b>)`;
+          const entry = document.createElement("div");
+          entry.innerHTML = entryHTML;
+          auditLogContainer.appendChild(entry);
+        });
+      });
+    }
+
+    function setupDeleteAll() {
+      document.getElementById("delete-all").addEventListener("click", async () => {
+        if (confirm("Delete all markers?")) {
+          try {
+            const markersSnapshot = await getDocs(collection(db, "markers"));
+            markersSnapshot.forEach(async (docSnap) => {
+              await deleteDoc(doc(db, "markers", docSnap.id));
+            });
+            recordAuditLog("delete_all", { count: markersSnapshot.size });
+          } catch (error) {
+            console.error("Error deleting all markers:", error);
+          }
+        }
+      });
+    }
+
+    function displayErrorOverlay(message) {
+      const overlay = document.getElementById("error-overlay");
+      overlay.textContent = message;
+      overlay.style.display = "flex";
+      console.warn("Error overlay activated:", message);
+    }
+  </script>
 </body>
 </html>
