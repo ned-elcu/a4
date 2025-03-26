@@ -399,6 +399,7 @@
       markerLayer.appendChild(markerEl);
     }
 
+    // Record audit logs in Firestore
     function recordAuditLog(action, details) {
       const user = auth.currentUser;
       if (!user) return;
@@ -412,30 +413,105 @@
         .catch(error => console.error("Error writing audit log:", error));
     }
 
+    // Listen for audit log changes and group events that occur within 5 minutes of each other (for add and delete marker events)
     function listenForAuditLogs() {
       const auditLogContainer = document.getElementById("audit-log");
-      const auditQuery = query(collection(db, "auditLogs"), orderBy("timestamp", "desc"));
+      // Order logs ascending so we can group consecutive ones
+      const auditQuery = query(collection(db, "auditLogs"), orderBy("timestamp", "asc"));
       onSnapshot(auditQuery, (snapshot) => {
-        auditLogContainer.innerHTML = "";
+        const logs = [];
         snapshot.forEach((docSnap) => {
           const log = docSnap.data();
-          const date = log.timestamp ? new Date(log.timestamp.seconds * 1000).toLocaleString() : "";
-          let actionText = "";
-          if(log.action === "delete_all"){
-            actionText = "delete all markers";
-          } else if(log.action === "add"){
-            actionText = "add marker";
-          } else if(log.action === "delete"){
-            actionText = "delete marker";
+          const ts = log.timestamp ? log.timestamp.seconds : 0;
+          logs.push({ timestamp: ts, log });
+        });
+
+        // Group events only for "add" and "delete" when markerType is defined.
+        const groupedLogs = [];
+        const groupingThreshold = 300; // 5 minutes in seconds
+        let currentGroup = null;
+
+        logs.forEach(item => {
+          const { timestamp, log } = item;
+          const applicable = (log.action === "add" || log.action === "delete") && log.details && log.details.markerType;
+          if (applicable) {
+            // Create a grouping key: user, action, markerType.
+            if (
+              currentGroup &&
+              currentGroup.key.user === log.user &&
+              currentGroup.key.action === log.action &&
+              currentGroup.key.markerType === log.details.markerType
+            ) {
+              // If within threshold, group together.
+              if (timestamp - currentGroup.lastTimestamp <= groupingThreshold) {
+                currentGroup.count += 1;
+                currentGroup.lastTimestamp = timestamp;
+              } else {
+                // Push previous group and start a new one.
+                groupedLogs.push(currentGroup);
+                currentGroup = {
+                  key: { user: log.user, action: log.action, markerType: log.details.markerType },
+                  count: 1,
+                  timestamp: timestamp,
+                  lastTimestamp: timestamp
+                };
+              }
+            } else {
+              if (currentGroup) {
+                groupedLogs.push(currentGroup);
+              }
+              currentGroup = {
+                key: { user: log.user, action: log.action, markerType: log.details.markerType },
+                count: 1,
+                timestamp: timestamp,
+                lastTimestamp: timestamp
+              };
+            }
           } else {
-            actionText = log.action;
+            // For non-applicable events, flush any current group and add individually.
+            if (currentGroup) {
+              groupedLogs.push(currentGroup);
+              currentGroup = null;
+            }
+            groupedLogs.push({
+              key: {
+                user: log.user,
+                action: log.action,
+                markerType: (log.details && log.details.markerType) ? log.details.markerType : null
+              },
+              count: 1,
+              timestamp: timestamp,
+              lastTimestamp: timestamp
+            });
           }
-          
-          let entryHTML = `[${date}] <b>${log.user}</b> ${actionText}`;
-          if(log.details && log.details.markerType) {
-            entryHTML += ` <b>[${log.details.markerType}]</b>`;
+        });
+        if (currentGroup) {
+          groupedLogs.push(currentGroup);
+        }
+
+        // Sort grouped logs descending by lastTimestamp for display.
+        groupedLogs.sort((a, b) => b.lastTimestamp - a.lastTimestamp);
+
+        auditLogContainer.innerHTML = "";
+        groupedLogs.forEach(group => {
+          const dateStr = new Date(group.lastTimestamp * 1000).toLocaleString();
+          let actionText = "";
+          if (group.key.action === "add") {
+            actionText = "add marker";
+          } else if (group.key.action === "delete") {
+            actionText = "delete marker";
+          } else if (group.key.action === "delete_all") {
+            actionText = "delete all markers";
+          } else {
+            actionText = group.key.action;
           }
-          // For delete_all or other actions without markerType details, you may adjust further if needed.
+          let entryHTML = `[${dateStr}] <b>${group.key.user}</b> ${actionText}`;
+          if (group.key.markerType) {
+            entryHTML += ` <b>[${group.key.markerType}]</b>`;
+          }
+          if (group.count > 1) {
+            entryHTML += ` (<b>x${group.count}</b>)`;
+          }
           const entry = document.createElement("div");
           entry.innerHTML = entryHTML;
           auditLogContainer.appendChild(entry);
