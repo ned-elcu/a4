@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>SOLIS Planner</title></title>
+  <title>SOLIS Planner</title>
   <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap">
   <style>
@@ -631,6 +631,7 @@
       });
     }
 
+    // Updated createMarkerElement to scale marker dimensions by 10x
     function createMarkerElement(id, data) {
       let markerEl = document.createElementNS("http://www.w3.org/2000/svg", "g");
       markerEl.setAttribute("data-marker", "true");
@@ -638,53 +639,53 @@
       let imgSrc, imgWidth, imgHeight, imgXOffset, imgYOffset, textXOffset;
       if (data.type === "marker") {
         imgSrc = "https://regnumsolis.com/planner/images/marker.svg";
-        imgWidth = 40;
-        imgHeight = 40;
-        imgXOffset = -20;
-        imgYOffset = -20;
-        textXOffset = 20;
+        imgWidth = 40 * 10;      // 400
+        imgHeight = 40 * 10;     // 400
+        imgXOffset = -20 * 10;   // -200
+        imgYOffset = -20 * 10;   // -200
+        textXOffset = 20 * 10;   // 200
       } else if (data.type === "citadel") {
         imgSrc = "https://regnumsolis.com/planner/images/citadel.svg";
-        imgWidth = 30;
-        imgHeight = 30;
-        imgXOffset = -15;
-        imgYOffset = -15;
-        textXOffset = 15;
+        imgWidth = 30 * 10;      // 300
+        imgHeight = 30 * 10;     // 300
+        imgXOffset = -15 * 10;   // -150
+        imgYOffset = -15 * 10;   // -150
+        textXOffset = 15 * 10;   // 150
       } else if (data.type === "torch") {
         imgSrc = "https://regnumsolis.com/planner/images/torch.svg";
-        imgWidth = 30;
-        imgHeight = 30;
-        imgXOffset = -15;
-        imgYOffset = -15;
-        textXOffset = 15;
+        imgWidth = 30 * 10;
+        imgHeight = 30 * 10;
+        imgXOffset = -15 * 10;
+        imgYOffset = -15 * 10;
+        textXOffset = 15 * 10;
       } else if (data.type === "cave") {
         imgSrc = "https://regnumsolis.com/planner/images/cave.svg";
-        imgWidth = 30;
-        imgHeight = 30;
-        imgXOffset = -15;
-        imgYOffset = -15;
-        textXOffset = 15;
+        imgWidth = 30 * 10;
+        imgHeight = 30 * 10;
+        imgXOffset = -15 * 10;
+        imgYOffset = -15 * 10;
+        textXOffset = 15 * 10;
       } else if (data.type === "sword") {
         imgSrc = "https://regnumsolis.com/planner/images/sword.svg";
-        imgWidth = 30;
-        imgHeight = 30;
-        imgXOffset = -15;
-        imgYOffset = -15;
-        textXOffset = 15;
+        imgWidth = 30 * 10;
+        imgHeight = 30 * 10;
+        imgXOffset = -15 * 10;
+        imgYOffset = -15 * 10;
+        textXOffset = 15 * 10;
       } else if (data.type === "spear") {
         imgSrc = "https://regnumsolis.com/planner/images/spear.svg";
-        imgWidth = 30;
-        imgHeight = 30;
-        imgXOffset = -15;
-        imgYOffset = -15;
-        textXOffset = 15;
+        imgWidth = 30 * 10;
+        imgHeight = 30 * 10;
+        imgXOffset = -15 * 10;
+        imgYOffset = -15 * 10;
+        textXOffset = 15 * 10;
       } else if (data.type === "bow") {
         imgSrc = "https://regnumsolis.com/planner/images/bow.svg";
-        imgWidth = 30;
-        imgHeight = 30;
-        imgXOffset = -15;
-        imgYOffset = -15;
-        textXOffset = 15;
+        imgWidth = 30 * 10;
+        imgHeight = 30 * 10;
+        imgXOffset = -15 * 10;
+        imgYOffset = -15 * 10;
+        textXOffset = 15 * 10;
       }
 
       const imgEl = document.createElementNS("http://www.w3.org/2000/svg", "image");
@@ -915,4 +916,3 @@
   </script>
 </body>
 </html>
-```
