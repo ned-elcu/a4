@@ -63,12 +63,24 @@
       z-index: 30;
       display: none;
     }
-    #admin-panel h3 { margin-top: 0; }
+    #admin-panel h3 {
+      margin-top: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    #admin-panel h3 span.icon {
+      cursor: pointer;
+      margin-left: 5px;
+      font-size: 18px;
+    }
     #audit-log {
       font-size: 12px;
       height: 200px;
       overflow-y: auto;
       margin-bottom: 10px;
+      border-top: 1px solid #ccc;
+      padding-top: 5px;
     }
     #delete-all {
       padding: 6px;
@@ -116,7 +128,13 @@
     </div>
     <!-- Admin Panel -->
     <div id="admin-panel">
-      <h3>Admin Panel</h3>
+      <h3>
+        Audit log
+        <span>
+          <span id="delete-audit" class="icon" title="Delete all audit logs">🗑️</span>
+          <span id="minimize-audit" class="icon" title="Minimize audit log">➖</span>
+        </span>
+      </h3>
       <div id="audit-log"></div>
       <button id="delete-all">Delete All Markers</button>
     </div>
@@ -153,6 +171,7 @@
     document.addEventListener("DOMContentLoaded", () => {
       setupLogin();
       setupToolbox();
+      setupAuditControls();
     });
 
     function setupLogin() {
@@ -256,6 +275,33 @@
       });
     }
 
+    function setupAuditControls() {
+      // Delete audit logs on clicking the trash icon
+      document.getElementById("delete-audit").addEventListener("click", async () => {
+        if (confirm("Delete all audit logs?")) {
+          try {
+            const auditSnapshot = await getDocs(collection(db, "auditLogs"));
+            auditSnapshot.forEach(async (docSnap) => {
+              await deleteDoc(doc(db, "auditLogs", docSnap.id));
+            });
+          } catch (error) {
+            console.error("Error deleting audit logs:", error);
+          }
+        }
+      });
+      // Minimize audit log toggle
+      document.getElementById("minimize-audit").addEventListener("click", () => {
+        const auditLogDiv = document.getElementById("audit-log");
+        if (auditLogDiv.style.display === "none") {
+          auditLogDiv.style.display = "block";
+          document.getElementById("minimize-audit").textContent = "➖";
+        } else {
+          auditLogDiv.style.display = "none";
+          document.getElementById("minimize-audit").textContent = "➕";
+        }
+      });
+    }
+
     function getSVGPoint(e) {
       const pt = svgRoot.createSVGPoint();
       pt.x = e.clientX;
@@ -290,7 +336,7 @@
       }
       try {
         const docRef = await addDoc(collection(db, "markers"), markerData);
-        // Record marker type in the audit log
+        // Record marker addition in the audit log
         recordAuditLog("add", { markerId: docRef.id, markerType: type });
       } catch (error) {
         console.error("Error adding marker:", error);
@@ -389,7 +435,7 @@
         if (confirm("Delete this marker?")) {
           try {
             await deleteDoc(doc(db, "markers", id));
-            // Record deletion along with marker type
+            // Record marker deletion in the audit log
             recordAuditLog("delete", { markerId: id, markerType: data.type });
           } catch (error) {
             console.error("Error deleting marker:", error);
@@ -435,19 +481,16 @@
           const { timestamp, log } = item;
           const applicable = (log.action === "add" || log.action === "delete") && log.details && log.details.markerType;
           if (applicable) {
-            // Create a grouping key: user, action, markerType.
             if (
               currentGroup &&
               currentGroup.key.user === log.user &&
               currentGroup.key.action === log.action &&
               currentGroup.key.markerType === log.details.markerType
             ) {
-              // If within threshold, group together.
               if (timestamp - currentGroup.lastTimestamp <= groupingThreshold) {
                 currentGroup.count += 1;
                 currentGroup.lastTimestamp = timestamp;
               } else {
-                // Push previous group and start a new one.
                 groupedLogs.push(currentGroup);
                 currentGroup = {
                   key: { user: log.user, action: log.action, markerType: log.details.markerType },
@@ -468,7 +511,6 @@
               };
             }
           } else {
-            // For non-applicable events, flush any current group and add individually.
             if (currentGroup) {
               groupedLogs.push(currentGroup);
               currentGroup = null;
