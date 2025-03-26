@@ -508,7 +508,8 @@
 
     async function addMarkerToFirestore(type, x, y) {
       let markerData = { type, x, y, timestamp: serverTimestamp() };
-      if (type === "marker" || type === "citadel" || type === "torch") {
+      // Update the condition to include the new marker types
+      if (["marker", "citadel", "torch", "cave", "sword", "spear", "bow"].includes(type)) {
         markerData.text = prompt("Enter marker text:") || "";
         markerData.color = prompt("Enter marker color (e.g., red or #ff0000):") || "black";
         if (type === "marker" && markerData.text === "") {
