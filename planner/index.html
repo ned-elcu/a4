@@ -3,120 +3,47 @@
 <head>
   <meta charset="UTF-8">
   <title>Interactive Game Map</title>
-  <!-- svg-pan-zoom Library -->
   <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
   <style>
-    /* General styling */
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f4f4f4;
-    }
-    /* Login screen styling */
+    body { margin: 0; font-family: Arial, sans-serif; background: #f4f4f4; }
     #login-screen {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      background: #2c3e50;
-      color: #ecf0f1;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      height: 100vh; background: #2c3e50; color: #ecf0f1;
     }
-    #login-screen input {
-      margin: 5px;
-      padding: 10px;
-      font-size: 16px;
-      width: 250px;
-      border: none;
-      border-radius: 4px;
-    }
+    #login-screen input { margin: 5px; padding: 10px; font-size: 16px; width: 250px;
+      border: none; border-radius: 4px; }
     #login-screen button {
-      margin-top: 10px;
-      padding: 10px 20px;
-      font-size: 16px;
-      border: none;
-      border-radius: 4px;
-      background: #27ae60;
-      color: #fff;
-      cursor: pointer;
+      margin-top: 10px; padding: 10px 20px; font-size: 16px; border: none;
+      border-radius: 4px; background: #27ae60; color: #fff; cursor: pointer;
     }
-    #login-screen button:hover {
-      background: #2ecc71;
-    }
-    #login-error {
-      margin-top: 10px;
-      color: #e74c3c;
-      font-weight: bold;
-    }
-    /* Main app layout */
-    #app {
-      display: none;
-      height: 100vh;
-      position: relative;
-    }
-    /* Toolbox styling */
+    #login-screen button:hover { background: #2ecc71; }
+    #login-error { margin-top: 10px; color: #e74c3c; font-weight: bold; }
+    #app { display: none; height: 100vh; position: relative; }
     #toolbox {
-      position: fixed;
-      top: 10px;
-      left: 10px;
-      background: rgba(255,255,255,0.95);
-      padding: 10px;
-      border-radius: 5px;
-      box-shadow: 0px 0px 10px rgba(0,0,0,0.3);
-      z-index: 20;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
+      position: fixed; top: 10px; left: 10px; background: rgba(255,255,255,0.95);
+      padding: 10px; border-radius: 5px; box-shadow: 0px 0px 10px rgba(0,0,0,0.3);
+      z-index: 20; display: flex; flex-direction: column; gap: 10px;
     }
     .tool {
-      width: 50px;
-      height: 50px;
-      border: 1px solid #ccc;
-      background: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: grab;
-      border-radius: 5px;
-      user-select: none;
+      width: 50px; height: 50px; border: 1px solid #ccc; background: #fff;
+      display: flex; align-items: center; justify-content: center; cursor: grab;
+      border-radius: 5px; user-select: none;
     }
-    .tool img {
-      max-width: 40px;
-      max-height: 40px;
-    }
-    /* Zoom controls styling */
+    .tool img { max-width: 40px; max-height: 40px; }
     #zoom-controls {
-      position: fixed;
-      top: 10px;
-      right: 10px;
-      z-index: 20;
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
+      position: fixed; top: 10px; right: 10px; z-index: 20;
+      display: flex; flex-direction: column; gap: 5px;
     }
     #zoom-controls button {
-      padding: 8px;
-      border: none;
-      border-radius: 4px;
-      background: #3498db;
-      color: #fff;
-      cursor: pointer;
+      padding: 8px; border: none; border-radius: 4px;
+      background: #3498db; color: #fff; cursor: pointer;
     }
-    #zoom-controls button:hover {
-      background: #2980b9;
-    }
-    /* Map container styling */
-    #map-container {
-      width: 100vw;
-      height: 100vh;
-      overflow: hidden;
-    }
-    /* Marker styling */
+    #zoom-controls button:hover { background: #2980b9; }
+    #map-container { width: 100vw; height: 100vh; overflow: hidden; }
     .marker:hover { opacity: 0.8; cursor: pointer; }
   </style>
 </head>
 <body>
-  <!-- Login Screen -->
   <div id="login-screen">
     <h2>Login</h2>
     <input id="email" type="email" placeholder="Email" />
@@ -125,37 +52,28 @@
     <div id="login-error"></div>
   </div>
   
-  <!-- Main App -->
   <div id="app">
-    <!-- Toolbox for draggable items -->
     <div id="toolbox">
       <div class="tool" draggable="true" data-type="marker" title="Text Marker">
-        <!-- Use text icon (or letter M) -->
         <span style="font-size:24px;">M</span>
       </div>
       <div class="tool" draggable="true" data-type="citadel" title="Citadel">
-        <!-- Placeholder SVG icon for citadel -->
         <img src="https://via.placeholder.com/40?text=C" alt="Citadel">
       </div>
       <div class="tool" draggable="true" data-type="torch" title="Torch">
-        <!-- Placeholder SVG icon for torch -->
         <img src="https://via.placeholder.com/40?text=T" alt="Torch">
       </div>
     </div>
-    <!-- Zoom Controls -->
     <div id="zoom-controls">
       <button id="zoom-in">Zoom In</button>
       <button id="zoom-out">Zoom Out</button>
       <button id="reset-zoom">Reset</button>
     </div>
-    <!-- Map Container -->
     <div id="map-container">
-      <!-- Load the SVG map from external URL -->
       <object id="map-svg" type="image/svg+xml" data="https://regnumsolis.com/planner/images/map.svg" width="100%" height="100%"></object>
     </div>
   </div>
 
-  <!-- Main Script using ES Modules -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
     import { getFirestore, collection, addDoc, orderBy, query, onSnapshot, deleteDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
@@ -177,7 +95,7 @@
 
     let panZoomInstance;
     let svgRoot;
-    let markerLayer; // Global reference for markers
+    let markerLayer;
 
     document.addEventListener("DOMContentLoaded", () => {
       setupLogin();
@@ -216,30 +134,18 @@
 
     function initializeMap() {
       const svgObject = document.getElementById("map-svg");
-      
-      svgObject.addEventListener("load", function init() {
-        // Check if the SVG is fully loaded.
-        if (!svgObject.contentDocument) {
-          console.error("SVG contentDocument is null. Retrying in 100ms...");
-          setTimeout(init, 100);
-          return;
-        }
+
+      svgObject.addEventListener("load", () => {
         svgRoot = svgObject.contentDocument.documentElement;
-        
-        // Create a group for the pan/zoom layer and move all existing content into it.
         const panLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
         panLayer.setAttribute("id", "pan-zoom-layer");
-        while (svgRoot.firstChild) {
-          panLayer.appendChild(svgRoot.firstChild);
-        }
+        while (svgRoot.firstChild) panLayer.appendChild(svgRoot.firstChild);
         svgRoot.appendChild(panLayer);
         
-        // Create a separate group for markers.
         markerLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
         markerLayer.setAttribute("id", "marker-layer");
         svgRoot.appendChild(markerLayer);
 
-        // Initialize svg-pan-zoom on the panLayer only.
         panZoomInstance = svgPanZoom(panLayer, {
           zoomEnabled: true,
           controlIconsEnabled: false,
@@ -247,16 +153,9 @@
           maxZoom: 5
         });
 
-        // Attach zoom control event listeners now that panZoomInstance is defined.
-        document.getElementById("zoom-in").addEventListener("click", () => panZoomInstance.zoomIn());
-        document.getElementById("zoom-out").addEventListener("click", () => panZoomInstance.zoomOut());
-        document.getElementById("reset-zoom").addEventListener("click", () => panZoomInstance.resetZoom());
-
-        // Function to update marker positions manually.
         const updateMarkersPosition = () => {
           const pan = panZoomInstance.getPan();
           const zoom = panZoomInstance.getZoom();
-          // For each marker in the marker layer, recalc position.
           markerLayer.querySelectorAll(".marker").forEach(marker => {
             const origX = parseFloat(marker.getAttribute("data-x"));
             const origY = parseFloat(marker.getAttribute("data-y"));
@@ -264,16 +163,16 @@
           });
         };
 
-        // Update markers on zoom and pan events.
         panZoomInstance.setOnZoom(updateMarkersPosition);
         panZoomInstance.setOnPan(updateMarkersPosition);
-
         setupDragAndDrop();
         listenForMarkers();
-
-        // Initial update
         updateMarkersPosition();
       });
+
+      document.getElementById("zoom-in").addEventListener("click", () => panZoomInstance.zoomIn());
+      document.getElementById("zoom-out").addEventListener("click", () => panZoomInstance.zoomOut());
+      document.getElementById("reset-zoom").addEventListener("click", () => panZoomInstance.resetZoom());
     }
 
     function setupToolbox() {
@@ -286,7 +185,6 @@
     }
 
     function setupDragAndDrop() {
-      // Listen for dragover and drop on the svgRoot (for coordinate consistency)
       svgRoot.addEventListener("dragover", (e) => {
         e.preventDefault();
         e.dataTransfer.dropEffect = "move";
@@ -294,21 +192,20 @@
 
       svgRoot.addEventListener("drop", async (e) => {
         e.preventDefault();
-
         const markerType = e.dataTransfer.getData("text/plain");
         const pt = svgRoot.createSVGPoint();
         pt.x = e.clientX;
         pt.y = e.clientY;
-        // Convert to SVG coordinates relative to the entire SVG.
-        const svgP = pt.matrixTransform(svgRoot.getScreenCTM().inverse());
-        // Get current pan and zoom values.
-        const pan = panZoomInstance.getPan();
+        
+        // Fixed coordinate calculation
+        const screenCTM = svgRoot.getScreenCTM().inverse();
+        const svgPoint = pt.matrixTransform(screenCTM);
         const zoom = panZoomInstance.getZoom();
-        // Convert the drop point into the local coordinate system.
-        const x = (svgP.x - pan.x) / zoom;
-        const y = (svgP.y - pan.y) / zoom;
+        const pan = panZoomInstance.getPan();
+        const originalX = (svgPoint.x - pan.x) / zoom;
+        const originalY = (svgPoint.y - pan.y) / zoom;
 
-        await addMarkerToFirestore(markerType, x, y);
+        await addMarkerToFirestore(markerType, originalX, originalY);
       });
     }
 
@@ -318,28 +215,20 @@
         markerData.text = prompt("Enter marker text:") || "M";
         markerData.color = prompt("Enter marker color (e.g., red or #ff0000):") || "black";
       }
-
-      try {
-        await addDoc(collection(db, "markers"), markerData);
-      } catch (error) {
-        console.error("Error adding marker: ", error);
-      }
+      try { await addDoc(collection(db, "markers"), markerData); }
+      catch (error) { console.error("Error adding marker: ", error); }
     }
 
     function listenForMarkers() {
       const markersQuery = query(collection(db, "markers"), orderBy("timestamp"));
       onSnapshot(markersQuery, (snapshot) => {
-        // Remove existing markers.
         markerLayer.querySelectorAll(".marker").forEach((marker) => marker.remove());
-        snapshot.forEach((docSnap) => {
-          createMarkerElement(docSnap.id, docSnap.data());
-        });
+        snapshot.forEach((docSnap) => createMarkerElement(docSnap.id, docSnap.data()));
       });
     }
 
     function createMarkerElement(id, data) {
       let markerEl;
-
       if (data.type === "marker") {
         markerEl = document.createElementNS("http://www.w3.org/2000/svg", "text");
         markerEl.textContent = data.text;
@@ -347,7 +236,9 @@
         markerEl.setAttribute("font-size", "16");
       } else {
         markerEl = document.createElementNS("http://www.w3.org/2000/svg", "image");
-        const markerSrc = data.type === "citadel" ? "https://via.placeholder.com/30?text=C" : "https://via.placeholder.com/30?text=T";
+        const markerSrc = data.type === "citadel" 
+          ? "https://via.placeholder.com/30?text=C" 
+          : "https://via.placeholder.com/30?text=T";
         markerEl.setAttributeNS("http://www.w3.org/1999/xlink", "href", markerSrc);
         markerEl.setAttribute("width", "30");
         markerEl.setAttribute("height", "30");
@@ -355,35 +246,21 @@
 
       markerEl.classList.add("marker");
       markerEl.setAttribute("data-id", id);
-      // Save original coordinates.
       markerEl.setAttribute("data-x", data.x);
       markerEl.setAttribute("data-y", data.y);
 
-      // Initially set position based on current pan and zoom.
       const pan = panZoomInstance.getPan();
       const zoom = panZoomInstance.getZoom();
       markerEl.setAttribute("transform", `translate(${pan.x + zoom * data.x}, ${pan.y + zoom * data.y})`);
 
       markerEl.addEventListener("click", async () => {
         if (confirm("Delete this marker?")) {
-          try {
-            await deleteDoc(doc(db, "markers", id));
-          } catch (error) {
-            console.error("Error deleting marker: ", error);
-          }
+          try { await deleteDoc(doc(db, "markers", id)); }
+          catch (error) { console.error("Error deleting marker: ", error); }
         }
       });
-
-      // Append the marker to the marker layer.
       markerLayer.appendChild(markerEl);
     }
-    
-    /* Test Cases:
-       1. Log in with a valid email/password and verify that the map loads.
-       2. Drag a toolbox item onto the map and verify that a marker is created at the drop location.
-       3. Use the zoom controls to zoom in/out and confirm that the markers adjust correctly.
-       4. Click a marker to test the deletion prompt and subsequent removal upon confirmation.
-    */
   </script>
 </body>
 </html>
