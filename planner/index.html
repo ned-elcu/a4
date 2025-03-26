@@ -50,6 +50,36 @@
       display: none; align-items: center; justify-content: center;
       z-index: 50; font-size: 20px; text-align: center; padding: 20px;
     }
+    /* Admin panel styling */
+    #admin-panel {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      width: 300px;
+      background: rgba(255,255,255,0.95);
+      border-radius: 5px;
+      box-shadow: 0px 0px 10px rgba(0,0,0,0.3);
+      padding: 10px;
+      z-index: 30;
+      display: none;
+    }
+    #admin-panel h3 { margin-top: 0; }
+    #audit-log {
+      font-size: 12px;
+      height: 200px;
+      overflow-y: auto;
+      margin-bottom: 10px;
+    }
+    #delete-all {
+      padding: 6px;
+      border: none;
+      border-radius: 4px;
+      background: #e74c3c;
+      color: #fff;
+      cursor: pointer;
+      width: 100%;
+    }
+    #delete-all:hover { background: #c0392b; }
   </style>
 </head>
 <body>
@@ -84,13 +114,19 @@
     <div id="map-container">
       <div id="map-svg-container"></div>
     </div>
+    <!-- Admin Panel -->
+    <div id="admin-panel">
+      <h3>Admin Panel</h3>
+      <div id="audit-log"></div>
+      <button id="delete-all">Delete All Markers</button>
+    </div>
   </div>
 
   <div id="error-overlay">Database connection failed. The app cannot be used at this time.</div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-    import { getFirestore, collection, addDoc, orderBy, query, onSnapshot, deleteDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, orderBy, query, onSnapshot, deleteDoc, doc, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 
     const firebaseConfig = {
@@ -112,6 +148,7 @@
     let panLayer;
     let markerLayer;
     let isMapReady = false;
+    const adminEmail = "gryves_dev@yahoo.com";
 
     document.addEventListener("DOMContentLoaded", () => {
       setupLogin();
@@ -141,6 +178,11 @@
           document.getElementById("login-screen").style.display = "none";
           document.getElementById("app").style.display = "block";
           initializeMap();
+          if (user.email === adminEmail) {
+            document.getElementById("admin-panel").style.display = "block";
+            listenForAuditLogs();
+            setupDeleteAll();
+          }
         } else {
           document.getElementById("login-screen").style.display = "flex";
           document.getElementById("app").style.display = "none";
@@ -173,7 +215,6 @@
       svgRoot.setAttribute("height", "100%");
       svgRoot.setAttribute("preserveAspectRatio", "xMidYMid meet");
 
-      // Create pan layer and move existing SVG content into it
       panLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
       panLayer.id = "pan-layer";
       while (svgRoot.firstChild) {
@@ -181,12 +222,10 @@
       }
       svgRoot.appendChild(panLayer);
 
-      // Create marker layer inside pan layer so markers follow zoom/pan
       markerLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
       markerLayer.id = "marker-layer";
       panLayer.appendChild(markerLayer);
 
-      // Initialize panZoom with a beforeMouseDown hook to prevent pan when clicking markers
       panZoomInstance = svgPanZoom(svgRoot, {
         zoomEnabled: true,
         panEnabled: true,
@@ -250,7 +289,8 @@
         }
       }
       try {
-        await addDoc(collection(db, "markers"), markerData);
+        const docRef = await addDoc(collection(db, "markers"), markerData);
+        recordAuditLog("add", { markerId: docRef.id });
       } catch (error) {
         console.error("Error adding marker:", error);
       }
@@ -282,7 +322,6 @@
     }
 
     function createMarkerElement(id, data) {
-      // Create group for marker and add identifier
       let markerEl = document.createElementNS("http://www.w3.org/2000/svg", "g");
       markerEl.setAttribute("data-marker", "true");
 
@@ -293,7 +332,7 @@
         imgHeight = 40;
         imgXOffset = -20;
         imgYOffset = -20;
-        textXOffset = 20; // position immediately right (no gap)
+        textXOffset = 20;
       } else if (data.type === "citadel") {
         imgSrc = "https://regnumsolis.com/planner/images/citadel.svg";
         imgWidth = 30;
@@ -310,7 +349,6 @@
         textXOffset = 15;
       }
 
-      // Create image element
       const imgEl = document.createElementNS("http://www.w3.org/2000/svg", "image");
       imgEl.setAttributeNS("http://www.w3.org/1999/xlink", "href", imgSrc);
       imgEl.setAttribute("width", imgWidth);
@@ -319,7 +357,6 @@
       imgEl.setAttribute("y", data.y + imgYOffset);
       markerEl.appendChild(imgEl);
 
-      // Create text element to be positioned right to the icon
       const textEl = document.createElementNS("http://www.w3.org/2000/svg", "text");
       textEl.textContent = data.text;
       textEl.setAttribute("fill", data.color);
@@ -331,7 +368,6 @@
       textEl.style.fontFamily = "'Bebas Neue', sans-serif";
       markerEl.appendChild(textEl);
 
-      // Create background rectangle behind the text using the text's computed length
       requestAnimationFrame(() => {
         const bbox = textEl.getBBox();
         const textLength = textEl.getComputedTextLength();
@@ -352,12 +388,57 @@
         if (confirm("Delete this marker?")) {
           try {
             await deleteDoc(doc(db, "markers", id));
+            recordAuditLog("delete", { markerId: id });
           } catch (error) {
             console.error("Error deleting marker:", error);
           }
         }
       });
       markerLayer.appendChild(markerEl);
+    }
+
+    function recordAuditLog(action, details) {
+      const user = auth.currentUser;
+      if (!user) return;
+      const logData = {
+        action,
+        details,
+        user: user.email,
+        timestamp: serverTimestamp()
+      };
+      addDoc(collection(db, "auditLogs"), logData)
+        .catch(error => console.error("Error writing audit log:", error));
+    }
+
+    function listenForAuditLogs() {
+      const auditLogContainer = document.getElementById("audit-log");
+      const auditQuery = query(collection(db, "auditLogs"), orderBy("timestamp", "desc"));
+      onSnapshot(auditQuery, (snapshot) => {
+        auditLogContainer.innerHTML = "";
+        snapshot.forEach((docSnap) => {
+          const log = docSnap.data();
+          const date = log.timestamp ? new Date(log.timestamp.seconds * 1000).toLocaleString() : "";
+          const entry = document.createElement("div");
+          entry.textContent = `[${date}] ${log.user} ${log.action} marker (${JSON.stringify(log.details)})`;
+          auditLogContainer.appendChild(entry);
+        });
+      });
+    }
+
+    function setupDeleteAll() {
+      document.getElementById("delete-all").addEventListener("click", async () => {
+        if (confirm("Delete all markers?")) {
+          try {
+            const markersSnapshot = await getDocs(collection(db, "markers"));
+            markersSnapshot.forEach(async (docSnap) => {
+              await deleteDoc(doc(db, "markers", docSnap.id));
+            });
+            recordAuditLog("delete_all", { count: markersSnapshot.size });
+          } catch (error) {
+            console.error("Error deleting all markers:", error);
+          }
+        }
+      });
     }
 
     function displayErrorOverlay(message) {
