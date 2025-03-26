@@ -310,7 +310,7 @@
       <button id="reset-zoom">Reset</button>
     </div>
     
-    <!-- New Map Switch Controls -->
+    <!-- Map Switch Controls: Markers and lines remain intact -->
     <div id="map-switch-controls">
       <button id="tactical-terrain">Tactical Terrain</button>
       <button id="visibility-terrain">Visibility Terrain</button>
@@ -405,12 +405,12 @@
       });
     }
 
-    // Updated to use switchMap for initial load.
+    // Use switchMap to load the initial map.
     function initializeMap() {
       switchMap("https://regnumsolis.com/planner/images/map.svg");
     }
 
-    // New function to switch maps.
+    // switchMap replaces the SVG map, then reinitializes pan/zoom and event listeners.
     function switchMap(url) {
       if (panZoomInstance) {
         panZoomInstance.destroy();
