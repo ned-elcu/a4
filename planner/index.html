@@ -1075,10 +1075,10 @@
     function animate() {
       ctx.clearRect(0, 0, width, height);
       
-      // New gradient: mainly blue with secondary purple, each 10% darker
+      // New gradient:  10% darker
       const bgGradient = ctx.createLinearGradient(0, 0, 0, height);
-      bgGradient.addColorStop(0, 'rgb(0,0,46)');   // Dark blue (dominant)
-      bgGradient.addColorStop(1, 'rgb(0,0,56)');    // Dark purple (secondary)
+      bgGradient.addColorStop(0, 'rgb(24, 51, 77)');   
+      bgGradient.addColorStop(1, 'rgb(24, 51, 51)');    
       ctx.fillStyle = bgGradient;
       ctx.fillRect(0, 0, width, height);
       
