@@ -152,15 +152,54 @@
       text-shadow: 0 0 5px rgba(223,197,136,0.8);
       animation: neonGlow 1.5s infinite alternate ease-in-out;
     }
-    /* Text Toggle (Checker) container */
-    #text-toggle-container {
-      position: fixed;
-      top: 120px;
-      left: 20px;
-      z-index: 21;
+    /* Right side menus container */
+    .menu-container {
+      width: 180px;
+      background: rgba(30,30,30,0.9);
+      padding: 10px;
+      border: 1px solid rgba(223,197,136,0.5);
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(223,197,136,0.5);
       display: flex;
+      flex-direction: column;
+      gap: 5px;
       align-items: center;
-      gap: 10px;
+    }
+    /* Map change controls */
+    #map-change-container {
+      position: fixed;
+      top: 100px;
+      right: 20px;
+      z-index: 20;
+    }
+    #map-change-container h2 {
+      font-size: 1.2em;
+      margin-bottom: 5px;
+    }
+    /* Zoom controls */
+    #zoom-controls {
+      position: fixed;
+      top: 260px;  /* Adjusted gap from the map switch menu */
+      right: 20px;
+      z-index: 20;
+    }
+    /* New Text Toggle on Right */
+    #text-toggle-right {
+      position: fixed;
+      top: 420px; /* Placed beneath the zoom controls */
+      right: 20px;
+      z-index: 20;
+      width: 180px;
+      background: rgba(30,30,30,0.9);
+      padding: 10px;
+      border: 1px solid rgba(223,197,136,0.5);
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(223,197,136,0.5);
+      text-align: center;
+    }
+    #text-toggle-right h2 {
+      font-size: 1em;
+      margin-bottom: 5px;
     }
     /* Modern toggle switch styling */
     #toggle-marker-text {
@@ -196,62 +235,15 @@
       cursor: pointer;
       font-size: 1em;
       transition: color 0.3s;
+      margin-left: 10px;
     }
     #toggle-marker-text-label:hover {
       color: #dfc588;
     }
-    /* Menu container for map change and zoom controls */
-    .menu-container {
-      width: 180px;
-      background: rgba(30,30,30,0.9);
-      padding: 10px;
-      border: 1px solid rgba(223,197,136,0.5);
-      border-radius: 5px;
-      box-shadow: 0 0 10px rgba(223,197,136,0.5);
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-      align-items: center;
-    }
-    /* Map change controls */
-    #map-change-container {
-      position: fixed;
-      top: 100px;
-      right: 20px;
-      z-index: 20;
-    }
-    #map-change-container h2 {
-      font-size: 1.2em;
-      margin-bottom: 5px;
-    }
-    /* Zoom controls */
-    #zoom-controls {
-      position: fixed;
-      top: 260px;  /* Adjusted gap from the map switch menu */
-      right: 20px;
-      z-index: 20;
-    }
-    /* Standard button style for menus */
-    .menu-container button {
-      width: 100%;
-      height: 40px;
-      font-family: 'Bebas Neue', sans-serif;
-      background: rgba(223,197,136,0.8);
-      border: none;
-      border-radius: 4px;
-      color: white;
-      cursor: pointer;
-      transition: transform 0.3s, box-shadow 0.3s;
-      box-shadow: 0 4px 15px rgba(223,197,136,0.5);
-    }
-    .menu-container button:hover {
-      transform: scale(1.05);
-      box-shadow: 0 4px 15px rgba(223,197,136,0.9);
-    }
     /* Toolbox */
     #toolbox {
       position: fixed;
-      top: 180px; /* Moved down to accommodate the text toggle */
+      top: 180px; /* Adjusted to accommodate the new right menu */
       left: 20px;
       background: rgba(30,30,30,0.9);
       padding: 10px;
@@ -410,10 +402,13 @@
       <button id="reset-zoom">Reset</button>
     </div>
 
-    <!-- Text Toggle (Checker) -->
-    <div id="text-toggle-container">
-      <input type="checkbox" id="toggle-marker-text">
-      <label for="toggle-marker-text" id="toggle-marker-text-label">Display text</label>
+    <!-- Text Toggle on Right -->
+    <div id="text-toggle-right">
+      <h2 style="font-size:1em; margin-bottom:5px;">Marker Text</h2>
+      <div id="toggle-container">
+        <input type="checkbox" id="toggle-marker-text">
+        <label for="toggle-marker-text" id="toggle-marker-text-label">Display text</label>
+      </div>
     </div>
 
     <!-- Toolbox -->
