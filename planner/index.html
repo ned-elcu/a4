@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>SOLIS Planner</title>
-  <link rel="icon" href="https://regnumsolis.com/planner/images/icon.png" type="image/png" />
+  <link rel="icon" href="https://regnumsolis.com/planner/images/icon.png" type="image/png">
   <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap">
   <style>
     /* Reset and base styles */
     * {
@@ -84,29 +84,6 @@
                      0 0 40px rgba(223,197,136,1);
       }
     }
-    /* Wind sway animation for dragging */
-    @keyframes windSway {
-      0% { transform: scale(0.9) rotate(2deg); }
-      50% { transform: scale(0.9) rotate(-2deg); }
-      100% { transform: scale(0.9) rotate(2deg); }
-    }
-    /* Pop-in animation for dropped markers */
-    @keyframes popIn {
-      0% { transform: scale(0.5); opacity: 0; }
-      100% { transform: scale(1); opacity: 1; }
-    }
-    /* Class added during custom drag */
-    .dragging {
-      position: fixed;
-      pointer-events: none;
-      z-index: 2000;
-      animation: windSway 1s infinite alternate;
-      opacity: 0.8;
-    }
-    /* Class for pop-in drop effect */
-    .drop-pop {
-      animation: popIn 0.5s ease-out;
-    }
     /* Login screen */
     #login-screen {
       display: flex;
@@ -176,7 +153,7 @@
       text-shadow: 0 0 5px rgba(223,197,136,0.8);
       animation: neonGlow 1.5s infinite alternate ease-in-out;
     }
-    /* Right menus container */
+    /* Right menus container to prevent overlap */
     #right-menus {
       position: fixed;
       top: 100px;
@@ -186,6 +163,7 @@
       gap: 20px;
       z-index: 20;
     }
+    /* Right-side menus */
     .menu-container {
       width: 180px;
       background: rgba(30,30,30,0.9);
@@ -199,6 +177,7 @@
     .menu-container.hidden {
       transform: translateX(109%);
     }
+    /* Menu header styling with toggle arrow */
     .menu-header {
       display: flex;
       align-items: center;
@@ -207,25 +186,28 @@
       margin-bottom: 5px;
       position: relative;
     }
-    .menu-toggle {
-      position: absolute;
-      left: -45px;
-      top: -40%;
-      background: none;
-      border: none;
-      font-size: 1.05em;
-      color: rgb(223,197,136);
-      cursor: pointer;
-      padding: 0;
-      line-height: 1;
-      width: 22px !important;
-      height: 23px !important;
-    }
+  /* Adjusted Arrow Toggle Button Styling */
+  .menu-toggle {
+    position: absolute;
+    left: -45px; /* position outside the menu container */
+    top: -40%;
+    background: none;       /* no background */
+    border: none;           /* no border */
+    font-size: 1.05em;       /* slightly larger for visibility */
+    color: rgb(223,197,136);
+    cursor: pointer;
+    padding: 0;             /* remove extra padding */
+    line-height: 1;
+    width: 22px !important;
+    height: 23px !important;
+  }
+    /* Styling for the content inside each menu */
     .menu-content {
       display: flex;
       flex-direction: column;
       gap: 5px;
     }
+    /* Buttons for map change and zoom inside menus */
     .menu-content button {
       width: 100%;
       height: 40px;
@@ -241,11 +223,12 @@
       transform: scale(1.05);
       box-shadow: 0 4px 15px rgba(223,197,136,0.9);
     }
-    /* Settings */
+    /* Settings (formerly Marker Text Toggle) */
     #text-toggle-right h2 {
       font-size: 1em;
       margin-bottom: 5px;
     }
+    /* Modern toggle switch styling */
     .toggle-switch {
       appearance: none;
       -webkit-appearance: none;
@@ -275,6 +258,7 @@
     .toggle-switch:checked::before {
       transform: translateX(20px);
     }
+    /* Align the switch container with centered text */
     #toggle-container {
       display: flex;
       align-items: center;
@@ -284,7 +268,7 @@
       margin-left: 10px;
       line-height: 20px;
     }
-    /* Marker Visibility toggles */
+    /* Marker Visibility toggles inside Settings */
     #marker-visibility-container {
       margin-top: 10px;
       text-align: left;
@@ -306,7 +290,7 @@
       flex-grow: 1;
       margin-left: 5px;
     }
-    /* Toolbox – custom drag so native draggable attribute is removed */
+    /* Toolbox */
     #toolbox {
       position: fixed;
       top: 180px;
@@ -321,7 +305,6 @@
       flex-direction: column;
       gap: 10px;
     }
-    /* Toolbox items */
     .tool {
       width: 50px;
       height: 50px;
@@ -333,8 +316,6 @@
       cursor: pointer;
       border-radius: 5px;
       transition: transform 0.3s;
-      user-select: none;
-      position: relative;
     }
     .tool:hover {
       transform: scale(1.1);
@@ -412,6 +393,7 @@
       border-top: 1px solid rgba(223,197,136,0.5);
       padding-top: 5px;
     }
+    /* Admin log button style applied to right menu buttons */
     .menu-container button {
       width: 100%;
       height: 40px;
@@ -427,6 +409,7 @@
       transform: scale(1.05);
       box-shadow: 0 4px 15px rgba(223,197,136,0.9);
     }
+    /* Existing delete all markers button styling remains unchanged */
     #delete-all {
       width: 100%;
       height: 40px;
@@ -442,6 +425,8 @@
       transform: scale(1.05);
       box-shadow: 0 4px 15px rgba(223,197,136,0.9);
     }
+      
+      
   </style>
 </head>
 <body>
@@ -449,11 +434,13 @@
   <div id="background-container">
     <canvas id="waveCanvas"></canvas>
   </div>
+
   <!-- Loading overlay -->
   <div id="loading-overlay">
-    <img src="https://regnumsolis.com/planner/images/loading.gif" alt="Loading" />
+    <img src="https://regnumsolis.com/planner/images/loading.gif" alt="Loading">
     <div id="loading-text">0%</div>
   </div>
+
   <!-- Login Screen -->
   <div id="login-screen">
     <h2>Login</h2>
@@ -462,12 +449,14 @@
     <button id="login-button">Login</button>
     <div id="login-error"></div>
   </div>
+
   <!-- Main App -->
   <div id="app">
     <!-- Header -->
     <div id="header-logo">
       <h1>REGNUM SOLIS R&D / REMNANT SENATE</h1>
     </div>
+
     <!-- Right-side menus container -->
     <div id="right-menus">
       <!-- Map Change Menu -->
@@ -481,6 +470,7 @@
           <button id="style-map">Style Map</button>
         </div>
       </div>
+
       <!-- Zoom Controls -->
       <div id="zoom-controls" class="menu-container hidden">
         <div class="menu-header">
@@ -493,17 +483,20 @@
           <button id="reset-zoom">Reset</button>
         </div>
       </div>
-      <!-- Settings -->
+
+      <!-- Settings (formerly Marker Text Toggle) -->
       <div id="text-toggle-right" class="menu-container hidden">
         <div class="menu-header">
           <span>Settings</span>
           <button class="menu-toggle">&#9654;</button>
         </div>
         <div class="menu-content">
+          <!-- Existing Hover Text Toggle -->
           <div id="toggle-container">
             <input type="checkbox" id="toggle-marker-text" class="toggle-switch">
             <label for="toggle-marker-text" id="toggle-marker-text-label">HOVER TEXT</label>
           </div>
+          <!-- New Marker Visibility Toggles -->
           <div id="marker-visibility-container">
             <h3>Marker Visibility</h3>
             <div class="toggle-item">
@@ -554,49 +547,53 @@
         </div>
       </div>
     </div>
-    <!-- Toolbox – custom drag only; native draggable removed -->
+
+    <!-- Toolbox -->
     <div id="toolbox">
-      <div class="tool" data-type="homestead" title="Homestead">
+      <!-- Renamed Homestead tool (formerly Text Marker) -->
+      <div class="tool" draggable="true" data-type="homestead" title="Homestead">
         <img src="https://regnumsolis.com/planner/images/marker.svg" alt="Homestead">
       </div>
-      <div class="tool" data-type="citadel" title="Citadel">
+      <div class="tool" draggable="true" data-type="citadel" title="Citadel">
         <img src="https://regnumsolis.com/planner/images/citadel.svg" alt="Citadel">
       </div>
-      <div class="tool" data-type="torch" title="Torch">
+      <div class="tool" draggable="true" data-type="torch" title="Torch">
         <img src="https://regnumsolis.com/planner/images/torch.svg" alt="Torch">
       </div>
-      <div class="tool" data-type="cave" title="Cave">
+      <div class="tool" draggable="true" data-type="cave" title="Cave">
         <img src="https://regnumsolis.com/planner/images/cave.svg" alt="Cave">
       </div>
-      <div class="tool" data-type="sword" title="Sword">
+      <div class="tool" draggable="true" data-type="sword" title="Sword">
         <img src="https://regnumsolis.com/planner/images/sword.svg" alt="Sword">
       </div>
-      <div class="tool" data-type="spear" title="Spear">
+      <div class="tool" draggable="true" data-type="spear" title="Spear">
         <img src="https://regnumsolis.com/planner/images/spear.svg" alt="Spear">
       </div>
-      <div class="tool" data-type="bow" title="Bow">
+      <div class="tool" draggable="true" data-type="bow" title="Bow">
         <img src="https://regnumsolis.com/planner/images/bow.svg" alt="Bow">
       </div>
       <div class="tool" data-type="line" title="Line Draw">
         <img src="https://regnumsolis.com/planner/images/line.svg" alt="Line Draw" onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2250%22 height=%2250%22><text x=%220%22 y=%2230%22 fill=%22white%22 font-size=%2230%22>―</text></svg>'">
       </div>
-      <div class="tool" data-type="beacon" title="Beacon">
+      <div class="tool" draggable="true" data-type="beacon" title="Beacon">
         <img src="https://regnumsolis.com/planner/images/beacon.svg" alt="Beacon">
       </div>
-      <div class="tool" data-type="camp" title="Camp">
+      <div class="tool" draggable="true" data-type="camp" title="Camp">
         <img src="https://regnumsolis.com/planner/images/camp.svg" alt="Camp">
       </div>
-      <div class="tool" data-type="catapult" title="Catapult">
+      <div class="tool" draggable="true" data-type="catapult" title="Catapult">
         <img src="https://regnumsolis.com/planner/images/catapult.svg" alt="Catapult">
       </div>
-      <div class="tool" data-type="ram" title="Ram">
+      <div class="tool" draggable="true" data-type="ram" title="Ram">
         <img src="https://regnumsolis.com/planner/images/ram.svg" alt="Ram">
       </div>
     </div>
+
     <!-- Map Container -->
     <div id="map-container">
       <div id="map-svg-container"></div>
     </div>
+
     <!-- Admin Panel -->
     <div id="admin-panel">
       <h3>
@@ -611,13 +608,12 @@
       <button id="delete-all">Delete All Markers</button>
     </div>
   </div>
+
   <div id="error-overlay">Database connection failed. The app cannot be used at this time.</div>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-    import {
-      getFirestore, collection, addDoc, orderBy, query, onSnapshot,
-      deleteDoc, doc, serverTimestamp, getDocs
-    } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, orderBy, query, onSnapshot, deleteDoc, doc, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 
     const firebaseConfig = {
@@ -637,6 +633,7 @@
     let panZoomInstance, svgRoot, panLayer, lineLayer, markerLayer;
     let isMapReady = false;
     const adminEmail = "gryves_dev@yahoo.com";
+
     let activeTool = null;
     let lineDrawingState = 0;
     let currentLine = null;
@@ -657,31 +654,6 @@
       ram: true
     };
 
-    // Use incremental updates for markers
-    function listenForMarkers() {
-      const markersQuery = query(collection(db, "markers"), orderBy("timestamp"));
-      onSnapshot(markersQuery, (snapshot) => {
-        snapshot.docChanges().forEach(change => {
-          const id = change.doc.id;
-          const data = change.doc.data();
-          if (change.type === "added") {
-            createMarkerElement(id, data);
-          } else if (change.type === "removed") {
-            const el = markerLayer.querySelector(`[data-id="${id}"]`);
-            if (el) el.remove();
-          } else if (change.type === "modified") {
-            const el = markerLayer.querySelector(`[data-id="${id}"]`);
-            if (el) el.remove();
-            createMarkerElement(id, data);
-          }
-        });
-        updateMarkerVisibility();
-      }, error => {
-        console.error("Firestore connection error:", error);
-        displayErrorOverlay("Firestore connection failed.");
-      });
-    }
-
     function updateMarkerVisibility() {
       markerLayer.querySelectorAll("[data-marker='true']").forEach(markerEl => {
         const type = markerEl.getAttribute("data-type");
@@ -701,6 +673,8 @@
       setupAuditControls();
       setupMapSwitchControls();
       setupMenuToggles();
+
+      // Setup marker text toggle functionality
       const toggleMarkerTextCheckbox = document.getElementById("toggle-marker-text");
       const toggleLabel = document.getElementById("toggle-marker-text-label");
       toggleMarkerTextCheckbox.addEventListener("change", function() {
@@ -712,7 +686,10 @@
           toggleLabel.textContent = "ALWAYS TEXT";
         }
       });
-      Object.keys(markerVisibility).forEach(type => {
+
+      // Setup marker visibility toggles
+      const markerTypes = Object.keys(markerVisibility);
+      markerTypes.forEach(type => {
         const checkbox = document.getElementById(`toggle-${type}`);
         if (checkbox) {
           checkbox.addEventListener("change", function() {
@@ -724,11 +701,17 @@
     });
 
     function setupMenuToggles() {
+      // Attach toggle functionality to each menu toggle button
       document.querySelectorAll(".menu-toggle").forEach(btn => {
         btn.addEventListener("click", () => {
           const menu = btn.closest(".menu-container");
           menu.classList.toggle("hidden");
-          btn.innerHTML = menu.classList.contains("hidden") ? "&#9664;" : "&#9654;";
+          // Change arrow direction
+          if (menu.classList.contains("hidden")) {
+            btn.innerHTML = "&#9664;"; // left arrow when hidden
+          } else {
+            btn.innerHTML = "&#9654;"; // right arrow when visible
+          }
         });
       });
     }
@@ -759,6 +742,7 @@
         const email = document.getElementById("email").value.trim();
         const password = document.getElementById("password").value.trim();
         const errorDiv = document.getElementById("login-error");
+
         signInWithEmailAndPassword(auth, email, password)
           .then(() => {
             errorDiv.textContent = "";
@@ -766,11 +750,12 @@
             document.getElementById("app").style.display = "block";
             initializeMap();
           })
-          .catch(error => {
+          .catch((error) => {
             errorDiv.textContent = error.message;
           });
       });
-      onAuthStateChanged(auth, user => {
+
+      onAuthStateChanged(auth, (user) => {
         if (user) {
           document.getElementById("login-screen").style.display = "none";
           document.getElementById("app").style.display = "block";
@@ -787,12 +772,16 @@
       });
     }
 
+    // Set default map to Style Map.
     function initializeMap() {
       switchMap("https://regnumsolis.com/planner/images/mvmvmdfs.svg");
     }
 
+    // switchMap shows the loading overlay, fetches the SVG, then initializes pan/zoom and listeners.
     function switchMap(url) {
-      if (panZoomInstance) panZoomInstance.destroy();
+      if (panZoomInstance) {
+        panZoomInstance.destroy();
+      }
       isMapReady = false;
       const container = document.getElementById("map-svg-container");
       showLoading();
@@ -816,6 +805,7 @@
         });
     }
 
+    // Setup the map switch controls.
     function setupMapSwitchControls() {
       document.getElementById("tactical-map").addEventListener("click", () => {
         switchMap("https://regnumsolis.com/planner/images/mvmvmdfstactical.svg");
@@ -830,18 +820,22 @@
       svgRoot.setAttribute("width", "100%");
       svgRoot.setAttribute("height", "100%");
       svgRoot.setAttribute("preserveAspectRatio", "xMidYMid meet");
+
       panLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
       panLayer.id = "pan-layer";
       while (svgRoot.firstChild) {
         panLayer.appendChild(svgRoot.firstChild);
       }
       svgRoot.appendChild(panLayer);
+
       lineLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
       lineLayer.id = "line-layer";
       panLayer.appendChild(lineLayer);
+
       markerLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
       markerLayer.id = "marker-layer";
       panLayer.appendChild(markerLayer);
+
       panZoomInstance = svgPanZoom(svgRoot, {
         zoomEnabled: true,
         panEnabled: true,
@@ -865,56 +859,83 @@
       document.getElementById("reset-zoom").addEventListener("click", () => panZoomInstance.resetZoom());
     }
 
-    // Custom drag handling for toolbox items
     function setupToolbox() {
-      const tools = document.querySelectorAll("#toolbox .tool");
-      tools.forEach(tool => {
-        const type = tool.getAttribute("data-type");
-        if (type !== "line") {
-          tool.addEventListener("mousedown", e => {
-            e.preventDefault();
-            // Create a clone of the tool to follow the cursor
-            const clone = tool.cloneNode(true);
-            clone.classList.add("dragging");
-            // Debug border so you can see the clone (remove later)
-            clone.style.border = "2px solid red";
-            document.body.appendChild(clone);
-            // Calculate offset from the tool's top-left corner
-            const rect = tool.getBoundingClientRect();
-            const offsetX = e.clientX - rect.left;
-            const offsetY = e.clientY - rect.top;
-            function moveClone(ev) {
-              clone.style.left = (ev.clientX - offsetX) + "px";
-              clone.style.top = (ev.clientY - offsetY) + "px";
-            }
-            moveClone(e);
-            document.addEventListener("mousemove", moveClone);
-            function dropHandler(ev) {
-              document.removeEventListener("mousemove", moveClone);
-              document.removeEventListener("mouseup", dropHandler);
-              // Check if drop occurred over the map
-              const mapContainer = document.getElementById("map-container");
-              const mapRect = mapContainer.getBoundingClientRect();
-              if (ev.clientX >= mapRect.left && ev.clientX <= mapRect.right &&
-                  ev.clientY >= mapRect.top && ev.clientY <= mapRect.bottom) {
-                const pt = svgRoot.createSVGPoint();
-                pt.x = ev.clientX;
-                pt.y = ev.clientY;
-                const svgP = pt.matrixTransform(panLayer.getScreenCTM().inverse());
-                addMarkerToFirestore(type, svgP.x, svgP.y);
-              }
-              clone.remove();
-            }
-            document.addEventListener("mouseup", dropHandler);
+      document.querySelectorAll(".tool").forEach((tool) => {
+        const type = tool.dataset.type;
+        if (type === "line") {
+          tool.addEventListener("click", () => {
+            activeTool = "line";
+            lineDrawingState = 0;
+            markerLayer.style.pointerEvents = "none";
+            document.querySelectorAll(".tool").forEach(t => t.style.borderColor = "rgba(223,197,136,0.5)");
+            tool.style.borderColor = "red";
+          });
+        } else {
+          tool.addEventListener("dragstart", (e) => {
+            e.dataTransfer.setData("text/plain", type);
           });
         }
       });
     }
 
-    // Disable native drag on svgRoot
+    function setupAuditControls() {
+      document.getElementById("delete-audit").addEventListener("click", async () => {
+        if (confirm("Delete all audit logs?")) {
+          try {
+            const auditSnapshot = await getDocs(collection(db, "auditLogs"));
+            auditSnapshot.forEach(async (docSnap) => {
+              await deleteDoc(doc(db, "auditLogs", docSnap.id));
+            });
+          } catch (error) {
+            console.error("Error deleting audit logs:", error);
+          }
+        }
+      });
+
+      document.getElementById("minimize-audit").addEventListener("click", () => {
+        const auditLogDiv = document.getElementById("audit-log");
+        if (auditLogDiv.style.display === "none") {
+          auditLogDiv.style.display = "block";
+          document.getElementById("minimize-audit").textContent = "➖";
+        } else {
+          auditLogDiv.style.display = "none";
+          document.getElementById("minimize-audit").textContent = "➕";
+        }
+      });
+      
+      document.getElementById("copy-audit").addEventListener("click", () => {
+        const auditLogContainer = document.getElementById("audit-log");
+        const textToCopy = auditLogContainer.textContent;
+        navigator.clipboard.writeText(textToCopy)
+          .then(() => {
+            alert("Audit log copied to clipboard!");
+          })
+          .catch((error) => {
+            alert("Failed to copy audit log.");
+          });
+      });
+    }
+
+    function getSVGPoint(e) {
+      const pt = svgRoot.createSVGPoint();
+      pt.x = e.clientX;
+      pt.y = e.clientY;
+      return pt.matrixTransform(panLayer.getScreenCTM().inverse());
+    }
+
     function setupDragAndDrop() {
-      svgRoot.addEventListener("dragover", e => { e.preventDefault(); });
-      svgRoot.addEventListener("drop", e => { e.preventDefault(); });
+      svgRoot.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+      });
+
+      svgRoot.addEventListener("drop", async (e) => {
+        if (!isMapReady || activeTool === "line") return;
+        e.preventDefault();
+        const type = e.dataTransfer.getData("text/plain");
+        const cursorPos = getSVGPoint(e);
+        await addMarkerToFirestore(type, cursorPos.x, cursorPos.y);
+      });
     }
 
     function setupLineDrawing() {
@@ -922,10 +943,13 @@
         if (activeTool !== "line") return;
         e.preventDefault();
         const pt = getSVGPoint(e);
+
         if (lineDrawingState === 0) {
           currentLineGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
           currentLineGroup.classList.add("line-group");
+
           const lineColor = prompt("Enter line color (e.g., red or #ff0000):") || "white";
+          
           currentLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
           currentLine.setAttribute("x1", pt.x);
           currentLine.setAttribute("y1", pt.y);
@@ -933,27 +957,38 @@
           currentLine.setAttribute("y2", pt.y);
           currentLine.setAttribute("stroke-width", "3.2");
           currentLine.setAttribute("stroke", lineColor);
+
           currentLineGroup.startPoint = { x: pt.x, y: pt.y };
           currentLineGroup.lineColor = lineColor;
           currentLineGroup.appendChild(currentLine);
           lineLayer.appendChild(currentLineGroup);
+
           lineDrawingState = 1;
         } else if (lineDrawingState === 1) {
           const x1 = currentLineGroup.startPoint.x;
           const y1 = currentLineGroup.startPoint.y;
           const x2 = pt.x;
           const y2 = pt.y;
+
           currentLine.setAttribute("x2", x2);
           currentLine.setAttribute("y2", y2);
+
           const midX = (x1 + x2) / 2;
           const midY = (y1 + y2) / 2;
           const angle = Math.atan2(y2 - y1, x2 - x1) * (180 / Math.PI);
+
           const arrow = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
           arrow.setAttribute("points", "0,-8 16,0 0,8");
           arrow.setAttribute("fill", currentLineGroup.lineColor);
           arrow.setAttribute("transform", `translate(${midX},${midY}) rotate(${angle})`);
           currentLineGroup.appendChild(arrow);
-          await addLineToFirestore({ x1, y1, x2, y2, color: currentLineGroup.lineColor, midX, midY, angle });
+
+          await addLineToFirestore({
+            x1, y1, x2, y2,
+            color: currentLineGroup.lineColor,
+            midX, midY, angle
+          });
+
           activeTool = null;
           lineDrawingState = 0;
           currentLine = null;
@@ -966,6 +1001,7 @@
 
     async function addMarkerToFirestore(type, x, y) {
       let markerData = { type, x, y, timestamp: serverTimestamp() };
+      // Note: update allowed types to use "homestead" instead of "marker"
       if (["homestead", "citadel", "torch", "cave", "sword", "spear", "bow", "beacon", "camp", "catapult", "ram"].includes(type)) {
         markerData.text = prompt("Enter marker text:") || "";
         markerData.color = prompt("Enter marker color (e.g., red or #ff0000):") || "black";
@@ -983,25 +1019,47 @@
 
     async function addLineToFirestore(lineData) {
       try {
-        const docRef = await addDoc(collection(db, "lines"), { ...lineData, timestamp: serverTimestamp() });
+        const docRef = await addDoc(collection(db, "lines"), {
+          ...lineData,
+          timestamp: serverTimestamp()
+        });
         recordAuditLog("add_line", { lineId: docRef.id });
       } catch (error) {
         console.error("Error adding line:", error);
       }
     }
 
-    function getSVGPoint(e) {
-      const pt = svgRoot.createSVGPoint();
-      pt.x = e.clientX;
-      pt.y = e.clientY;
-      return pt.matrixTransform(panLayer.getScreenCTM().inverse());
+    function listenForMarkers() {
+      let snapshotReceived = false;
+      const markersQuery = query(collection(db, "markers"), orderBy("timestamp"));
+      const unsubscribe = onSnapshot(markersQuery, (snapshot) => {
+        snapshotReceived = true;
+        while (markerLayer.firstChild) {
+          markerLayer.removeChild(markerLayer.firstChild);
+        }
+        snapshot.forEach((docSnap) => {
+          createMarkerElement(docSnap.id, docSnap.data());
+        });
+        updateMarkerVisibility();
+      }, (error) => {
+        console.error("Firestore connection error:", error);
+        displayErrorOverlay("Firestore connection failed.");
+      });
+
+      setTimeout(() => {
+        if (!snapshotReceived) {
+          console.error("No Firestore snapshot received within timeout.");
+          displayErrorOverlay("Firestore connection failed.");
+          unsubscribe();
+        }
+      }, 5000);
     }
 
     function listenForLines() {
       const linesQuery = query(collection(db, "lines"), orderBy("timestamp"));
-      onSnapshot(linesQuery, snapshot => {
+      onSnapshot(linesQuery, (snapshot) => {
         lineLayer.innerHTML = "";
-        snapshot.forEach(docSnap => {
+        snapshot.forEach((docSnap) => {
           createLineElement(docSnap.id, docSnap.data());
         });
       });
@@ -1010,7 +1068,8 @@
     function createMarkerElement(id, data) {
       let markerEl = document.createElementNS("http://www.w3.org/2000/svg", "g");
       markerEl.setAttribute("data-marker", "true");
-      markerEl.dataset.type = data.type;
+      markerEl.dataset.type = data.type; // add type for visibility toggling
+
       let imgSrc, imgWidth, imgHeight, imgXOffset, imgYOffset, fontSize;
       if (data.type === "homestead") {
         imgSrc = "https://regnumsolis.com/planner/images/marker.svg";
@@ -1061,7 +1120,8 @@
         imgXOffset = -15 * 1.7;
         imgYOffset = -15 * 1.7;
         fontSize = 14 * 1.7;
-      } else if (data.type === "beacon") {
+      }
+      else if (data.type === "beacon") {
         imgSrc = "https://regnumsolis.com/planner/images/beacon.svg";
         imgWidth = 30 * 1.7 * 1.2;
         imgHeight = 30 * 1.7 * 1.2;
@@ -1091,6 +1151,7 @@
         fontSize = 14 * 1.7 * 1.2;
       }
       let textXOffset = imgXOffset + imgWidth;
+
       const imgEl = document.createElementNS("http://www.w3.org/2000/svg", "image");
       imgEl.setAttributeNS("http://www.w3.org/1999/xlink", "href", imgSrc);
       imgEl.setAttribute("width", imgWidth);
@@ -1098,6 +1159,7 @@
       imgEl.setAttribute("x", data.x + imgXOffset);
       imgEl.setAttribute("y", data.y + imgYOffset);
       markerEl.appendChild(imgEl);
+
       const textEl = document.createElementNS("http://www.w3.org/2000/svg", "text");
       textEl.textContent = data.text;
       textEl.setAttribute("fill", data.color);
@@ -1108,6 +1170,7 @@
       textEl.setAttribute("dominant-baseline", "middle");
       textEl.style.fontFamily = "'Bebas Neue', sans-serif";
       markerEl.appendChild(textEl);
+
       requestAnimationFrame(() => {
         const bbox = textEl.getBBox();
         const textLength = textEl.getComputedTextLength();
@@ -1120,7 +1183,7 @@
         rectEl.setAttribute("opacity", "0.63");
         markerEl.insertBefore(rectEl, textEl);
       });
-      markerEl.classList.add("drop-pop");
+
       markerEl.classList.add("marker");
       markerEl.dataset.id = id;
       markerEl.addEventListener("click", async (e) => {
@@ -1142,6 +1205,7 @@
       const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
       group.classList.add("line-group");
       group.dataset.id = id;
+
       const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
       line.setAttribute("x1", data.x1);
       line.setAttribute("y1", data.y1);
@@ -1149,12 +1213,15 @@
       line.setAttribute("y2", data.y2);
       line.setAttribute("stroke", data.color);
       line.setAttribute("stroke-width", "3.2");
+
       const arrow = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
       arrow.setAttribute("points", "0,-8 16,0 0,8");
       arrow.setAttribute("fill", data.color);
       arrow.setAttribute("transform", `translate(${data.midX},${data.midY}) rotate(${data.angle})`);
+
       group.appendChild(line);
       group.appendChild(arrow);
+      
       group.addEventListener("click", async (e) => {
         e.stopPropagation();
         if (confirm("Delete this line?")) {
@@ -1162,6 +1229,7 @@
           recordAuditLog("delete_line", { lineId: id });
         }
       });
+
       lineLayer.appendChild(group);
     }
 
@@ -1183,38 +1251,52 @@
       const auditQuery = query(collection(db, "auditLogs"), orderBy("timestamp", "asc"));
       onSnapshot(auditQuery, (snapshot) => {
         const logs = [];
-        snapshot.forEach(docSnap => {
+        snapshot.forEach((docSnap) => {
           const log = docSnap.data();
           const ts = log.timestamp ? log.timestamp.seconds : 0;
           logs.push({ timestamp: ts, log });
         });
+
         const groupedLogs = [];
         const groupingThreshold = 300;
         let currentGroup = null;
+
         logs.forEach(item => {
           const { timestamp, log } = item;
           const applicable = (log.action === "add" || log.action === "delete" || log.action === "add_line" || log.action === "delete_line") && log.details;
           if (applicable) {
-            if (currentGroup &&
-                currentGroup.key.user === log.user &&
-                currentGroup.key.action === log.action &&
-                currentGroup.key.markerType === log.details.markerType) {
+            if (
+              currentGroup &&
+              currentGroup.key.user === log.user &&
+              currentGroup.key.action === log.action &&
+              currentGroup.key.markerType === log.details.markerType
+            ) {
               if (timestamp - currentGroup.lastTimestamp <= groupingThreshold) {
                 currentGroup.count += 1;
                 currentGroup.lastTimestamp = timestamp;
               } else {
                 groupedLogs.push(currentGroup);
                 currentGroup = {
-                  key: { user: log.user, action: log.action, markerType: log.details.markerType || "line" },
+                  key: { 
+                    user: log.user, 
+                    action: log.action,
+                    markerType: log.details.markerType || "line"
+                  },
                   count: 1,
                   timestamp: timestamp,
                   lastTimestamp: timestamp
                 };
               }
             } else {
-              if (currentGroup) groupedLogs.push(currentGroup);
+              if (currentGroup) {
+                groupedLogs.push(currentGroup);
+              }
               currentGroup = {
-                key: { user: log.user, action: log.action, markerType: log.details.markerType || "line" },
+                key: { 
+                  user: log.user, 
+                  action: log.action,
+                  markerType: log.details.markerType || "line"
+                },
                 count: 1,
                 timestamp: timestamp,
                 lastTimestamp: timestamp
@@ -1226,7 +1308,11 @@
               currentGroup = null;
             }
             groupedLogs.push({
-              key: { user: log.user, action: log.action, markerType: (log.details && log.details.markerType) ? log.details.markerType : null },
+              key: { 
+                user: log.user, 
+                action: log.action,
+                markerType: (log.details && log.details.markerType) ? log.details.markerType : null 
+              },
               count: 1,
               timestamp: timestamp,
               lastTimestamp: timestamp
@@ -1234,6 +1320,7 @@
           }
         });
         if (currentGroup) groupedLogs.push(currentGroup);
+
         groupedLogs.sort((a, b) => b.lastTimestamp - a.lastTimestamp);
         auditLogContainer.innerHTML = "";
         groupedLogs.forEach(group => {
@@ -1245,9 +1332,11 @@
           else if (group.key.action === "add_line") actionText = "add line";
           else if (group.key.action === "delete_line") actionText = "delete line";
           else actionText = group.key.action;
+
           let entryHTML = `[${dateStr}] <b>${group.key.user}</b> ${actionText}`;
           if (group.key.markerType) entryHTML += ` <b>[${group.key.markerType}]</b>`;
           if (group.count > 1) entryHTML += ` (<b>x${group.count}</b>)`;
+
           const entry = document.createElement("div");
           entry.innerHTML = entryHTML;
           auditLogContainer.appendChild(entry);
@@ -1260,14 +1349,20 @@
         if (confirm("Delete all markers and lines?")) {
           try {
             const markersSnapshot = await getDocs(collection(db, "markers"));
-            markersSnapshot.forEach(async docSnap => {
+            markersSnapshot.forEach(async (docSnap) => {
               await deleteDoc(doc(db, "markers", docSnap.id));
             });
+            
             const linesSnapshot = await getDocs(collection(db, "lines"));
-            linesSnapshot.forEach(async docSnap => {
+            linesSnapshot.forEach(async (docSnap) => {
               await deleteDoc(doc(db, "lines", docSnap.id));
             });
-            recordAuditLog("delete_all", { markers: markersSnapshot.size, lines: linesSnapshot.size });
+
+            recordAuditLog("delete_all", { 
+              markers: markersSnapshot.size,
+              lines: linesSnapshot.size
+            });
+            
             lineLayer.innerHTML = "";
           } catch (error) {
             console.error("Error deleting all content:", error);
@@ -1285,11 +1380,16 @@
   </script>
   <!-- Animated Waves Background Script Using WebGL -->
   <script>
+    // Setup WebGL on the canvas with id "waveCanvas"
     const canvas = document.getElementById('waveCanvas');
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
     const gl = canvas.getContext("webgl");
-    if (!gl) alert("WebGL is not supported in your browser.");
+    if (!gl) {
+      alert("WebGL is not supported in your browser.");
+    }
+
+    // Vertex shader: full-screen quad.
     const vertexShaderSource = `
       attribute vec2 a_position;
       varying vec2 v_uv;
@@ -1298,16 +1398,21 @@
         gl_Position = vec4(a_position, 0.0, 1.0);
       }
     `;
+
+    // Fragment shader: sums eight sine waves with varied parameters and extra phase offsets,
+    // then darkens the result by reducing lightness by 90%.
     const fragmentShaderSource = `
       precision mediump float;
       uniform float u_time;
       uniform vec2 u_resolution;
       varying vec2 v_uv;
+      
       float wave(vec2 st, float angle, float frequency, float amplitude, float speed) {
         vec2 dir = vec2(cos(angle), sin(angle));
         float phaseOffset = angle * 7.0;
         return sin(dot(st, dir) * frequency + u_time * speed + phaseOffset) * amplitude;
       }
+      
       float waveHeight(vec2 st) {
         float h = 0.0;
         h += wave(st, 0.0,   30.1, 0.0020, 0.81);
@@ -1320,6 +1425,7 @@
         h += wave(st, 4.7,   70.8, 0.0011, 0.99);
         return h;
       }
+      
       vec3 computeNormal(vec2 st, float h) {
         float eps = 0.001;
         float hx = waveHeight(st + vec2(eps, 0.0));
@@ -1328,26 +1434,35 @@
         float dFdy = (hy - h) / eps;
         return normalize(vec3(-dFdx, -dFdy, 1.0));
       }
+      
       void main(){
         vec2 st = gl_FragCoord.xy / u_resolution.xy;
         st.y *= u_resolution.y / u_resolution.x;
+        
         float h = waveHeight(st);
         vec3 normal = computeNormal(st, h);
+        
         vec3 deepWater = vec3(0.0, 0.15, 0.35);
         vec3 shallowWater = vec3(0.0, 0.45, 0.75);
         vec3 baseColor = mix(deepWater, shallowWater, st.y + h * 0.5);
+        
         vec3 sunDir = normalize(vec3(0.3, 0.8, 1.0));
         float diffuse = max(dot(normal, sunDir), 0.0);
         vec3 viewDir = normalize(vec3(0.0, 0.0, 1.0));
         vec3 halfDir = normalize(sunDir + viewDir);
         float spec = pow(max(dot(normal, halfDir), 0.0), 50.0);
         float fresnel = pow(1.0 - max(dot(viewDir, normal), 0.0), 3.0) * 0.6;
+        
         vec3 color = baseColor * (0.4 + 0.6 * diffuse) + vec3(1.0, 0.95, 0.8) * spec;
         color = mix(color, vec3(1.0), fresnel);
+        
+        // Darken by reducing lightness by 90%
         color *= 0.1;
+        
         gl_FragColor = vec4(color, 1.0);
       }
     `;
+
     function createShader(gl, type, source) {
       const shader = gl.createShader(type);
       gl.shaderSource(shader, source);
@@ -1359,8 +1474,10 @@
       }
       return shader;
     }
+
     const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
     const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+
     const program = gl.createProgram();
     gl.attachShader(program, vertexShader);
     gl.attachShader(program, fragmentShader);
@@ -1368,9 +1485,11 @@
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
       console.error("Program linking failed: " + gl.getProgramInfoLog(program));
     }
+
     const positionAttributeLocation = gl.getAttribLocation(program, "a_position");
     const timeUniformLocation = gl.getUniformLocation(program, "u_time");
     const resolutionUniformLocation = gl.getUniformLocation(program, "u_resolution");
+
     const positionBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
     const positions = [
@@ -1382,20 +1501,25 @@
        1,  1
     ];
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+
     function render(time) {
       time *= 0.001;
       gl.viewport(0, 0, canvas.width, canvas.height);
       gl.clear(gl.COLOR_BUFFER_BIT);
       gl.useProgram(program);
+      
       gl.enableVertexAttribArray(positionAttributeLocation);
       gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
       gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
+      
       gl.uniform1f(timeUniformLocation, time);
       gl.uniform2f(resolutionUniformLocation, canvas.width, canvas.height);
+      
       gl.drawArrays(gl.TRIANGLES, 0, 6);
       requestAnimationFrame(render);
     }
     render(0);
+
     window.addEventListener("resize", () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
