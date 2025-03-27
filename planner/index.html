@@ -154,7 +154,7 @@
       text-shadow: 0 0 5px rgba(223,197,136,0.8);
       animation: neonGlow 1.5s infinite alternate ease-in-out;
     }
-    /* Right-side menus (map change, zoom controls, and toggle) */
+    /* Right-side menus (map change, zoom controls, and markers menu) */
     .menu-container {
       width: 180px;
       background: rgba(30,30,30,0.9);
@@ -185,8 +185,8 @@
       right: 20px;
       z-index: 20;
     }
-    /* Marker text toggle container on right */
-    #text-toggle-right {
+    /* Markers menu (replacing the old text marker toggle) */
+    #markers-menu {
       position: fixed;
       top: 420px;
       right: 20px;
@@ -199,48 +199,14 @@
       box-shadow: 0 0 10px rgba(223,197,136,0.5);
       text-align: center;
     }
-    #text-toggle-right h2 {
+    #markers-menu h2 {
       font-size: 1em;
       margin-bottom: 5px;
     }
-    /* Modern toggle switch styling */
-    #toggle-marker-text {
-      appearance: none;
-      -webkit-appearance: none;
-      width: 40px;
-      height: 20px;
-      background: #ccc;
-      border-radius: 20px;
-      position: relative;
-      outline: none;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-    #toggle-marker-text:checked {
-      background: #dfc588;
-    }
-    #toggle-marker-text::before {
-      content: "";
-      position: absolute;
-      top: 2px;
-      left: 2px;
-      width: 16px;
-      height: 16px;
-      background: white;
-      border-radius: 50%;
-      transition: transform 0.3s;
-    }
-    #toggle-marker-text:checked::before {
-      transform: translateX(20px);
-    }
-    /* Align the switch container with centered text to the right of the checkbox */
-    #toggle-container {
-      display: flex;
-      align-items: center;
-    }
-    #toggle-marker-text-label {
-      margin-left: 10px;
-      line-height: 20px;
+    #markers-filter label {
+      display: block;
+      font-size: 0.9em;
+      margin-bottom: 5px;
     }
     /* Toolbox */
     #toolbox {
@@ -421,12 +387,21 @@
       <button id="reset-zoom">Reset</button>
     </div>
 
-    <!-- Marker Text Toggle (Right Side) -->
-    <div id="text-toggle-right">
-      <h2>Marker Text</h2>
-      <div id="toggle-container">
-        <input type="checkbox" id="toggle-marker-text">
-        <label for="toggle-marker-text" id="toggle-marker-text-label">ALWAYS TEXT</label>
+    <!-- Markers Menu (Right Side) -->
+    <div id="markers-menu">
+      <h2>Markers Menu</h2>
+      <div id="markers-filter">
+        <label><input type="checkbox" value="marker" checked> Text Marker</label>
+        <label><input type="checkbox" value="citadel" checked> Citadel</label>
+        <label><input type="checkbox" value="torch" checked> Torch</label>
+        <label><input type="checkbox" value="cave" checked> Cave</label>
+        <label><input type="checkbox" value="sword" checked> Sword</label>
+        <label><input type="checkbox" value="spear" checked> Spear</label>
+        <label><input type="checkbox" value="bow" checked> Bow</label>
+        <label><input type="checkbox" value="beacon" checked> Beacon</label>
+        <label><input type="checkbox" value="camp" checked> Camp</label>
+        <label><input type="checkbox" value="catapult" checked> Catapult</label>
+        <label><input type="checkbox" value="ram" checked> Ram</label>
       </div>
     </div>
 
@@ -532,19 +507,9 @@
       setupToolbox();
       setupAuditControls();
       setupMapSwitchControls();
+      setupMarkerFilter();
 
-      // Setup marker text toggle functionality
-      const toggleMarkerTextCheckbox = document.getElementById("toggle-marker-text");
-      const toggleLabel = document.getElementById("toggle-marker-text-label");
-      toggleMarkerTextCheckbox.addEventListener("change", function() {
-        if (this.checked) {
-          document.body.classList.add("text-hover-only");
-          toggleLabel.textContent = "HOVER TEXT";
-        } else {
-          document.body.classList.remove("text-hover-only");
-          toggleLabel.textContent = "ALWAYS TEXT";
-        }
-      });
+      // Removed the old toggle for marker text.
     });
 
     function showLoading() {
@@ -747,6 +712,36 @@
       });
     }
 
+    // Setup the marker filter checkboxes.
+    function setupMarkerFilter() {
+      const checkboxes = document.querySelectorAll("#markers-filter input[type='checkbox']");
+      checkboxes.forEach(cb => {
+        cb.addEventListener("change", updateMarkerVisibility);
+      });
+    }
+
+    // Update marker visibility based on filter checkboxes.
+    function updateMarkerVisibility() {
+      const checkboxes = document.querySelectorAll("#markers-filter input[type='checkbox']");
+      let visibleTypes = {};
+      checkboxes.forEach(cb => {
+        if (cb.checked) {
+          visibleTypes[cb.value] = true;
+        }
+      });
+      if (markerLayer) {
+        Array.from(markerLayer.children).forEach(marker => {
+          if (marker.dataset && marker.dataset.type) {
+            if (visibleTypes[marker.dataset.type]) {
+              marker.style.display = "block";
+            } else {
+              marker.style.display = "none";
+            }
+          }
+        });
+      }
+    }
+
     function getSVGPoint(e) {
       const pt = svgRoot.createSVGPoint();
       pt.x = e.clientX;
@@ -870,6 +865,7 @@
         snapshot.forEach((docSnap) => {
           createMarkerElement(docSnap.id, docSnap.data());
         });
+        updateMarkerVisibility();
       }, (error) => {
         console.error("Firestore connection error:", error);
         displayErrorOverlay("Firestore connection failed.");
@@ -897,7 +893,8 @@
     function createMarkerElement(id, data) {
       let markerEl = document.createElementNS("http://www.w3.org/2000/svg", "g");
       markerEl.setAttribute("data-marker", "true");
-
+      markerEl.dataset.type = data.type;
+      
       let imgSrc, imgWidth, imgHeight, imgXOffset, imgYOffset, fontSize;
       if (data.type === "marker") {
         imgSrc = "https://regnumsolis.com/planner/images/marker.svg";
