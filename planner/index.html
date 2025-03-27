@@ -235,7 +235,7 @@
       transform: scale(1.05);
       box-shadow: 0 4px 15px rgba(223,197,136,0.9);
     }
-    /* Settings (formerly Marker Text Toggle) */
+    /* Settings */
     #text-toggle-right h2 {
       font-size: 1em;
       margin-bottom: 5px;
@@ -504,7 +504,7 @@
             <input type="checkbox" id="toggle-marker-text" class="toggle-switch" />
             <label for="toggle-marker-text" id="toggle-marker-text-label">HOVER TEXT</label>
           </div>
-          <!-- New Marker Visibility Toggles (including Lines) -->
+          <!-- Marker Visibility Toggles (including Lines) -->
           <div id="marker-visibility-container">
             <h3>Marker Visibility</h3>
             <div class="toggle-item">
@@ -551,7 +551,7 @@
               <input type="checkbox" id="toggle-ram" class="toggle-switch" checked />
               <label for="toggle-ram">Ram</label>
             </div>
-            <!-- New toggle for lines -->
+            <!-- New toggle for Lines -->
             <div class="toggle-item">
               <input type="checkbox" id="toggle-lines" class="toggle-switch" checked />
               <label for="toggle-lines">Lines</label>
@@ -651,7 +651,7 @@
     let currentLine = null;
     let currentLineGroup = null;
 
-    // Global marker and line visibility state
+    // Global visibility state for markers and lines
     const visibilityState = {
       homestead: true,
       citadel: true,
@@ -674,7 +674,6 @@
       });
     }
     function updateLineVisibility() {
-      // Hide or show the entire line layer based on the toggle state
       lineLayer.style.display = visibilityState.lines ? "" : "none";
     }
 
@@ -689,6 +688,7 @@
       setupToolbox();
       setupMapSwitchControls();
       setupMenuToggles();
+      setupAdminControls();
 
       // Setup marker text toggle functionality
       const toggleMarkerTextCheckbox = document.getElementById("toggle-marker-text");
@@ -703,7 +703,7 @@
         }
       });
 
-      // Setup marker visibility toggles (including lines)
+      // Setup visibility toggles (markers and lines)
       Object.keys(visibilityState).forEach(key => {
         const checkbox = document.getElementById(`toggle-${key}`);
         if (checkbox) {
@@ -723,13 +723,28 @@
           e.stopPropagation();
           const menu = btn.closest(".menu-container");
           menu.classList.toggle("hidden");
-          // If the menu now has the "hidden" class, show ▶ (expand); if visible, show ◀ (collapse).
           if (menu.classList.contains("hidden")) {
-            btn.innerHTML = "&#9654;"; // ▶
+            btn.innerHTML = "&#9654;"; // ▶ when hidden
           } else {
-            btn.innerHTML = "&#9664;"; // ◀
+            btn.innerHTML = "&#9664;"; // ◀ when visible
           }
         });
+      });
+    }
+
+    // Admin panel controls: minimize audit log toggle.
+    function setupAdminControls() {
+      const minimizeBtn = document.getElementById("minimize-audit");
+      const auditLog = document.getElementById("audit-log");
+      minimizeBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (auditLog.style.display === "none" || auditLog.style.display === "") {
+          auditLog.style.display = "block";
+          minimizeBtn.textContent = "➖";
+        } else {
+          auditLog.style.display = "none";
+          minimizeBtn.textContent = "➕";
+        }
       });
     }
 
@@ -888,11 +903,9 @@
         } else {
           tool.addEventListener("dragstart", (e) => {
             e.dataTransfer.setData("text/plain", type);
-            // Hide default ghost image
             const emptyImg = new Image();
             emptyImg.src = "";
             e.dataTransfer.setDragImage(emptyImg, 0, 0);
-            // Create a clone element for visual feedback
             const dragClone = tool.cloneNode(true);
             dragClone.classList.add("drag-clone");
             dragClone.style.position = "fixed";
@@ -903,7 +916,6 @@
             document.body.appendChild(dragClone);
             tool.dragClone = dragClone;
           });
-          // Update clone position on the tool's drag event
           tool.addEventListener("drag", (e) => {
             if (!tool.dragClone) return;
             const offsetX = 10;
@@ -920,7 +932,7 @@
         }
       });
     }
-    // Add a document-level dragover to update the clone’s position (for Gecko compatibility)
+    // Document-level dragover to update clone position for Gecko compatibility
     document.addEventListener("dragover", (e) => {
       const activeClone = document.querySelector(".drag-clone");
       if (activeClone) {
