@@ -386,7 +386,7 @@
       font-size: 1.2em;
     }
     #audit-log {
-      font-size: 0.9em;
+      font-size: 1.5em;
       height: 200px;
       overflow-y: auto;
       margin-bottom: 10px;
@@ -425,6 +425,8 @@
       transform: scale(1.05);
       box-shadow: 0 4px 15px rgba(223,197,136,0.9);
     }
+      
+      
   </style>
 </head>
 <body>
@@ -458,7 +460,7 @@
     <!-- Right-side menus container -->
     <div id="right-menus">
       <!-- Map Change Menu -->
-      <div id="map-change-container" class="menu-container">
+      <div id="map-change-container" class="menu-container hidden">
         <div class="menu-header">
           <span>Change Maps</span>
           <button class="menu-toggle">&#9654;</button>
@@ -470,7 +472,7 @@
       </div>
 
       <!-- Zoom Controls -->
-      <div id="zoom-controls" class="menu-container">
+      <div id="zoom-controls" class="menu-container hidden">
         <div class="menu-header">
           <span>Zoom</span>
           <button class="menu-toggle">&#9654;</button>
@@ -483,7 +485,7 @@
       </div>
 
       <!-- Settings (formerly Marker Text Toggle) -->
-      <div id="text-toggle-right" class="menu-container">
+      <div id="text-toggle-right" class="menu-container hidden">
         <div class="menu-header">
           <span>Settings</span>
           <button class="menu-toggle">&#9654;</button>
@@ -595,7 +597,7 @@
     <!-- Admin Panel -->
     <div id="admin-panel">
       <h3>
-        Audit log
+        ADMIN panel
         <span>
           <span id="delete-audit" class="icon" title="Delete all audit logs">🗑️</span>
           <span id="minimize-audit" class="icon" title="Minimize audit log">➖</span>
