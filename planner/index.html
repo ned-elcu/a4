@@ -42,7 +42,6 @@
       height: 100%;
       z-index: -1;
     }
-    /* The canvas now hosts the WebGL animated ocean */
     #waveCanvas {
       display: block;
       width: 100%;
@@ -154,7 +153,17 @@
       text-shadow: 0 0 5px rgba(223,197,136,0.8);
       animation: neonGlow 1.5s infinite alternate ease-in-out;
     }
-    /* Right-side menus (map change, zoom controls, and settings) */
+    /* Right menus container to prevent overlap */
+    #right-menus {
+      position: fixed;
+      top: 100px;
+      right: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      z-index: 20;
+    }
+    /* Right-side menus */
     .menu-container {
       width: 180px;
       background: rgba(30,30,30,0.9);
@@ -162,39 +171,46 @@
       border: 1px solid rgba(223,197,136,0.5);
       border-radius: 5px;
       box-shadow: 0 0 10px rgba(223,197,136,0.5);
+      position: relative;
+      transition: transform 0.3s ease;
+    }
+    .menu-container.hidden {
+      transform: translateX(100%);
+    }
+    /* Menu header styling with toggle arrow */
+    .menu-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2em;
+      margin-bottom: 5px;
+      position: relative;
+    }
+    /* Arrow toggle button */
+    .menu-toggle {
+      position: absolute;
+      left: -20px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(30,30,30,0.9);
+      border: 1px solid rgba(223,197,136,0.5);
+      border-radius: 0 5px 5px 0;
+      width: 20px;
+      height: 40px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.3s;
+    }
+    /* Styling for the content inside each menu */
+    .menu-content {
       display: flex;
       flex-direction: column;
       gap: 5px;
-      align-items: center;
-      position: relative;
     }
-    /* Header inside each menu container for title and hide toggle */
-    .menu-header {
-      width: 100%;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 5px;
-    }
-    .menu-header h2 {
-      font-size: 1.2em;
-      margin: 0;
-    }
-    .hide-menu {
-      cursor: pointer;
-      font-size: 1em;
-      background: transparent;
-      border: none;
-      color: rgb(223,197,136);
-    }
-    /* Map change controls */
-    #map-change-container {
-      position: fixed;
-      top: 100px;
-      right: 20px;
-      z-index: 20;
-    }
-    #map-change-container .menu-content button {
+    /* Buttons for map change and zoom inside menus */
+    .menu-content button {
       width: 100%;
       height: 40px;
       border: none;
@@ -205,47 +221,12 @@
       transition: transform 0.3s, box-shadow 0.3s;
       box-shadow: 0 4px 15px rgba(223,197,136,0.5);
     }
-    #map-change-container .menu-content button:hover {
-      transform: scale(1.05);
-      box-shadow: 0 4px 15px rgba(223,197,136,0.9);
-    }
-    /* Zoom controls */
-    #zoom-controls {
-      position: fixed;
-      top: 260px;
-      right: 20px;
-      z-index: 20;
-    }
-    #zoom-controls .menu-content button {
-      width: 100%;
-      height: 40px;
-      border: none;
-      border-radius: 4px;
-      background: rgba(223,197,136,0.8);
-      color: white;
-      cursor: pointer;
-      transition: transform 0.3s, box-shadow 0.3s;
-      box-shadow: 0 4px 15px rgba(223,197,136,0.5);
-    }
-    #zoom-controls .menu-content button:hover {
+    .menu-content button:hover {
       transform: scale(1.05);
       box-shadow: 0 4px 15px rgba(223,197,136,0.9);
     }
     /* Settings (formerly Marker Text Toggle) */
-    #text-toggle-right {
-      position: fixed;
-      top: 420px;
-      right: 20px;
-      z-index: 20;
-      width: 180px;
-      background: rgba(30,30,30,0.9);
-      padding: 10px;
-      border: 1px solid rgba(223,197,136,0.5);
-      border-radius: 5px;
-      box-shadow: 0 0 10px rgba(223,197,136,0.5);
-      text-align: center;
-    }
-    #text-toggle-right .menu-header h2 {
+    #text-toggle-right h2 {
       font-size: 1em;
       margin-bottom: 5px;
     }
@@ -279,7 +260,7 @@
     .toggle-switch:checked::before {
       transform: translateX(20px);
     }
-    /* Align the switch container with centered text to the right of the checkbox */
+    /* Align the switch container with centered text */
     #toggle-container {
       display: flex;
       align-items: center;
@@ -476,89 +457,92 @@
       <h1>REGNUM SOLIS R&D / REMNANT SENATE</h1>
     </div>
 
-    <!-- Map Change Menu -->
-    <div id="map-change-container" class="menu-container">
-      <div class="menu-header">
-        <h2>Change Maps</h2>
-        <button class="hide-menu">Hide</button>
-      </div>
-      <div class="menu-content">
-        <button id="tactical-map">Tactical Map</button>
-        <button id="style-map">Style Map</button>
-      </div>
-    </div>
-
-    <!-- Zoom Controls -->
-    <div id="zoom-controls" class="menu-container">
-      <div class="menu-header">
-        <h2>Zoom</h2>
-        <button class="hide-menu">Hide</button>
-      </div>
-      <div class="menu-content">
-        <button id="zoom-in">Zoom In</button>
-        <button id="zoom-out">Zoom Out</button>
-        <button id="reset-zoom">Reset</button>
-      </div>
-    </div>
-
-    <!-- Settings (formerly Marker Text Toggle) -->
-    <div id="text-toggle-right" class="menu-container">
-      <div class="menu-header">
-        <h2>Settings</h2>
-        <button class="hide-menu">Hide</button>
-      </div>
-      <div class="menu-content">
-        <!-- Existing Hover Text Toggle -->
-        <div id="toggle-container">
-          <input type="checkbox" id="toggle-marker-text" class="toggle-switch">
-          <label for="toggle-marker-text" id="toggle-marker-text-label">HOVER TEXT</label>
+    <!-- Right-side menus container -->
+    <div id="right-menus">
+      <!-- Map Change Menu -->
+      <div id="map-change-container" class="menu-container">
+        <div class="menu-header">
+          <span>Change Maps</span>
+          <button class="menu-toggle">&#9654;</button>
         </div>
-        <!-- New Marker Visibility Toggles -->
-        <div id="marker-visibility-container">
-          <h3>Marker Visibility</h3>
-          <div class="toggle-item">
-            <input type="checkbox" id="toggle-homestead" class="toggle-switch" checked>
-            <label for="toggle-homestead">Homestead</label>
+        <div class="menu-content">
+          <button id="tactical-map">Tactical Map</button>
+          <button id="style-map">Style Map</button>
+        </div>
+      </div>
+
+      <!-- Zoom Controls -->
+      <div id="zoom-controls" class="menu-container">
+        <div class="menu-header">
+          <span>Zoom</span>
+          <button class="menu-toggle">&#9654;</button>
+        </div>
+        <div class="menu-content">
+          <button id="zoom-in">Zoom In</button>
+          <button id="zoom-out">Zoom Out</button>
+          <button id="reset-zoom">Reset</button>
+        </div>
+      </div>
+
+      <!-- Settings (formerly Marker Text Toggle) -->
+      <div id="text-toggle-right" class="menu-container">
+        <div class="menu-header">
+          <span>Settings</span>
+          <button class="menu-toggle">&#9654;</button>
+        </div>
+        <div class="menu-content">
+          <!-- Existing Hover Text Toggle -->
+          <div id="toggle-container">
+            <input type="checkbox" id="toggle-marker-text" class="toggle-switch">
+            <label for="toggle-marker-text" id="toggle-marker-text-label">HOVER TEXT</label>
           </div>
-          <div class="toggle-item">
-            <input type="checkbox" id="toggle-citadel" class="toggle-switch" checked>
-            <label for="toggle-citadel">Citadel</label>
-          </div>
-          <div class="toggle-item">
-            <input type="checkbox" id="toggle-torch" class="toggle-switch" checked>
-            <label for="toggle-torch">Torch</label>
-          </div>
-          <div class="toggle-item">
-            <input type="checkbox" id="toggle-cave" class="toggle-switch" checked>
-            <label for="toggle-cave">Cave</label>
-          </div>
-          <div class="toggle-item">
-            <input type="checkbox" id="toggle-sword" class="toggle-switch" checked>
-            <label for="toggle-sword">Sword</label>
-          </div>
-          <div class="toggle-item">
-            <input type="checkbox" id="toggle-spear" class="toggle-switch" checked>
-            <label for="toggle-spear">Spear</label>
-          </div>
-          <div class="toggle-item">
-            <input type="checkbox" id="toggle-bow" class="toggle-switch" checked>
-            <label for="toggle-bow">Bow</label>
-          </div>
-          <div class="toggle-item">
-            <input type="checkbox" id="toggle-beacon" class="toggle-switch" checked>
-            <label for="toggle-beacon">Beacon</label>
-          </div>
-          <div class="toggle-item">
-            <input type="checkbox" id="toggle-camp" class="toggle-switch" checked>
-            <label for="toggle-camp">Camp</label>
-          </div>
-          <div class="toggle-item">
-            <input type="checkbox" id="toggle-catapult" class="toggle-switch" checked>
-            <label for="toggle-catapult">Catapult</label>
-          </div>
-          <div class="toggle-item">
-            <input type="checkbox" id="toggle-ram" class="toggle-switch" checked>
-            <label for="toggle-ram">Ram</label>
+          <!-- New Marker Visibility Toggles -->
+          <div id="marker-visibility-container">
+            <h3>Marker Visibility</h3>
+            <div class="toggle-item">
+              <input type="checkbox" id="toggle-homestead" class="toggle-switch" checked>
+              <label for="toggle-homestead">Homestead</label>
+            </div>
+            <div class="toggle-item">
+              <input type="checkbox" id="toggle-citadel" class="toggle-switch" checked>
+              <label for="toggle-citadel">Citadel</label>
+            </div>
+            <div class="toggle-item">
+              <input type="checkbox" id="toggle-torch" class="toggle-switch" checked>
+              <label for="toggle-torch">Torch</label>
+            </div>
+            <div class="toggle-item">
+              <input type="checkbox" id="toggle-cave" class="toggle-switch" checked>
+              <label for="toggle-cave">Cave</label>
+            </div>
+            <div class="toggle-item">
+              <input type="checkbox" id="toggle-sword" class="toggle-switch" checked>
+              <label for="toggle-sword">Sword</label>
+            </div>
+            <div class="toggle-item">
+              <input type="checkbox" id="toggle-spear" class="toggle-switch" checked>
+              <label for="toggle-spear">Spear</label>
+            </div>
+            <div class="toggle-item">
+              <input type="checkbox" id="toggle-bow" class="toggle-switch" checked>
+              <label for="toggle-bow">Bow</label>
+            </div>
+            <div class="toggle-item">
+              <input type="checkbox" id="toggle-beacon" class="toggle-switch" checked>
+              <label for="toggle-beacon">Beacon</label>
+            </div>
+            <div class="toggle-item">
+              <input type="checkbox" id="toggle-camp" class="toggle-switch" checked>
+              <label for="toggle-camp">Camp</label>
+            </div>
+            <div class="toggle-item">
+              <input type="checkbox" id="toggle-catapult" class="toggle-switch" checked>
+              <label for="toggle-catapult">Catapult</label>
+            </div>
+            <div class="toggle-item">
+              <input type="checkbox" id="toggle-ram" class="toggle-switch" checked>
+              <label for="toggle-ram">Ram</label>
+            </div>
           </div>
         </div>
       </div>
@@ -717,16 +701,16 @@
     });
 
     function setupMenuToggles() {
-      document.querySelectorAll(".menu-container").forEach(menu => {
-        const hideBtn = menu.querySelector(".hide-menu");
-        const content = menu.querySelector(".menu-content");
-        hideBtn.addEventListener("click", () => {
-          if (content.style.display === "none") {
-            content.style.display = "flex";
-            hideBtn.textContent = "Hide";
+      // Attach toggle functionality to each menu toggle button
+      document.querySelectorAll(".menu-toggle").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const menu = btn.closest(".menu-container");
+          menu.classList.toggle("hidden");
+          // Change arrow direction
+          if (menu.classList.contains("hidden")) {
+            btn.innerHTML = "&#9664;"; // left arrow when hidden
           } else {
-            content.style.display = "none";
-            hideBtn.textContent = "Show";
+            btn.innerHTML = "&#9654;"; // right arrow when visible
           }
         });
       });
