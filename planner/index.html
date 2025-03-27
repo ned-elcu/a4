@@ -152,7 +152,7 @@
       text-shadow: 0 0 5px rgba(223,197,136,0.8);
       animation: neonGlow 1.5s infinite alternate ease-in-out;
     }
-    /* Right side menus container */
+    /* Right-side menus (map change, zoom controls, and toggle) */
     .menu-container {
       width: 180px;
       background: rgba(30,30,30,0.9);
@@ -183,12 +183,13 @@
       right: 20px;
       z-index: 20;
     }
-    /* New Text Toggle on Right */
+    /* Marker text toggle container on right */
     #text-toggle-right {
       position: fixed;
       top: 420px; /* Placed beneath the zoom controls */
       right: 20px;
       z-index: 20;
+      /* Match the look of other right menus */
       width: 180px;
       background: rgba(30,30,30,0.9);
       padding: 10px;
@@ -243,7 +244,7 @@
     /* Toolbox */
     #toolbox {
       position: fixed;
-      top: 180px; /* Adjusted to accommodate the new right menu */
+      top: 180px; /* Left side toolbox remains unchanged */
       left: 20px;
       background: rgba(30,30,30,0.9);
       padding: 10px;
@@ -402,12 +403,12 @@
       <button id="reset-zoom">Reset</button>
     </div>
 
-    <!-- Text Toggle on Right -->
+    <!-- Marker Text Toggle (Right Side) -->
     <div id="text-toggle-right">
-      <h2 style="font-size:1em; margin-bottom:5px;">Marker Text</h2>
+      <h2>Marker Text</h2>
       <div id="toggle-container">
         <input type="checkbox" id="toggle-marker-text">
-        <label for="toggle-marker-text" id="toggle-marker-text-label">Display text</label>
+        <label for="toggle-marker-text" id="toggle-marker-text-label">ALWAYS TEXT</label>
       </div>
     </div>
 
@@ -520,10 +521,10 @@
       toggleMarkerTextCheckbox.addEventListener("change", function() {
         if (this.checked) {
           document.body.classList.add("text-hover-only");
-          toggleLabel.textContent = "Display text only on hover";
+          toggleLabel.textContent = "HOVER TEXT";
         } else {
           document.body.classList.remove("text-hover-only");
-          toggleLabel.textContent = "Display text";
+          toggleLabel.textContent = "ALWAYS TEXT";
         }
       });
     });
