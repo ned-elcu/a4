@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>SOLIS Planner</title>
-  <link rel="icon" href="https://regnumsolis.com/planner/images/icon.png" type="image/png">
+  <link rel="icon" href="https://regnumsolis.com/planner/images/icon.png" type="image/png" />
   <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" />
   <style>
     /* Reset and base styles */
     * {
@@ -445,7 +445,7 @@
 
   <!-- Loading overlay -->
   <div id="loading-overlay">
-    <img src="https://regnumsolis.com/planner/images/loading.gif" alt="Loading">
+    <img src="https://regnumsolis.com/planner/images/loading.gif" alt="Loading" />
     <div id="loading-text">0%</div>
   </div>
 
@@ -499,55 +499,62 @@
           <button class="menu-toggle">&#9654;</button>
         </div>
         <div class="menu-content">
+          <!-- Existing Hover Text Toggle -->
           <div id="toggle-container">
-            <input type="checkbox" id="toggle-marker-text" class="toggle-switch">
+            <input type="checkbox" id="toggle-marker-text" class="toggle-switch" />
             <label for="toggle-marker-text" id="toggle-marker-text-label">HOVER TEXT</label>
           </div>
+          <!-- New Marker Visibility Toggles (including Lines) -->
           <div id="marker-visibility-container">
             <h3>Marker Visibility</h3>
             <div class="toggle-item">
-              <input type="checkbox" id="toggle-homestead" class="toggle-switch" checked>
+              <input type="checkbox" id="toggle-homestead" class="toggle-switch" checked />
               <label for="toggle-homestead">Homestead</label>
             </div>
             <div class="toggle-item">
-              <input type="checkbox" id="toggle-citadel" class="toggle-switch" checked>
+              <input type="checkbox" id="toggle-citadel" class="toggle-switch" checked />
               <label for="toggle-citadel">Citadel</label>
             </div>
             <div class="toggle-item">
-              <input type="checkbox" id="toggle-torch" class="toggle-switch" checked>
+              <input type="checkbox" id="toggle-torch" class="toggle-switch" checked />
               <label for="toggle-torch">Torch</label>
             </div>
             <div class="toggle-item">
-              <input type="checkbox" id="toggle-cave" class="toggle-switch" checked>
+              <input type="checkbox" id="toggle-cave" class="toggle-switch" checked />
               <label for="toggle-cave">Cave</label>
             </div>
             <div class="toggle-item">
-              <input type="checkbox" id="toggle-sword" class="toggle-switch" checked>
+              <input type="checkbox" id="toggle-sword" class="toggle-switch" checked />
               <label for="toggle-sword">Sword</label>
             </div>
             <div class="toggle-item">
-              <input type="checkbox" id="toggle-spear" class="toggle-switch" checked>
+              <input type="checkbox" id="toggle-spear" class="toggle-switch" checked />
               <label for="toggle-spear">Spear</label>
             </div>
             <div class="toggle-item">
-              <input type="checkbox" id="toggle-bow" class="toggle-switch" checked>
+              <input type="checkbox" id="toggle-bow" class="toggle-switch" checked />
               <label for="toggle-bow">Bow</label>
             </div>
             <div class="toggle-item">
-              <input type="checkbox" id="toggle-beacon" class="toggle-switch" checked>
+              <input type="checkbox" id="toggle-beacon" class="toggle-switch" checked />
               <label for="toggle-beacon">Beacon</label>
             </div>
             <div class="toggle-item">
-              <input type="checkbox" id="toggle-camp" class="toggle-switch" checked>
+              <input type="checkbox" id="toggle-camp" class="toggle-switch" checked />
               <label for="toggle-camp">Camp</label>
             </div>
             <div class="toggle-item">
-              <input type="checkbox" id="toggle-catapult" class="toggle-switch" checked>
+              <input type="checkbox" id="toggle-catapult" class="toggle-switch" checked />
               <label for="toggle-catapult">Catapult</label>
             </div>
             <div class="toggle-item">
-              <input type="checkbox" id="toggle-ram" class="toggle-switch" checked>
+              <input type="checkbox" id="toggle-ram" class="toggle-switch" checked />
               <label for="toggle-ram">Ram</label>
+            </div>
+            <!-- New toggle for lines -->
+            <div class="toggle-item">
+              <input type="checkbox" id="toggle-lines" class="toggle-switch" checked />
+              <label for="toggle-lines">Lines</label>
             </div>
           </div>
         </div>
@@ -557,40 +564,40 @@
     <!-- Toolbox -->
     <div id="toolbox">
       <div class="tool" draggable="true" data-type="homestead" title="Homestead">
-        <img src="https://regnumsolis.com/planner/images/marker.svg" alt="Homestead">
+        <img src="https://regnumsolis.com/planner/images/marker.svg" alt="Homestead" />
       </div>
       <div class="tool" draggable="true" data-type="citadel" title="Citadel">
-        <img src="https://regnumsolis.com/planner/images/citadel.svg" alt="Citadel">
+        <img src="https://regnumsolis.com/planner/images/citadel.svg" alt="Citadel" />
       </div>
       <div class="tool" draggable="true" data-type="torch" title="Torch">
-        <img src="https://regnumsolis.com/planner/images/torch.svg" alt="Torch">
+        <img src="https://regnumsolis.com/planner/images/torch.svg" alt="Torch" />
       </div>
       <div class="tool" draggable="true" data-type="cave" title="Cave">
-        <img src="https://regnumsolis.com/planner/images/cave.svg" alt="Cave">
+        <img src="https://regnumsolis.com/planner/images/cave.svg" alt="Cave" />
       </div>
       <div class="tool" draggable="true" data-type="sword" title="Sword">
-        <img src="https://regnumsolis.com/planner/images/sword.svg" alt="Sword">
+        <img src="https://regnumsolis.com/planner/images/sword.svg" alt="Sword" />
       </div>
       <div class="tool" draggable="true" data-type="spear" title="Spear">
-        <img src="https://regnumsolis.com/planner/images/spear.svg" alt="Spear">
+        <img src="https://regnumsolis.com/planner/images/spear.svg" alt="Spear" />
       </div>
       <div class="tool" draggable="true" data-type="bow" title="Bow">
-        <img src="https://regnumsolis.com/planner/images/bow.svg" alt="Bow">
+        <img src="https://regnumsolis.com/planner/images/bow.svg" alt="Bow" />
       </div>
       <div class="tool" data-type="line" title="Line Draw">
-        <img src="https://regnumsolis.com/planner/images/line.svg" alt="Line Draw" onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2250%22 height=%2250%22><text x=%220%22 y=%2230%22 fill=%22white%22 font-size=%2230%22>―</text></svg>'">
+        <img src="https://regnumsolis.com/planner/images/line.svg" alt="Line Draw" onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2250%22 height=%2250%22><text x=%220%22 y=%2230%22 fill=%22white%22 font-size=%2230%22>―</text></svg>'" />
       </div>
       <div class="tool" draggable="true" data-type="beacon" title="Beacon">
-        <img src="https://regnumsolis.com/planner/images/beacon.svg" alt="Beacon">
+        <img src="https://regnumsolis.com/planner/images/beacon.svg" alt="Beacon" />
       </div>
       <div class="tool" draggable="true" data-type="camp" title="Camp">
-        <img src="https://regnumsolis.com/planner/images/camp.svg" alt="Camp">
+        <img src="https://regnumsolis.com/planner/images/camp.svg" alt="Camp" />
       </div>
       <div class="tool" draggable="true" data-type="catapult" title="Catapult">
-        <img src="https://regnumsolis.com/planner/images/catapult.svg" alt="Catapult">
+        <img src="https://regnumsolis.com/planner/images/catapult.svg" alt="Catapult" />
       </div>
       <div class="tool" draggable="true" data-type="ram" title="Ram">
-        <img src="https://regnumsolis.com/planner/images/ram.svg" alt="Ram">
+        <img src="https://regnumsolis.com/planner/images/ram.svg" alt="Ram" />
       </div>
     </div>
 
@@ -644,8 +651,8 @@
     let currentLine = null;
     let currentLineGroup = null;
 
-    // Global marker visibility state
-    const markerVisibility = {
+    // Global marker and line visibility state
+    const visibilityState = {
       homestead: true,
       citadel: true,
       torch: true,
@@ -656,14 +663,19 @@
       beacon: true,
       camp: true,
       catapult: true,
-      ram: true
+      ram: true,
+      lines: true
     };
 
     function updateMarkerVisibility() {
       markerLayer.querySelectorAll("[data-marker='true']").forEach(markerEl => {
         const type = markerEl.getAttribute("data-type");
-        markerEl.style.display = markerVisibility[type] ? "" : "none";
+        markerEl.style.display = visibilityState[type] ? "" : "none";
       });
+    }
+    function updateLineVisibility() {
+      // Hide or show the entire line layer based on the toggle state
+      lineLayer.style.display = visibilityState.lines ? "" : "none";
     }
 
     // Loading simulation
@@ -675,7 +687,6 @@
     document.addEventListener("DOMContentLoaded", () => {
       setupLogin();
       setupToolbox();
-      // Removed call to undefined setupAuditControls();
       setupMapSwitchControls();
       setupMenuToggles();
 
@@ -692,25 +703,32 @@
         }
       });
 
-      // Setup marker visibility toggles
-      const markerTypes = Object.keys(markerVisibility);
-      markerTypes.forEach(type => {
-        const checkbox = document.getElementById(`toggle-${type}`);
+      // Setup marker visibility toggles (including lines)
+      Object.keys(visibilityState).forEach(key => {
+        const checkbox = document.getElementById(`toggle-${key}`);
         if (checkbox) {
           checkbox.addEventListener("change", function() {
-            markerVisibility[type] = this.checked;
-            updateMarkerVisibility();
+            visibilityState[key] = this.checked;
+            if (key === "lines") updateLineVisibility();
+            else updateMarkerVisibility();
           });
         }
       });
     });
 
+    // Toggle menu visibility with arrow icon updates.
     function setupMenuToggles() {
       document.querySelectorAll(".menu-toggle").forEach(btn => {
         btn.addEventListener("click", (e) => {
           e.stopPropagation();
           const menu = btn.closest(".menu-container");
           menu.classList.toggle("hidden");
+          // If the menu now has the "hidden" class, show ▶ (expand); if visible, show ◀ (collapse).
+          if (menu.classList.contains("hidden")) {
+            btn.innerHTML = "&#9654;"; // ▶
+          } else {
+            btn.innerHTML = "&#9664;"; // ◀
+          }
         });
       });
     }
@@ -870,9 +888,11 @@
         } else {
           tool.addEventListener("dragstart", (e) => {
             e.dataTransfer.setData("text/plain", type);
+            // Hide default ghost image
             const emptyImg = new Image();
             emptyImg.src = "";
             e.dataTransfer.setDragImage(emptyImg, 0, 0);
+            // Create a clone element for visual feedback
             const dragClone = tool.cloneNode(true);
             dragClone.classList.add("drag-clone");
             dragClone.style.position = "fixed";
@@ -883,6 +903,7 @@
             document.body.appendChild(dragClone);
             tool.dragClone = dragClone;
           });
+          // Update clone position on the tool's drag event
           tool.addEventListener("drag", (e) => {
             if (!tool.dragClone) return;
             const offsetX = 10;
@@ -899,6 +920,14 @@
         }
       });
     }
+    // Add a document-level dragover to update the clone’s position (for Gecko compatibility)
+    document.addEventListener("dragover", (e) => {
+      const activeClone = document.querySelector(".drag-clone");
+      if (activeClone) {
+        activeClone.style.left = (e.clientX + 10) + "px";
+        activeClone.style.top = (e.clientY + 10) + "px";
+      }
+    });
 
     function setupDragAndDrop() {
       svgRoot.addEventListener("dragover", (e) => {
@@ -1038,6 +1067,7 @@
         snapshot.forEach((docSnap) => {
           createLineElement(docSnap.id, docSnap.data());
         });
+        updateLineVisibility();
       });
     }
 
