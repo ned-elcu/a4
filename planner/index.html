@@ -16,14 +16,13 @@
     html, body {
       width: 100%;
       height: 100%;
-      /* Set background transparent so the animated canvas shows through */
       background: transparent;
       color: white;
       font-family: 'Bebas Neue', sans-serif;
       overflow: hidden;
       position: relative;
     }
-    /* Background container and canvas for animated waves */
+    /* Background container and animated canvas */
     #background-container {
       position: absolute;
       top: 0;
@@ -37,7 +36,7 @@
       width: 100%;
       height: 100%;
     }
-    /* Loading overlay styles */
+    /* Loading overlay */
     #loading-overlay {
       position: fixed;
       top: 0;
@@ -130,7 +129,7 @@
       animation: fadeIn 1s ease-out;
       z-index: 1;
     }
-    /* Header with text */
+    /* Header text instead of logo */
     #header-logo {
       text-align: center;
       padding: 10px 0;
@@ -139,6 +138,43 @@
     #header-logo h1 {
       font-size: 1.5em;
       margin: 0;
+      color: rgb(223,197,136);
+      text-shadow: 0 0 5px rgba(223,197,136,0.8);
+    }
+    /* Map change controls container */
+    #map-change-container {
+      position: fixed;
+      top: 100px;
+      right: 20px;
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      background: rgba(30,30,30,0.9);
+      padding: 10px;
+      border: 1px solid rgba(223,197,136,0.5);
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(223,197,136,0.5);
+    }
+    #map-change-container h2 {
+      font-size: 1.2em;
+      margin-bottom: 5px;
+    }
+    #map-change-container button {
+      padding: 8px;
+      border: none;
+      border-radius: 4px;
+      background: rgba(223,197,136,0.8);
+      color: white;
+      cursor: pointer;
+      transition: transform 0.3s, box-shadow 0.3s;
+      box-shadow: 0 4px 15px rgba(223,197,136,0.5);
+      font-family: 'Bebas Neue', sans-serif;
+    }
+    #map-change-container button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 15px rgba(223,197,136,0.9);
     }
     /* Toolbox */
     #toolbox {
@@ -195,30 +231,6 @@
       box-shadow: 0 4px 15px rgba(223,197,136,0.5);
     }
     #zoom-controls button:hover {
-      transform: scale(1.05);
-      box-shadow: 0 4px 15px rgba(223,197,136,0.9);
-    }
-    /* Map Switch Controls */
-    #map-switch-controls {
-      position: fixed;
-      top: 300px;
-      right: 20px;
-      z-index: 20;
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
-    #map-switch-controls button {
-      padding: 8px;
-      border: none;
-      border-radius: 4px;
-      background: rgba(223,197,136,0.8);
-      color: white;
-      cursor: pointer;
-      transition: transform 0.3s, box-shadow 0.3s;
-      box-shadow: 0 4px 15px rgba(223,197,136,0.5);
-    }
-    #map-switch-controls button:hover {
       transform: scale(1.05);
       box-shadow: 0 4px 15px rgba(223,197,136,0.9);
     }
@@ -331,10 +343,23 @@
 
   <!-- Main App -->
   <div id="app">
+    <!-- Header with text -->
     <div id="header-logo">
       <h1>Crafted by the Regnum Solis Research and Development Team for the usage of the Remnants Senate</h1>
     </div>
 
+    <!-- Map Change Controls -->
+    <div id="map-change-container">
+      <h2>Change Maps</h2>
+      <!-- New button: Visibility Map -->
+      <button id="visibility-map">Visibility Map</button>
+      <!-- Renamed from Tactical Map -->
+      <button id="color-scan">Color Scan</button>
+      <!-- Renamed from current Visibility Map -->
+      <button id="dark-scan">Dark Scan</button>
+    </div>
+
+    <!-- Toolbox, Zoom, Map -->
     <div id="toolbox">
       <div class="tool" draggable="true" data-type="marker" title="Text Marker">
         <img src="https://regnumsolis.com/planner/images/marker.svg" alt="Marker Background">
@@ -366,11 +391,6 @@
       <button id="zoom-in">Zoom In</button>
       <button id="zoom-out">Zoom Out</button>
       <button id="reset-zoom">Reset</button>
-    </div>
-    
-    <div id="map-switch-controls">
-      <button id="tactical-terrain">Tactical Terrain</button>
-      <button id="visibility-terrain">Visibility Terrain</button>
     </div>
 
     <div id="map-container">
@@ -420,7 +440,7 @@
     let currentLine = null;
     let currentLineGroup = null;
 
-    // For loading simulation
+    // Loading simulation
     let loadingInterval;
     let currentProgress = 0;
     const loadingOverlay = document.getElementById("loading-overlay");
@@ -489,10 +509,12 @@
       });
     }
 
+    // Set default map to the new main map.
     function initializeMap() {
-      switchMap("https://regnumsolis.com/planner/images/map.svg");
+      switchMap("https://regnumsolis.com/planner/images/mvmvmdfs.svg");
     }
 
+    // switchMap shows the loading overlay, fetches the SVG, then initializes pan/zoom and listeners.
     function switchMap(url) {
       if (panZoomInstance) {
         panZoomInstance.destroy();
@@ -520,11 +542,18 @@
         });
     }
 
+    // Setup the map change buttons with new names and URLs.
     function setupMapSwitchControls() {
-      document.getElementById("tactical-terrain").addEventListener("click", () => {
+      // New button: Visibility Map
+      document.getElementById("visibility-map").addEventListener("click", () => {
+        switchMap("https://regnumsolis.com/planner/images/visibilitymap.svg");
+      });
+      // Renamed from Tactical Map to Color Scan (old main map)
+      document.getElementById("color-scan").addEventListener("click", () => {
         switchMap("https://regnumsolis.com/planner/images/map.svg");
       });
-      document.getElementById("visibility-terrain").addEventListener("click", () => {
+      // Renamed from current Visibility Map to Dark Scan
+      document.getElementById("dark-scan").addEventListener("click", () => {
         switchMap("https://regnumsolis.com/planner/images/darkmap.svg");
       });
     }
@@ -1049,7 +1078,7 @@
     }
   </script>
   <script>
-    // Animated waves background script
+    // Animated waves background script with updated gradient colors
     const canvas = document.getElementById('waveCanvas');
     const ctx = canvas.getContext('2d');
     let width, height;
@@ -1070,10 +1099,10 @@
     function animate() {
       ctx.clearRect(0, 0, width, height);
       
-      // New gradient
+      // New gradient: top rgb(24,35,38) and bottom rgb(24,35,49)
       const bgGradient = ctx.createLinearGradient(0, 0, 0, height);
-      bgGradient.addColorStop(0, 'rgb(24, 51, 77)');   
-      bgGradient.addColorStop(1, 'rgb(24, 51, 51)');    
+      bgGradient.addColorStop(0, 'rgb(24,35,38)');
+      bgGradient.addColorStop(1, 'rgb(24,35,49)');
       ctx.fillStyle = bgGradient;
       ctx.fillRect(0, 0, width, height);
       
