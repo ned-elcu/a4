@@ -84,6 +84,19 @@
                      0 0 40px rgba(223,197,136,1);
       }
     }
+    /* Reduced glow animation for header title (60% reduction) */
+    @keyframes reducedNeonGlow {
+      0% {
+        text-shadow: 0 0 2px rgba(223,197,136,0.24),
+                     0 0 4px rgba(223,197,136,0.24),
+                     0 0 6px rgba(223,197,136,0.24);
+      }
+      100% {
+        text-shadow: 0 0 8px rgba(223,197,136,0.4),
+                     0 0 12px rgba(223,197,136,0.4),
+                     0 0 16px rgba(223,197,136,0.4);
+      }
+    }
     /* Swinging animation for drag clone */
     @keyframes swing {
       0%   { transform: rotate(-10deg); }
@@ -160,8 +173,8 @@
       font-size: 1.05em;
       margin: 0;
       color: rgb(223,197,136);
-      text-shadow: 0 0 5px rgba(223,197,136,0.8);
-      animation: neonGlow 1.5s infinite alternate ease-in-out;
+      /* Override glow with reducedNeonGlow */
+      animation: reducedNeonGlow 1.5s infinite alternate ease-in-out;
     }
     /* Right menus container to prevent overlap */
     #right-menus {
@@ -1220,7 +1233,8 @@
       markerEl.addEventListener("click", async (e) => {
         e.stopPropagation();
         if (activeTool === "line") return;
-        if (confirm("Delete this marker?")) {
+        // Use custom confirmation modal for deletion
+        if (await customConfirm("Delete this marker?")) {
           try {
             await deleteDoc(doc(db, "markers", id));
             recordAuditLog("delete", { markerId: id, markerType: data.type });
@@ -1428,6 +1442,7 @@
         
         promptMessage.textContent = message;
         promptInput.value = defaultValue || "";
+        promptInput.style.display = "block";
         overlay.style.display = "flex";
         
         function cleanup() {
@@ -1443,6 +1458,42 @@
         
         function onCancel() {
           resolve(null);
+          cleanup();
+        }
+        
+        okButton.addEventListener("click", onOk);
+        cancelButton.addEventListener("click", onCancel);
+      });
+    }
+  </script>
+  <script>
+    // Custom Confirm Functionality (using the same modal style)
+    function customConfirm(message) {
+      return new Promise((resolve) => {
+        const overlay = document.getElementById("custom-prompt-overlay");
+        const promptMessage = document.getElementById("custom-prompt-message");
+        const promptInput = document.getElementById("custom-prompt-input");
+        const okButton = document.getElementById("custom-prompt-ok");
+        const cancelButton = document.getElementById("custom-prompt-cancel");
+        
+        promptMessage.textContent = message;
+        promptInput.style.display = "none"; // hide input for confirmation
+        overlay.style.display = "flex";
+        
+        function cleanup() {
+          overlay.style.display = "none";
+          promptInput.style.display = "block"; // reset for future prompts
+          okButton.removeEventListener("click", onOk);
+          cancelButton.removeEventListener("click", onCancel);
+        }
+        
+        function onOk() {
+          resolve(true);
+          cleanup();
+        }
+        
+        function onCancel() {
+          resolve(false);
           cleanup();
         }
         
