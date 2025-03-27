@@ -146,7 +146,7 @@
       background: transparent;
     }
     #header-logo h1 {
-      font-size: 1.05em; /* scaled down by roughly 30% from 1.5em */
+      font-size: 1.05em;
       margin: 0;
       color: rgb(223,197,136);
       text-shadow: 0 0 5px rgba(223,197,136,0.8);
@@ -179,17 +179,16 @@
     /* Zoom controls */
     #zoom-controls {
       position: fixed;
-      top: 260px;  /* Adjusted gap from the map switch menu */
+      top: 260px;
       right: 20px;
       z-index: 20;
     }
     /* Marker text toggle container on right */
     #text-toggle-right {
       position: fixed;
-      top: 420px; /* Placed beneath the zoom controls */
+      top: 420px;
       right: 20px;
       z-index: 20;
-      /* Match the look of other right menus */
       width: 180px;
       background: rgba(30,30,30,0.9);
       padding: 10px;
@@ -232,19 +231,19 @@
     #toggle-marker-text:checked::before {
       transform: translateX(20px);
     }
-    #toggle-marker-text-label {
-      cursor: pointer;
-      font-size: 1em;
-      transition: color 0.3s;
-      margin-left: 10px;
+    /* Align the switch container with centered text to the right of the checkbox */
+    #toggle-container {
+      display: flex;
+      align-items: center;
     }
-    #toggle-marker-text-label:hover {
-      color: #dfc588;
+    #toggle-marker-text-label {
+      margin-left: 10px;
+      line-height: 20px;
     }
     /* Toolbox */
     #toolbox {
       position: fixed;
-      top: 180px; /* Left side toolbox remains unchanged */
+      top: 180px;
       left: 20px;
       background: rgba(30,30,30,0.9);
       padding: 10px;
@@ -344,6 +343,23 @@
       border-top: 1px solid rgba(223,197,136,0.5);
       padding-top: 5px;
     }
+    /* Admin log button style applied to right menu buttons */
+    .menu-container button {
+      width: 100%;
+      height: 40px;
+      border: none;
+      border-radius: 4px;
+      background: rgba(223,197,136,0.8);
+      color: white;
+      cursor: pointer;
+      transition: transform 0.3s, box-shadow 0.3s;
+      box-shadow: 0 4px 15px rgba(223,197,136,0.5);
+    }
+    .menu-container button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 15px rgba(223,197,136,0.9);
+    }
+    /* Existing delete all markers button styling remains unchanged */
     #delete-all {
       width: 100%;
       height: 40px;
@@ -716,7 +732,6 @@
         }
       });
       
-      // Setup the copy audit log functionality.
       document.getElementById("copy-audit").addEventListener("click", () => {
         const auditLogContainer = document.getElementById("audit-log");
         const textToCopy = auditLogContainer.textContent;
@@ -932,7 +947,6 @@
         imgYOffset = -15 * 1.7;
         fontSize = 14 * 1.7;
       }
-      // New marker types (treated similar to citadel)
       else if (data.type === "beacon") {
         imgSrc = "https://regnumsolis.com/planner/images/beacon.svg";
         imgWidth = 30 * 1.7 * 1.2;
