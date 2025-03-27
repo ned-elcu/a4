@@ -84,6 +84,16 @@
                      0 0 40px rgba(223,197,136,1);
       }
     }
+    /* Swinging animation for drag clone */
+    @keyframes swing {
+      0%   { transform: rotate(-10deg); }
+      50%  { transform: rotate(10deg); }
+      100% { transform: rotate(-10deg); }
+    }
+    .drag-clone {
+      animation: swing 1s ease-in-out infinite;
+      opacity: 0.9;
+    }
     /* Login screen */
     #login-screen {
       display: flex;
@@ -186,21 +196,21 @@
       margin-bottom: 5px;
       position: relative;
     }
-  /* Adjusted Arrow Toggle Button Styling */
-  .menu-toggle {
-    position: absolute;
-    left: -45px; /* position outside the menu container */
-    top: -40%;
-    background: none;       /* no background */
-    border: none;           /* no border */
-    font-size: 1.05em;       /* slightly larger for visibility */
-    color: rgb(223,197,136);
-    cursor: pointer;
-    padding: 0;             /* remove extra padding */
-    line-height: 1;
-    width: 22px !important;
-    height: 23px !important;
-  }
+    /* Adjusted Arrow Toggle Button Styling */
+    .menu-toggle {
+      position: absolute;
+      left: -45px;
+      top: -40%;
+      background: none;
+      border: none;
+      font-size: 1.05em;
+      color: rgb(223,197,136);
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+      width: 22px !important;
+      height: 23px !important;
+    }
     /* Styling for the content inside each menu */
     .menu-content {
       display: flex;
@@ -393,7 +403,6 @@
       border-top: 1px solid rgba(223,197,136,0.5);
       padding-top: 5px;
     }
-    /* Admin log button style applied to right menu buttons */
     .menu-container button {
       width: 100%;
       height: 40px;
@@ -409,7 +418,6 @@
       transform: scale(1.05);
       box-shadow: 0 4px 15px rgba(223,197,136,0.9);
     }
-    /* Existing delete all markers button styling remains unchanged */
     #delete-all {
       width: 100%;
       height: 40px;
@@ -425,8 +433,6 @@
       transform: scale(1.05);
       box-shadow: 0 4px 15px rgba(223,197,136,0.9);
     }
-      
-      
   </style>
 </head>
 <body>
@@ -701,16 +707,14 @@
     });
 
     function setupMenuToggles() {
-      // Attach toggle functionality to each menu toggle button
       document.querySelectorAll(".menu-toggle").forEach(btn => {
         btn.addEventListener("click", () => {
           const menu = btn.closest(".menu-container");
           menu.classList.toggle("hidden");
-          // Change arrow direction
           if (menu.classList.contains("hidden")) {
-            btn.innerHTML = "&#9664;"; // left arrow when hidden
+            btn.innerHTML = "&#9664;";
           } else {
-            btn.innerHTML = "&#9654;"; // right arrow when visible
+            btn.innerHTML = "&#9654;";
           }
         });
       });
@@ -777,7 +781,6 @@
       switchMap("https://regnumsolis.com/planner/images/mvmvmdfs.svg");
     }
 
-    // switchMap shows the loading overlay, fetches the SVG, then initializes pan/zoom and listeners.
     function switchMap(url) {
       if (panZoomInstance) {
         panZoomInstance.destroy();
@@ -805,7 +808,6 @@
         });
     }
 
-    // Setup the map switch controls.
     function setupMapSwitchControls() {
       document.getElementById("tactical-map").addEventListener("click", () => {
         switchMap("https://regnumsolis.com/planner/images/mvmvmdfstactical.svg");
@@ -873,54 +875,36 @@
         } else {
           tool.addEventListener("dragstart", (e) => {
             e.dataTransfer.setData("text/plain", type);
+            // Hide default ghost image
+            const emptyImg = new Image();
+            emptyImg.src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
+            e.dataTransfer.setDragImage(emptyImg, 0, 0);
+            // Create a clone element for visual feedback
+            const dragClone = tool.cloneNode(true);
+            dragClone.classList.add("drag-clone");
+            dragClone.style.position = "fixed";
+            dragClone.style.top = "0px";
+            dragClone.style.left = "0px";
+            dragClone.style.pointerEvents = "none";
+            dragClone.style.zIndex = "1000";
+            document.body.appendChild(dragClone);
+            tool.dragClone = dragClone;
+          });
+          tool.addEventListener("drag", (e) => {
+            if (!tool.dragClone) return;
+            const offsetX = 10;
+            const offsetY = 10;
+            tool.dragClone.style.left = e.clientX + offsetX + "px";
+            tool.dragClone.style.top = e.clientY + offsetY + "px";
+          });
+          tool.addEventListener("dragend", (e) => {
+            if (tool.dragClone) {
+              tool.dragClone.remove();
+              tool.dragClone = null;
+            }
           });
         }
       });
-    }
-
-    function setupAuditControls() {
-      document.getElementById("delete-audit").addEventListener("click", async () => {
-        if (confirm("Delete all audit logs?")) {
-          try {
-            const auditSnapshot = await getDocs(collection(db, "auditLogs"));
-            auditSnapshot.forEach(async (docSnap) => {
-              await deleteDoc(doc(db, "auditLogs", docSnap.id));
-            });
-          } catch (error) {
-            console.error("Error deleting audit logs:", error);
-          }
-        }
-      });
-
-      document.getElementById("minimize-audit").addEventListener("click", () => {
-        const auditLogDiv = document.getElementById("audit-log");
-        if (auditLogDiv.style.display === "none") {
-          auditLogDiv.style.display = "block";
-          document.getElementById("minimize-audit").textContent = "➖";
-        } else {
-          auditLogDiv.style.display = "none";
-          document.getElementById("minimize-audit").textContent = "➕";
-        }
-      });
-      
-      document.getElementById("copy-audit").addEventListener("click", () => {
-        const auditLogContainer = document.getElementById("audit-log");
-        const textToCopy = auditLogContainer.textContent;
-        navigator.clipboard.writeText(textToCopy)
-          .then(() => {
-            alert("Audit log copied to clipboard!");
-          })
-          .catch((error) => {
-            alert("Failed to copy audit log.");
-          });
-      });
-    }
-
-    function getSVGPoint(e) {
-      const pt = svgRoot.createSVGPoint();
-      pt.x = e.clientX;
-      pt.y = e.clientY;
-      return pt.matrixTransform(panLayer.getScreenCTM().inverse());
     }
 
     function setupDragAndDrop() {
@@ -1001,7 +985,6 @@
 
     async function addMarkerToFirestore(type, x, y) {
       let markerData = { type, x, y, timestamp: serverTimestamp() };
-      // Note: update allowed types to use "homestead" instead of "marker"
       if (["homestead", "citadel", "torch", "cave", "sword", "spear", "bow", "beacon", "camp", "catapult", "ram"].includes(type)) {
         markerData.text = prompt("Enter marker text:") || "";
         markerData.color = prompt("Enter marker color (e.g., red or #ff0000):") || "black";
@@ -1068,7 +1051,7 @@
     function createMarkerElement(id, data) {
       let markerEl = document.createElementNS("http://www.w3.org/2000/svg", "g");
       markerEl.setAttribute("data-marker", "true");
-      markerEl.dataset.type = data.type; // add type for visibility toggling
+      markerEl.dataset.type = data.type;
 
       let imgSrc, imgWidth, imgHeight, imgXOffset, imgYOffset, fontSize;
       if (data.type === "homestead") {
@@ -1120,8 +1103,7 @@
         imgXOffset = -15 * 1.7;
         imgYOffset = -15 * 1.7;
         fontSize = 14 * 1.7;
-      }
-      else if (data.type === "beacon") {
+      } else if (data.type === "beacon") {
         imgSrc = "https://regnumsolis.com/planner/images/beacon.svg";
         imgWidth = 30 * 1.7 * 1.2;
         imgHeight = 30 * 1.7 * 1.2;
@@ -1371,6 +1353,13 @@
       });
     }
 
+    function getSVGPoint(e) {
+      const pt = svgRoot.createSVGPoint();
+      pt.x = e.clientX;
+      pt.y = e.clientY;
+      return pt.matrixTransform(panLayer.getScreenCTM().inverse());
+    }
+
     function displayErrorOverlay(message) {
       const overlay = document.getElementById("error-overlay");
       overlay.textContent = message;
@@ -1378,9 +1367,8 @@
       console.warn("Error overlay activated:", message);
     }
   </script>
-  <!-- Animated Waves Background Script Using WebGL -->
   <script>
-    // Setup WebGL on the canvas with id "waveCanvas"
+    // Animated Waves Background Script Using WebGL
     const canvas = document.getElementById('waveCanvas');
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
@@ -1389,7 +1377,6 @@
       alert("WebGL is not supported in your browser.");
     }
 
-    // Vertex shader: full-screen quad.
     const vertexShaderSource = `
       attribute vec2 a_position;
       varying vec2 v_uv;
@@ -1399,8 +1386,6 @@
       }
     `;
 
-    // Fragment shader: sums eight sine waves with varied parameters and extra phase offsets,
-    // then darkens the result by reducing lightness by 90%.
     const fragmentShaderSource = `
       precision mediump float;
       uniform float u_time;
@@ -1456,7 +1441,6 @@
         vec3 color = baseColor * (0.4 + 0.6 * diffuse) + vec3(1.0, 0.95, 0.8) * spec;
         color = mix(color, vec3(1.0), fresnel);
         
-        // Darken by reducing lightness by 90%
         color *= 0.1;
         
         gl_FragColor = vec4(color, 1.0);
