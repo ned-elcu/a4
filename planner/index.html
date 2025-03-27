@@ -391,6 +391,7 @@
         <span>
           <span id="delete-audit" class="icon" title="Delete all audit logs">🗑️</span>
           <span id="minimize-audit" class="icon" title="Minimize audit log">➖</span>
+          <span id="copy-audit" class="icon" title="Copy audit log">📋</span>
         </span>
       </h3>
       <div id="audit-log"></div>
@@ -626,6 +627,19 @@
           auditLogDiv.style.display = "none";
           document.getElementById("minimize-audit").textContent = "➕";
         }
+      });
+      
+      // Setup the copy audit log functionality.
+      document.getElementById("copy-audit").addEventListener("click", () => {
+        const auditLogContainer = document.getElementById("audit-log");
+        const textToCopy = auditLogContainer.textContent;
+        navigator.clipboard.writeText(textToCopy)
+          .then(() => {
+            alert("Audit log copied to clipboard!");
+          })
+          .catch((error) => {
+            alert("Failed to copy audit log.");
+          });
       });
     }
 
