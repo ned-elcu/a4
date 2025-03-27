@@ -101,6 +101,10 @@
       animation: windSway 1s infinite alternate;
       opacity: 0.8;
     }
+    /* Pop-in animation for dropped markers */
+    .drop-pop {
+      animation: popIn 0.5s ease-out;
+    }
     /* Login screen */
     #login-screen {
       display: flex;
@@ -206,7 +210,7 @@
     /* Adjusted Arrow Toggle Button Styling */
     .menu-toggle {
       position: absolute;
-      left: -45px; /* position outside the menu container */
+      left: -45px;
       top: -40%;
       background: none;
       border: none;
@@ -355,10 +359,6 @@
       opacity: 0.8;
       cursor: pointer;
     }
-    /* Pop-in animation for dropped markers */
-    .drop-pop {
-      animation: popIn 0.5s ease-out;
-    }
     /* Error overlay */
     #error-overlay {
       position: fixed;
@@ -444,7 +444,6 @@
       transform: scale(1.05);
       box-shadow: 0 4px 15px rgba(223,197,136,0.9);
     }
-      
   </style>
 </head>
 <body>
@@ -726,9 +725,9 @@
           menu.classList.toggle("hidden");
           // Change arrow direction
           if (menu.classList.contains("hidden")) {
-            btn.innerHTML = "&#9664;"; // left arrow when hidden
+            btn.innerHTML = "&#9664;";
           } else {
-            btn.innerHTML = "&#9654;"; // right arrow when visible
+            btn.innerHTML = "&#9654;";
           }
         });
       });
@@ -890,12 +889,12 @@
           });
         } else {
           tool.addEventListener("dragstart", (e) => {
-            e.dataTransfer.setData("text/plain", type);
-            // Add dragging effect to tool
+            // Hide default ghost image
+            e.dataTransfer.setDragImage(new Image(), 0, 0);
             tool.classList.add("dragging");
+            e.dataTransfer.setData("text/plain", type);
           });
           tool.addEventListener("dragend", (e) => {
-            // Remove dragging effect when drag ends
             tool.classList.remove("dragging");
           });
         }
@@ -1024,7 +1023,6 @@
 
     async function addMarkerToFirestore(type, x, y) {
       let markerData = { type, x, y, timestamp: serverTimestamp() };
-      // Note: update allowed types to use "homestead" instead of "marker"
       if (["homestead", "citadel", "torch", "cave", "sword", "spear", "bow", "beacon", "camp", "catapult", "ram"].includes(type)) {
         markerData.text = prompt("Enter marker text:") || "";
         markerData.color = prompt("Enter marker color (e.g., red or #ff0000):") || "black";
@@ -1091,7 +1089,7 @@
     function createMarkerElement(id, data) {
       let markerEl = document.createElementNS("http://www.w3.org/2000/svg", "g");
       markerEl.setAttribute("data-marker", "true");
-      markerEl.dataset.type = data.type; // add type for visibility toggling
+      markerEl.dataset.type = data.type;
 
       let imgSrc, imgWidth, imgHeight, imgXOffset, imgYOffset, fontSize;
       if (data.type === "homestead") {
@@ -1406,7 +1404,6 @@
   </script>
   <!-- Animated Waves Background Script Using WebGL -->
   <script>
-    // Setup WebGL on the canvas with id "waveCanvas"
     const canvas = document.getElementById('waveCanvas');
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
@@ -1415,7 +1412,6 @@
       alert("WebGL is not supported in your browser.");
     }
 
-    // Vertex shader: full-screen quad.
     const vertexShaderSource = `
       attribute vec2 a_position;
       varying vec2 v_uv;
@@ -1425,8 +1421,6 @@
       }
     `;
 
-    // Fragment shader: sums eight sine waves with varied parameters and extra phase offsets,
-    // then darkens the result by reducing lightness by 90%.
     const fragmentShaderSource = `
       precision mediump float;
       uniform float u_time;
@@ -1482,7 +1476,6 @@
         vec3 color = baseColor * (0.4 + 0.6 * diffuse) + vec3(1.0, 0.95, 0.8) * spec;
         color = mix(color, vec3(1.0), fresnel);
         
-        // Darken by reducing lightness by 90%
         color *= 0.1;
         
         gl_FragColor = vec4(color, 1.0);
