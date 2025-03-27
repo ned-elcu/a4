@@ -546,7 +546,7 @@
     function setupMapSwitchControls() {
       // New button: Visibility Map
       document.getElementById("visibility-map").addEventListener("click", () => {
-        switchMap("https://regnumsolis.com/planner/images/visibilitymap.svg");
+        switchMap("https://regnumsolis.com/planner/images/mvmvmdfs.svg");
       });
       // Renamed from Tactical Map to Color Scan (old main map)
       document.getElementById("color-scan").addEventListener("click", () => {
