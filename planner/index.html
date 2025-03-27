@@ -84,6 +84,23 @@
                      0 0 40px rgba(223,197,136,1);
       }
     }
+    /* New animation for dragging tool (sway effect) */
+    @keyframes windSway {
+      0% { transform: scale(0.9) rotate(2deg); }
+      50% { transform: scale(0.9) rotate(-2deg); }
+      100% { transform: scale(0.9) rotate(2deg); }
+    }
+    /* New animation for pop in effect on drop */
+    @keyframes popIn {
+      0% { transform: scale(0.5); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    /* Class added during drag */
+    .dragging {
+      transform-origin: top left;
+      animation: windSway 1s infinite alternate;
+      opacity: 0.8;
+    }
     /* Login screen */
     #login-screen {
       display: flex;
@@ -186,21 +203,21 @@
       margin-bottom: 5px;
       position: relative;
     }
-  /* Adjusted Arrow Toggle Button Styling */
-  .menu-toggle {
-    position: absolute;
-    left: -45px; /* position outside the menu container */
-    top: -40%;
-    background: none;       /* no background */
-    border: none;           /* no border */
-    font-size: 1.05em;       /* slightly larger for visibility */
-    color: rgb(223,197,136);
-    cursor: pointer;
-    padding: 0;             /* remove extra padding */
-    line-height: 1;
-    width: 22px !important;
-    height: 23px !important;
-  }
+    /* Adjusted Arrow Toggle Button Styling */
+    .menu-toggle {
+      position: absolute;
+      left: -45px; /* position outside the menu container */
+      top: -40%;
+      background: none;
+      border: none;
+      font-size: 1.05em;
+      color: rgb(223,197,136);
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+      width: 22px !important;
+      height: 23px !important;
+    }
     /* Styling for the content inside each menu */
     .menu-content {
       display: flex;
@@ -338,6 +355,10 @@
       opacity: 0.8;
       cursor: pointer;
     }
+    /* Pop-in animation for dropped markers */
+    .drop-pop {
+      animation: popIn 0.5s ease-out;
+    }
     /* Error overlay */
     #error-overlay {
       position: fixed;
@@ -393,7 +414,6 @@
       border-top: 1px solid rgba(223,197,136,0.5);
       padding-top: 5px;
     }
-    /* Admin log button style applied to right menu buttons */
     .menu-container button {
       width: 100%;
       height: 40px;
@@ -409,7 +429,6 @@
       transform: scale(1.05);
       box-shadow: 0 4px 15px rgba(223,197,136,0.9);
     }
-    /* Existing delete all markers button styling remains unchanged */
     #delete-all {
       width: 100%;
       height: 40px;
@@ -425,7 +444,6 @@
       transform: scale(1.05);
       box-shadow: 0 4px 15px rgba(223,197,136,0.9);
     }
-      
       
   </style>
 </head>
@@ -873,6 +891,12 @@
         } else {
           tool.addEventListener("dragstart", (e) => {
             e.dataTransfer.setData("text/plain", type);
+            // Add dragging effect to tool
+            tool.classList.add("dragging");
+          });
+          tool.addEventListener("dragend", (e) => {
+            // Remove dragging effect when drag ends
+            tool.classList.remove("dragging");
           });
         }
       });
@@ -933,8 +957,7 @@
         if (!isMapReady || activeTool === "line") return;
         e.preventDefault();
         const type = e.dataTransfer.getData("text/plain");
-        const cursorPos = getSVGPoint(e);
-        await addMarkerToFirestore(type, cursorPos.x, cursorPos.y);
+        await addMarkerToFirestore(type, getSVGPoint(e).x, getSVGPoint(e).y);
       });
     }
 
@@ -1183,6 +1206,9 @@
         rectEl.setAttribute("opacity", "0.63");
         markerEl.insertBefore(rectEl, textEl);
       });
+
+      // Add pop-in animation on drop
+      markerEl.classList.add("drop-pop");
 
       markerEl.classList.add("marker");
       markerEl.dataset.id = id;
