@@ -30,14 +30,33 @@
       left: 0;
       width: 100%;
       height: 100%;
-      z-index: -1; /* Ensure it's behind all other elements */
+      z-index: -1;
     }
     #waveCanvas {
       display: block;
       width: 100%;
       height: 100%;
     }
-    
+    /* Loading overlay styles */
+    #loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      font-size: 2em;
+    }
+    #loading-overlay img {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 20px;
+    }
     /* Animations */
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(20px); }
@@ -55,7 +74,6 @@
                      0 0 40px rgba(223,197,136,0.8);
       }
     }
-    
     /* Login screen */
     #login-screen {
       display: flex;
@@ -108,7 +126,6 @@
       color: #e74c3c;
       font-weight: bold;
     }
-    
     /* Main app container */
     #app {
       display: none;
@@ -117,7 +134,7 @@
       animation: fadeIn 1s ease-out;
       z-index: 1;
     }
-    /* Header with logos – now transparent background */
+    /* Header with logos – transparent background */
     #header-logo {
       text-align: center;
       padding: 10px 0;
@@ -300,6 +317,12 @@
     <canvas id="waveCanvas"></canvas>
   </div>
 
+  <!-- Loading overlay -->
+  <div id="loading-overlay">
+    <img src="https://regnumsolis.com/planner/images/loading.gif" alt="Loading">
+    <div id="loading-text">0%</div>
+  </div>
+
   <!-- Login Screen -->
   <div id="login-screen">
     <img class="logo" src="https://regnumsolis.com/planner/images/longlogo.svg" alt="Long Logo">
@@ -401,12 +424,39 @@
     let currentLine = null;
     let currentLineGroup = null;
 
+    // For loading simulation
+    let loadingInterval;
+    let currentProgress = 0;
+    const loadingOverlay = document.getElementById("loading-overlay");
+    const loadingText = document.getElementById("loading-text");
+
     document.addEventListener("DOMContentLoaded", () => {
       setupLogin();
       setupToolbox();
       setupAuditControls();
       setupMapSwitchControls();
     });
+
+    function showLoading() {
+      currentProgress = 0;
+      loadingText.textContent = "0%";
+      loadingOverlay.style.display = "flex";
+      loadingInterval = setInterval(() => {
+        if (currentProgress < 90) { // simulate progress up to 90%
+          currentProgress += Math.floor(Math.random() * 3) + 1;
+          if (currentProgress > 90) currentProgress = 90;
+          loadingText.textContent = currentProgress + "%";
+        }
+      }, 100);
+    }
+
+    function hideLoading() {
+      clearInterval(loadingInterval);
+      loadingText.textContent = "100%";
+      setTimeout(() => {
+        loadingOverlay.style.display = "none";
+      }, 300);
+    }
 
     function setupLogin() {
       document.getElementById("login-button").addEventListener("click", () => {
@@ -443,18 +493,18 @@
       });
     }
 
-    // Use switchMap to load the initial map.
     function initializeMap() {
       switchMap("https://regnumsolis.com/planner/images/map.svg");
     }
 
-    // switchMap replaces the SVG map, then reinitializes pan/zoom and event listeners.
+    // switchMap displays the loading overlay before fetching the SVG.
     function switchMap(url) {
       if (panZoomInstance) {
         panZoomInstance.destroy();
       }
       isMapReady = false;
       const container = document.getElementById("map-svg-container");
+      showLoading();
       fetch(url)
         .then(response => response.text())
         .then(svgText => {
@@ -466,10 +516,12 @@
           listenForMarkers();
           listenForLines();
           isMapReady = true;
+          hideLoading();
         })
         .catch(error => {
           console.error("Error loading SVG:", error);
           displayErrorOverlay("Error loading map data.");
+          hideLoading();
         });
     }
 
@@ -610,7 +662,6 @@
           currentLine.setAttribute("y1", pt.y);
           currentLine.setAttribute("x2", pt.x);
           currentLine.setAttribute("y2", pt.y);
-          // Increase stroke width by 60% (from 2 to 3.2)
           currentLine.setAttribute("stroke-width", "3.2");
           currentLine.setAttribute("stroke", lineColor);
 
@@ -633,7 +684,6 @@
           const midY = (y1 + y2) / 2;
           const angle = Math.atan2(y2 - y1, x2 - x1) * (180 / Math.PI);
 
-          // Arrow polygon scaled by 60%: "0,-8 16,0 0,8"
           const arrow = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
           arrow.setAttribute("points", "0,-8 16,0 0,8");
           arrow.setAttribute("fill", currentLineGroup.lineColor);
@@ -726,7 +776,6 @@
 
       let imgSrc, imgWidth, imgHeight, imgXOffset, imgYOffset, fontSize;
       if (data.type === "marker") {
-        // For marker, center the image (assume width = 30*1.7)
         imgSrc = "https://regnumsolis.com/planner/images/marker.svg";
         imgWidth = 30 * 1.7;
         imgHeight = 30 * 1.7;
@@ -735,7 +784,6 @@
         fontSize = 16 * 1.7;
       } else if (data.type === "citadel") {
         imgSrc = "https://regnumsolis.com/planner/images/citadel.svg";
-        // Increase size by 20%
         imgWidth = 30 * 1.7 * 1.2;
         imgHeight = 30 * 1.7 * 1.2;
         imgXOffset = -15 * 1.7 * 1.2;
@@ -798,7 +846,6 @@
       textEl.style.fontFamily = "'Bebas Neue', sans-serif";
       markerEl.appendChild(textEl);
 
-      // Double down on the text background opacity to 0.63.
       requestAnimationFrame(() => {
         const bbox = textEl.getBBox();
         const textLength = textEl.getComputedTextLength();
@@ -840,11 +887,9 @@
       line.setAttribute("x2", data.x2);
       line.setAttribute("y2", data.y2);
       line.setAttribute("stroke", data.color);
-      // Increase stroke width by 60% (from 2 to 3.2)
       line.setAttribute("stroke-width", "3.2");
 
       const arrow = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-      // Arrow points scaled by 60%: "0,-8 16,0 0,8"
       arrow.setAttribute("points", "0,-8 16,0 0,8");
       arrow.setAttribute("fill", data.color);
       arrow.setAttribute("transform", `translate(${data.midX},${data.midY}) rotate(${data.angle})`);
@@ -1030,10 +1075,10 @@
     function animate() {
       ctx.clearRect(0, 0, width, height);
       
-      // New gradient: mainly blue (top) and secondary purple (bottom) with 10% lower lightness
+      // New gradient: mainly blue with secondary purple, each 10% darker
       const bgGradient = ctx.createLinearGradient(0, 0, 0, height);
-      bgGradient.addColorStop(0, 'rgb(0,0,46)');  
-      bgGradient.addColorStop(1, 'rgb(6, 8, 135)');   
+      bgGradient.addColorStop(0, 'rgb(0,0,46)');   // Dark blue (dominant)
+      bgGradient.addColorStop(1, 'rgb(25,8,41)');    // Dark purple (secondary)
       ctx.fillStyle = bgGradient;
       ctx.fillRect(0, 0, width, height);
       
