@@ -186,23 +186,20 @@
       margin-bottom: 5px;
       position: relative;
     }
-    /* Arrow toggle button */
-    .menu-toggle {
-      position: absolute;
-      left: -20px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: rgba(30,30,30,0.9);
-      border: 1px solid rgba(223,197,136,0.5);
-      border-radius: 0 5px 5px 0;
-      width: 20px;
-      height: 40px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background 0.3s;
-    }
+  /* Adjusted Arrow Toggle Button Styling */
+  .menu-toggle {
+    position: absolute;
+    left: -25px; /* position outside the menu container */
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;       /* no background */
+    border: none;           /* no border */
+    font-size: 1.5em;       /* slightly larger for visibility */
+    color: rgb(223,197,136);
+    cursor: pointer;
+    padding: 0;             /* remove extra padding */
+    line-height: 1;
+  }
     /* Styling for the content inside each menu */
     .menu-content {
       display: flex;
