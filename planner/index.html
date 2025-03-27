@@ -500,7 +500,7 @@
 
     // Set default map to Tactical Map.
     function initializeMap() {
-      switchMap("https://regnumsolis.com/planner/images/mvmvmdfstactical");
+      switchMap("https://regnumsolis.com/planner/images/mvmvmdfstactical.svg");
     }
 
     // switchMap shows the loading overlay, fetches the SVG, then initializes pan/zoom and listeners.
@@ -534,13 +534,13 @@
     // Setup the map switch controls.
     function setupMapSwitchControls() {
       document.getElementById("tactical-map").addEventListener("click", () => {
-        switchMap("https://regnumsolis.com/planner/images/mvmvmdfstactical");
+        switchMap("https://regnumsolis.com/planner/images/mvmvmdfstactical.svg");
       });
       document.getElementById("style-map").addEventListener("click", () => {
-        switchMap("https://regnumsolis.com/planner/images/mvmvmdfs");
+        switchMap("https://regnumsolis.com/planner/images/mvmvmdfs.svg");
       });
       document.getElementById("dark-map").addEventListener("click", () => {
-        switchMap("https://regnumsolis.com/planner/images/mvmvmdfsdark");
+        switchMap("https://regnumsolis.com/planner/images/mvmvmdfsdark.svg");
       });
     }
 
