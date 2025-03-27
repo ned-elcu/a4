@@ -168,7 +168,7 @@
     /* Zoom controls */
     #zoom-controls {
       position: fixed;
-      top: 600px;
+      top: 350px;
       right: 20px;
       z-index: 20;
     }
@@ -342,7 +342,6 @@
       <h2>Change Maps</h2>
       <button id="tactical-map">Tactical Map</button>
       <button id="style-map">Style Map</button>
-      <button id="dark-map">Dark Map</button>
     </div>
 
     <!-- Zoom Controls -->
@@ -498,9 +497,9 @@
       });
     }
 
-    // Set default map to Tactical Map.
+    // Set default map to Style Map.
     function initializeMap() {
-      switchMap("https://regnumsolis.com/planner/images/mvmvmdfstactical.svg");
+      switchMap("https://regnumsolis.com/planner/images/mvmvmdfs.svg");
     }
 
     // switchMap shows the loading overlay, fetches the SVG, then initializes pan/zoom and listeners.
@@ -538,9 +537,6 @@
       });
       document.getElementById("style-map").addEventListener("click", () => {
         switchMap("https://regnumsolis.com/planner/images/mvmvmdfs.svg");
-      });
-      document.getElementById("dark-map").addEventListener("click", () => {
-        switchMap("https://regnumsolis.com/planner/images/mvmvmdfsdark.svg");
       });
     }
 
