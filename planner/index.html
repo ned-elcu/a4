@@ -623,6 +623,18 @@
 
   <div id="error-overlay">Database connection failed. The app cannot be used at this time.</div>
 
+  <!-- Custom Prompt Modal -->
+  <div id="custom-prompt-overlay" style="display:none; position: fixed; top: 0; left: 0; width:100%; height:100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); align-items: center; justify-content: center; z-index: 2000;">
+    <div id="custom-prompt" style="background: #1e1e1e; border: 1px solid rgba(223,197,136,0.8); padding: 20px; border-radius: 8px; text-align: center; color: white; min-width: 300px;">
+      <p id="custom-prompt-message" style="margin-bottom: 15px;"></p>
+      <input id="custom-prompt-input" type="text" style="width: 80%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 15px;" />
+      <div>
+        <button id="custom-prompt-ok" style="padding: 8px 15px; margin-right: 10px; background: rgba(223,197,136,0.8); border: none; border-radius: 4px; cursor: pointer;">OK</button>
+        <button id="custom-prompt-cancel" style="padding: 8px 15px; background: rgba(223,197,136,0.8); border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
     import { getFirestore, collection, addDoc, orderBy, query, onSnapshot, deleteDoc, doc, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
@@ -904,7 +916,8 @@
           tool.addEventListener("dragstart", (e) => {
             e.dataTransfer.setData("text/plain", type);
             const emptyImg = new Image();
-            emptyImg.src = "";
+            // Use a transparent 1x1 pixel SVG to disable the default ghost image
+            emptyImg.src = "data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg'></svg>";
             e.dataTransfer.setDragImage(emptyImg, 0, 0);
             const dragClone = tool.cloneNode(true);
             dragClone.classList.add("drag-clone");
@@ -966,7 +979,8 @@
           currentLineGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
           currentLineGroup.classList.add("line-group");
 
-          const lineColor = prompt("Enter line color (e.g., red or #ff0000):") || "white";
+          // Use custom prompt for line color
+          const lineColor = await customPrompt("Enter line color (e.g., red or #ff0000):", "white") || "white";
           
           currentLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
           currentLine.setAttribute("x1", pt.x);
@@ -1020,8 +1034,8 @@
     async function addMarkerToFirestore(type, x, y) {
       let markerData = { type, x, y, timestamp: serverTimestamp() };
       if (["homestead", "citadel", "torch", "cave", "sword", "spear", "bow", "beacon", "camp", "catapult", "ram"].includes(type)) {
-        markerData.text = prompt("Enter marker text:") || "";
-        markerData.color = prompt("Enter marker color (e.g., red or #ff0000):") || "black";
+        markerData.text = await customPrompt("Enter marker text:", "") || "";
+        markerData.color = await customPrompt("Enter marker color (e.g., red or #ff0000):", "black") || "black";
         if (type === "homestead" && markerData.text === "") {
           markerData.text = "homestead";
         }
@@ -1400,6 +1414,41 @@
       overlay.textContent = message;
       overlay.style.display = "flex";
       console.warn("Error overlay activated:", message);
+    }
+  </script>
+  <script>
+    // Custom Prompt Functionality
+    function customPrompt(message, defaultValue) {
+      return new Promise((resolve) => {
+        const overlay = document.getElementById("custom-prompt-overlay");
+        const promptMessage = document.getElementById("custom-prompt-message");
+        const promptInput = document.getElementById("custom-prompt-input");
+        const okButton = document.getElementById("custom-prompt-ok");
+        const cancelButton = document.getElementById("custom-prompt-cancel");
+        
+        promptMessage.textContent = message;
+        promptInput.value = defaultValue || "";
+        overlay.style.display = "flex";
+        
+        function cleanup() {
+          overlay.style.display = "none";
+          okButton.removeEventListener("click", onOk);
+          cancelButton.removeEventListener("click", onCancel);
+        }
+        
+        function onOk() {
+          resolve(promptInput.value);
+          cleanup();
+        }
+        
+        function onCancel() {
+          resolve(null);
+          cleanup();
+        }
+        
+        okButton.addEventListener("click", onOk);
+        cancelButton.addEventListener("click", onCancel);
+      });
     }
   </script>
   <script>
