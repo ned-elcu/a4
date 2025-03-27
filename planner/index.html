@@ -129,7 +129,7 @@
       animation: fadeIn 1s ease-out;
       z-index: 1;
     }
-    /* Header text instead of logo */
+    /* Header text */
     #header-logo {
       text-align: center;
       padding: 10px 0;
@@ -141,7 +141,7 @@
       color: rgb(223,197,136);
       text-shadow: 0 0 5px rgba(223,197,136,0.8);
     }
-    /* Container for menus */
+    /* Menu container for map change and zoom controls */
     .menu-container {
       width: 180px;
       background: rgba(30,30,30,0.9);
@@ -168,7 +168,7 @@
     /* Zoom controls */
     #zoom-controls {
       position: fixed;
-      top: 320px;
+      top: 200px;
       right: 20px;
       z-index: 20;
     }
@@ -332,18 +332,17 @@
 
   <!-- Main App -->
   <div id="app">
-    <!-- Header with text -->
+    <!-- Header -->
     <div id="header-logo">
       <h1>Crafted by the Regnum Solis Research and Development Team for the usage of the Remnants Senate</h1>
     </div>
 
-    <!-- Map Change Controls -->
+    <!-- Map Change Menu -->
     <div id="map-change-container" class="menu-container">
       <h2>Change Maps</h2>
-      <button id="visibility-map">Visibility Map</button>
-      <button id="dark-visibility">Dark Visibility</button>
-      <button id="color-scan">Color Scan</button>
-      <button id="dark-scan">Dark Scan</button>
+      <button id="tactical-map">Tactical Map</button>
+      <button id="style-map">Style Map</button>
+      <button id="dark-map">Dark Map</button>
     </div>
 
     <!-- Zoom Controls -->
@@ -381,6 +380,7 @@
       </div>
     </div>
 
+    <!-- Map Container -->
     <div id="map-container">
       <div id="map-svg-container"></div>
     </div>
@@ -498,9 +498,9 @@
       });
     }
 
-    // Set default map to the new main map.
+    // Set default map to Tactical Map.
     function initializeMap() {
-      switchMap("https://regnumsolis.com/planner/images/mvmvmdfs.svg");
+      switchMap("https://regnumsolis.com/planner/images/mvmvmdfstactical");
     }
 
     // switchMap shows the loading overlay, fetches the SVG, then initializes pan/zoom and listeners.
@@ -531,23 +531,16 @@
         });
     }
 
-    // Setup the map change buttons with new names and URLs.
+    // Setup the map switch controls.
     function setupMapSwitchControls() {
-      // New button: Visibility Map
-      document.getElementById("visibility-map").addEventListener("click", () => {
-        switchMap("https://regnumsolis.com/planner/images/mvmvmdfs.svg");
+      document.getElementById("tactical-map").addEventListener("click", () => {
+        switchMap("https://regnumsolis.com/planner/images/mvmvmdfstactical");
       });
-      // New button: Dark Visibility
-      document.getElementById("dark-visibility").addEventListener("click", () => {
-        switchMap("https://regnumsolis.com/planner/images/darkvisibility.svg");
+      document.getElementById("style-map").addEventListener("click", () => {
+        switchMap("https://regnumsolis.com/planner/images/mvmvmdfs");
       });
-      // Renamed from Tactical Map to Color Scan (old main map)
-      document.getElementById("color-scan").addEventListener("click", () => {
-        switchMap("https://regnumsolis.com/planner/images/map.svg");
-      });
-      // Renamed from current Visibility Map to Dark Scan
-      document.getElementById("dark-scan").addEventListener("click", () => {
-        switchMap("https://regnumsolis.com/planner/images/darkmap.svg");
+      document.getElementById("dark-map").addEventListener("click", () => {
+        switchMap("https://regnumsolis.com/planner/images/mvmvmdfsdark");
       });
     }
 
