@@ -141,38 +141,51 @@
       color: rgb(223,197,136);
       text-shadow: 0 0 5px rgba(223,197,136,0.8);
     }
-    /* Map change controls container */
-    #map-change-container {
-      position: fixed;
-      top: 100px;
-      right: 20px;
-      z-index: 20;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 5px;
+    /* Container for menus */
+    .menu-container {
+      width: 180px;
       background: rgba(30,30,30,0.9);
       padding: 10px;
       border: 1px solid rgba(223,197,136,0.5);
       border-radius: 5px;
       box-shadow: 0 0 10px rgba(223,197,136,0.5);
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      align-items: center;
+    }
+    /* Map change controls */
+    #map-change-container {
+      position: fixed;
+      top: 100px;
+      right: 20px;
+      z-index: 20;
     }
     #map-change-container h2 {
       font-size: 1.2em;
       margin-bottom: 5px;
     }
-    #map-change-container button {
-      padding: 8px;
+    /* Zoom controls */
+    #zoom-controls {
+      position: fixed;
+      top: 320px;
+      right: 20px;
+      z-index: 20;
+    }
+    /* Standard button style for menus */
+    .menu-container button {
+      width: 100%;
+      height: 40px;
+      font-family: 'Bebas Neue', sans-serif;
+      background: rgba(223,197,136,0.8);
       border: none;
       border-radius: 4px;
-      background: rgba(223,197,136,0.8);
       color: white;
       cursor: pointer;
       transition: transform 0.3s, box-shadow 0.3s;
       box-shadow: 0 4px 15px rgba(223,197,136,0.5);
-      font-family: 'Bebas Neue', sans-serif;
     }
-    #map-change-container button:hover {
+    .menu-container button:hover {
       transform: scale(1.05);
       box-shadow: 0 4px 15px rgba(223,197,136,0.9);
     }
@@ -209,35 +222,6 @@
     .tool img {
       max-width: 100%;
       max-height: 100%;
-    }
-    /* Zoom Controls */
-    #zoom-controls {
-      position: fixed;
-      top: 320px;
-      right: 20px;
-      z-index: 20;
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-      background: rgba(30,30,30,0.9);
-      padding: 10px;
-      border: 1px solid rgba(223,197,136,0.5);
-      border-radius: 5px;
-      box-shadow: 0 0 10px rgba(223,197,136,0.5);
-    }
-    #zoom-controls button {
-      padding: 8px;
-      border: none;
-      border-radius: 4px;
-      background: rgba(223,197,136,0.8);
-      color: white;
-      cursor: pointer;
-      transition: transform 0.3s, box-shadow 0.3s;
-      box-shadow: 0 4px 15px rgba(223,197,136,0.5);
-    }
-    #zoom-controls button:hover {
-      transform: scale(1.05);
-      box-shadow: 0 4px 15px rgba(223,197,136,0.9);
     }
     /* Map container */
     #map-container {
@@ -309,13 +293,13 @@
       padding-top: 5px;
     }
     #delete-all {
-      padding: 8px;
+      width: 100%;
+      height: 40px;
       border: none;
       border-radius: 4px;
       background: rgba(223,197,136,0.8);
       color: white;
       cursor: pointer;
-      width: 100%;
       transition: transform 0.3s, box-shadow 0.3s;
       box-shadow: 0 4px 15px rgba(223,197,136,0.5);
     }
@@ -354,19 +338,22 @@
     </div>
 
     <!-- Map Change Controls -->
-    <div id="map-change-container">
+    <div id="map-change-container" class="menu-container">
       <h2>Change Maps</h2>
-      <!-- New button: Visibility Map -->
       <button id="visibility-map">Visibility Map</button>
-      <!-- New button: Dark Visibility -->
       <button id="dark-visibility">Dark Visibility</button>
-      <!-- Renamed from Tactical Map -->
       <button id="color-scan">Color Scan</button>
-      <!-- Renamed from current Visibility Map -->
       <button id="dark-scan">Dark Scan</button>
     </div>
 
-    <!-- Toolbox, Zoom, Map -->
+    <!-- Zoom Controls -->
+    <div id="zoom-controls" class="menu-container">
+      <button id="zoom-in">Zoom In</button>
+      <button id="zoom-out">Zoom Out</button>
+      <button id="reset-zoom">Reset</button>
+    </div>
+
+    <!-- Toolbox -->
     <div id="toolbox">
       <div class="tool" draggable="true" data-type="marker" title="Text Marker">
         <img src="https://regnumsolis.com/planner/images/marker.svg" alt="Marker Background">
@@ -394,16 +381,11 @@
       </div>
     </div>
 
-    <div id="zoom-controls">
-      <button id="zoom-in">Zoom In</button>
-      <button id="zoom-out">Zoom Out</button>
-      <button id="reset-zoom">Reset</button>
-    </div>
-
     <div id="map-container">
       <div id="map-svg-container"></div>
     </div>
 
+    <!-- Admin Panel -->
     <div id="admin-panel">
       <h3>
         Audit log
