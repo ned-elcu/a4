@@ -354,7 +354,7 @@
     <!-- Toolbox -->
     <div id="toolbox">
       <div class="tool" draggable="true" data-type="marker" title="Text Marker">
-        <img src="https://regnumsolis.com/planner/images/marker.svg" alt="Marker Background">
+        <img src="https://regnumsolis.com/planner/images/marker.svg" alt="Marker">
       </div>
       <div class="tool" draggable="true" data-type="citadel" title="Citadel">
         <img src="https://regnumsolis.com/planner/images/citadel.svg" alt="Citadel">
@@ -376,6 +376,19 @@
       </div>
       <div class="tool" data-type="line" title="Line Draw">
         <img src="https://regnumsolis.com/planner/images/line.svg" alt="Line Draw" onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2250%22 height=%2250%22><text x=%220%22 y=%2230%22 fill=%22white%22 font-size=%2230%22>―</text></svg>'">
+      </div>
+      <!-- New markers added below -->
+      <div class="tool" draggable="true" data-type="beacon" title="Beacon">
+        <img src="https://regnumsolis.com/planner/images/beacon.svg" alt="Beacon">
+      </div>
+      <div class="tool" draggable="true" data-type="camp" title="Camp">
+        <img src="https://regnumsolis.com/planner/images/camp.svg" alt="Camp">
+      </div>
+      <div class="tool" draggable="true" data-type="catapult" title="Catapult">
+        <img src="https://regnumsolis.com/planner/images/catapult.svg" alt="Catapult">
+      </div>
+      <div class="tool" draggable="true" data-type="ram" title="Ram">
+        <img src="https://regnumsolis.com/planner/images/ram.svg" alt="Ram">
       </div>
     </div>
 
@@ -727,8 +740,9 @@
     }
 
     async function addMarkerToFirestore(type, x, y) {
+      // Include new marker types in the condition below.
       let markerData = { type, x, y, timestamp: serverTimestamp() };
-      if (["marker", "citadel", "torch", "cave", "sword", "spear", "bow"].includes(type)) {
+      if (["marker", "citadel", "torch", "cave", "sword", "spear", "bow", "beacon", "camp", "catapult", "ram"].includes(type)) {
         markerData.text = prompt("Enter marker text:") || "";
         markerData.color = prompt("Enter marker color (e.g., red or #ff0000):") || "black";
         if (type === "marker" && markerData.text === "") {
@@ -844,6 +858,36 @@
         imgXOffset = -15 * 1.7;
         imgYOffset = -15 * 1.7;
         fontSize = 14 * 1.7;
+      }
+      // New marker types are treated similar to "citadel"
+      else if (data.type === "beacon") {
+        imgSrc = "https://regnumsolis.com/planner/images/beacon.svg";
+        imgWidth = 30 * 1.7 * 1.2;
+        imgHeight = 30 * 1.7 * 1.2;
+        imgXOffset = -15 * 1.7 * 1.2;
+        imgYOffset = -15 * 1.7 * 1.2;
+        fontSize = 14 * 1.7 * 1.2;
+      } else if (data.type === "camp") {
+        imgSrc = "https://regnumsolis.com/planner/images/camp.svg";
+        imgWidth = 30 * 1.7 * 1.2;
+        imgHeight = 30 * 1.7 * 1.2;
+        imgXOffset = -15 * 1.7 * 1.2;
+        imgYOffset = -15 * 1.7 * 1.2;
+        fontSize = 14 * 1.7 * 1.2;
+      } else if (data.type === "catapult") {
+        imgSrc = "https://regnumsolis.com/planner/images/catapult.svg";
+        imgWidth = 30 * 1.7 * 1.2;
+        imgHeight = 30 * 1.7 * 1.2;
+        imgXOffset = -15 * 1.7 * 1.2;
+        imgYOffset = -15 * 1.7 * 1.2;
+        fontSize = 14 * 1.7 * 1.2;
+      } else if (data.type === "ram") {
+        imgSrc = "https://regnumsolis.com/planner/images/ram.svg";
+        imgWidth = 30 * 1.7 * 1.2;
+        imgHeight = 30 * 1.7 * 1.2;
+        imgXOffset = -15 * 1.7 * 1.2;
+        imgYOffset = -15 * 1.7 * 1.2;
+        fontSize = 14 * 1.7 * 1.2;
       }
       let textXOffset = imgXOffset + imgWidth;
 
