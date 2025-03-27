@@ -22,6 +22,14 @@
       overflow: hidden;
       position: relative;
     }
+    /* Global style for marker text toggle */
+    .text-hover-only .marker text {
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .text-hover-only .marker:hover text {
+      opacity: 1;
+    }
     /* Background container and animated canvas */
     #background-container {
       position: absolute;
@@ -142,6 +150,27 @@
       text-shadow: 0 0 5px rgba(223,197,136,0.8);
       animation: neonGlow 1.5s infinite alternate ease-in-out;
     }
+    /* Text Toggle (Checker) container */
+    #text-toggle-container {
+      position: fixed;
+      top: 120px;
+      left: 20px;
+      z-index: 21;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    #text-toggle-container input {
+      cursor: pointer;
+    }
+    #text-toggle-container label {
+      cursor: pointer;
+      font-size: 1em;
+      transition: color 0.3s;
+    }
+    #text-toggle-container label:hover {
+      color: #dfc588;
+    }
     /* Menu container for map change and zoom controls */
     .menu-container {
       width: 180px;
@@ -169,7 +198,7 @@
     /* Zoom controls */
     #zoom-controls {
       position: fixed;
-      top: 260px;  /* Reduced gap from the map switch menu */
+      top: 260px;  /* Adjusted gap from the map switch menu */
       right: 20px;
       z-index: 20;
     }
@@ -193,7 +222,7 @@
     /* Toolbox */
     #toolbox {
       position: fixed;
-      top: 160px;
+      top: 180px; /* Moved down to accommodate the text toggle */
       left: 20px;
       background: rgba(30,30,30,0.9);
       padding: 10px;
@@ -352,6 +381,12 @@
       <button id="reset-zoom">Reset</button>
     </div>
 
+    <!-- Text Toggle (Checker) -->
+    <div id="text-toggle-container">
+      <input type="checkbox" id="toggle-marker-text">
+      <label for="toggle-marker-text" id="toggle-marker-text-label">Display text</label>
+    </div>
+
     <!-- Toolbox -->
     <div id="toolbox">
       <div class="tool" draggable="true" data-type="marker" title="Text Marker">
@@ -454,6 +489,19 @@
       setupToolbox();
       setupAuditControls();
       setupMapSwitchControls();
+
+      // Setup marker text toggle functionality
+      const toggleMarkerTextCheckbox = document.getElementById("toggle-marker-text");
+      const toggleLabel = document.getElementById("toggle-marker-text-label");
+      toggleMarkerTextCheckbox.addEventListener("change", function() {
+        if (this.checked) {
+          document.body.classList.add("text-hover-only");
+          toggleLabel.textContent = "Display text only on hover";
+        } else {
+          document.body.classList.remove("text-hover-only");
+          toggleLabel.textContent = "Display text";
+        }
+      });
     });
 
     function showLoading() {
