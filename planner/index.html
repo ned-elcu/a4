@@ -84,7 +84,6 @@
                      0 0 40px rgba(223,197,136,1);
       }
     }
-    /* Reduced glow animation for header title (60% reduction) */
     @keyframes reducedNeonGlow {
       0% {
         text-shadow: 0 0 2px rgba(223,197,136,0.24),
@@ -163,7 +162,7 @@
       animation: fadeIn 1s ease-out;
       z-index: 1;
     }
-    /* Header text */
+    /* Header text - Updated to white and no glow */
     #header-logo {
       text-align: center;
       padding: 10px 0;
@@ -172,9 +171,9 @@
     #header-logo h1 {
       font-size: 1.05em;
       margin: 0;
-      color: rgb(223,197,136);
-      /* Override glow with reducedNeonGlow */
-      animation: reducedNeonGlow 1.5s infinite alternate ease-in-out;
+      color: white;
+      /* Remove the glow animation */
+      animation: none;
     }
     /* Right menus container to prevent overlap */
     #right-menus {
@@ -391,7 +390,7 @@
       border-radius: 5px;
       box-shadow: 0 0 10px rgba(223,197,136,0.5);
       padding: 10px;
-      z-index: 30; /* Ensure admin panel appears above the footer */
+      z-index: 30;
       display: none;
       animation: fadeIn 1s ease-out;
     }
@@ -459,7 +458,7 @@
       padding: 5px 0;
       font-family: 'Bebas Neue', sans-serif;
       font-size: 1em;
-      z-index: 5; /* Lower z-index so the admin panel appears above */
+      z-index: 5;
     }
     footer a {
       color: white;
@@ -773,9 +772,9 @@
           const menu = btn.closest(".menu-container");
           menu.classList.toggle("hidden");
           if (menu.classList.contains("hidden")) {
-            btn.innerHTML = "&#9654;"; // ▶ when hidden
+            btn.innerHTML = "&#9654;";
           } else {
-            btn.innerHTML = "&#9664;"; // ◀ when visible
+            btn.innerHTML = "&#9664;";
           }
         });
       });
@@ -882,7 +881,6 @@
           console.error("Error loading SVG:", error);
           displayErrorOverlay("Error loading map data.");
           hideLoading();
-          // Update DB indicator to red on error
           document.getElementById("db-indicator").textContent = "🔴";
         });
     }
@@ -955,7 +953,6 @@
           tool.addEventListener("dragstart", (e) => {
             e.dataTransfer.setData("text/plain", type);
             const emptyImg = new Image();
-            // Use a transparent 1x1 pixel SVG to disable the default ghost image
             emptyImg.src = "data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg'></svg>";
             e.dataTransfer.setDragImage(emptyImg, 0, 0);
             const dragClone = tool.cloneNode(true);
@@ -984,7 +981,6 @@
         }
       });
     }
-    // Document-level dragover to update clone position for Gecko compatibility
     document.addEventListener("dragover", (e) => {
       const activeClone = document.querySelector(".drag-clone");
       if (activeClone) {
@@ -1018,7 +1014,6 @@
           currentLineGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
           currentLineGroup.classList.add("line-group");
 
-          // Use custom prompt for line color
           const lineColor = await customPrompt("Enter line color (e.g., red or #ff0000):", "white") || "white";
           
           currentLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
@@ -1104,7 +1099,6 @@
       const markersQuery = query(collection(db, "markers"), orderBy("timestamp"));
       const unsubscribe = onSnapshot(markersQuery, (snapshot) => {
         snapshotReceived = true;
-        // Update DB connection indicator to green
         document.getElementById("db-indicator").textContent = "🟢";
         while (markerLayer.firstChild) {
           markerLayer.removeChild(markerLayer.firstChild);
@@ -1116,7 +1110,6 @@
       }, (error) => {
         console.error("Firestore connection error:", error);
         displayErrorOverlay("Firestore connection failed.");
-        // Update DB connection indicator to red on error
         document.getElementById("db-indicator").textContent = "🔴";
       });
 
@@ -1125,7 +1118,6 @@
           console.error("No Firestore snapshot received within timeout.");
           displayErrorOverlay("Firestore connection failed.");
           unsubscribe();
-          // Update DB connection indicator to red if no snapshot received
           document.getElementById("db-indicator").textContent = "🔴";
         }
       }, 5000);
@@ -1265,7 +1257,6 @@
       markerEl.addEventListener("click", async (e) => {
         e.stopPropagation();
         if (activeTool === "line") return;
-        // Use custom confirmation modal for deletion
         if (await customConfirm("Delete this marker?")) {
           try {
             await deleteDoc(doc(db, "markers", id));
@@ -1510,12 +1501,12 @@
         const cancelButton = document.getElementById("custom-prompt-cancel");
         
         promptMessage.textContent = message;
-        promptInput.style.display = "none"; // hide input for confirmation
+        promptInput.style.display = "none";
         overlay.style.display = "flex";
         
         function cleanup() {
           overlay.style.display = "none";
-          promptInput.style.display = "block"; // reset for future prompts
+          promptInput.style.display = "block";
           okButton.removeEventListener("click", onOk);
           cancelButton.removeEventListener("click", onCancel);
         }
