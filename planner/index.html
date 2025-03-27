@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>SOLIS Planner</title>
   <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" />
   <style>
     /* Reset and base styles */
     * {
@@ -129,7 +129,7 @@
       animation: fadeIn 1s ease-out;
       z-index: 1;
     }
-    /* Header text instead of logo */
+    /* Header with text */
     #header-logo {
       text-align: center;
       padding: 10px 0;
@@ -141,7 +141,7 @@
       color: rgb(223,197,136);
       text-shadow: 0 0 5px rgba(223,197,136,0.8);
     }
-    /* Map change controls container */
+    /* Map Change Controls */
     #map-change-container {
       position: fixed;
       top: 100px;
@@ -210,30 +210,6 @@
       max-width: 100%;
       max-height: 100%;
     }
-    /* Zoom Controls */
-    #zoom-controls {
-      position: fixed;
-      top: 160px;
-      right: 20px;
-      z-index: 20;
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
-    #zoom-controls button {
-      padding: 8px;
-      border: none;
-      border-radius: 4px;
-      background: rgba(223,197,136,0.8);
-      color: white;
-      cursor: pointer;
-      transition: transform 0.3s, box-shadow 0.3s;
-      box-shadow: 0 4px 15px rgba(223,197,136,0.5);
-    }
-    #zoom-controls button:hover {
-      transform: scale(1.05);
-      box-shadow: 0 4px 15px rgba(223,197,136,0.9);
-    }
     /* Map container */
     #map-container {
       width: 100vw;
@@ -295,6 +271,12 @@
       margin-left: 5px;
       font-size: 1.2em;
     }
+    /* Added copy button for audit log */
+    #admin-panel h3 span#copy-audit {
+      cursor: pointer;
+      font-size: 1.2em;
+      margin-left: 10px;
+    }
     #audit-log {
       font-size: 0.9em;
       height: 200px;
@@ -328,7 +310,7 @@
 
   <!-- Loading overlay -->
   <div id="loading-overlay">
-    <img src="https://regnumsolis.com/planner/images/loading.gif" alt="Loading">
+    <img src="https://regnumsolis.com/planner/images/loading.gif" alt="Loading" />
     <div id="loading-text">0%</div>
   </div>
 
@@ -351,58 +333,57 @@
     <!-- Map Change Controls -->
     <div id="map-change-container">
       <h2>Change Maps</h2>
-      <!-- New button: Visibility Map -->
+      <!-- New Visibility Map button -->
       <button id="visibility-map">Visibility Map</button>
-      <!-- Renamed from Tactical Map -->
+      <!-- Renamed Tactical Map to Color Scan -->
       <button id="color-scan">Color Scan</button>
-      <!-- Renamed from current Visibility Map -->
+      <!-- Renamed current Visibility Map to Dark Scan -->
       <button id="dark-scan">Dark Scan</button>
+      <!-- New button: Dark Vis. Map -->
+      <button id="dark-vis-map">Dark Vis. Map</button>
     </div>
 
-    <!-- Toolbox, Zoom, Map -->
+    <!-- Toolbox -->
     <div id="toolbox">
       <div class="tool" draggable="true" data-type="marker" title="Text Marker">
-        <img src="https://regnumsolis.com/planner/images/marker.svg" alt="Marker Background">
+        <img src="https://regnumsolis.com/planner/images/marker.svg" alt="Marker Background" />
       </div>
       <div class="tool" draggable="true" data-type="citadel" title="Citadel">
-        <img src="https://regnumsolis.com/planner/images/citadel.svg" alt="Citadel">
+        <img src="https://regnumsolis.com/planner/images/citadel.svg" alt="Citadel" />
       </div>
       <div class="tool" draggable="true" data-type="torch" title="Torch">
-        <img src="https://regnumsolis.com/planner/images/torch.svg" alt="Torch">
+        <img src="https://regnumsolis.com/planner/images/torch.svg" alt="Torch" />
       </div>
       <div class="tool" draggable="true" data-type="cave" title="Cave">
-        <img src="https://regnumsolis.com/planner/images/cave.svg" alt="Cave">
+        <img src="https://regnumsolis.com/planner/images/cave.svg" alt="Cave" />
       </div>
       <div class="tool" draggable="true" data-type="sword" title="Sword">
-        <img src="https://regnumsolis.com/planner/images/sword.svg" alt="Sword">
+        <img src="https://regnumsolis.com/planner/images/sword.svg" alt="Sword" />
       </div>
       <div class="tool" draggable="true" data-type="spear" title="Spear">
-        <img src="https://regnumsolis.com/planner/images/spear.svg" alt="Spear">
+        <img src="https://regnumsolis.com/planner/images/spear.svg" alt="Spear" />
       </div>
       <div class="tool" draggable="true" data-type="bow" title="Bow">
-        <img src="https://regnumsolis.com/planner/images/bow.svg" alt="Bow">
+        <img src="https://regnumsolis.com/planner/images/bow.svg" alt="Bow" />
       </div>
       <div class="tool" data-type="line" title="Line Draw">
-        <img src="https://regnumsolis.com/planner/images/line.svg" alt="Line Draw" onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2250%22 height=%2250%22><text x=%220%22 y=%2230%22 fill=%22white%22 font-size=%2230%22>―</text></svg>'">
+        <img src="https://regnumsolis.com/planner/images/line.svg" alt="Line Draw" onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2250%22 height=%2250%22><text x=%220%22 y=%2230%22 fill=%22white%22 font-size=%2230%22>―</text></svg>'" />
       </div>
     </div>
 
-    <div id="zoom-controls">
-      <button id="zoom-in">Zoom In</button>
-      <button id="zoom-out">Zoom Out</button>
-      <button id="reset-zoom">Reset</button>
-    </div>
-
+    <!-- Map container -->
     <div id="map-container">
       <div id="map-svg-container"></div>
     </div>
 
+    <!-- Admin panel with copy button -->
     <div id="admin-panel">
       <h3>
         Audit log
         <span>
           <span id="delete-audit" class="icon" title="Delete all audit logs">🗑️</span>
           <span id="minimize-audit" class="icon" title="Minimize audit log">➖</span>
+          <span id="copy-audit" class="icon" title="Copy Audit Log">📋</span>
         </span>
       </h3>
       <div id="audit-log"></div>
@@ -451,6 +432,7 @@
       setupToolbox();
       setupAuditControls();
       setupMapSwitchControls();
+      setupCopyAudit();
     });
 
     function showLoading() {
@@ -509,12 +491,12 @@
       });
     }
 
-    // Set default map to the new main map.
+    // Set default map to new main map: mvmvmdfs.svg
     function initializeMap() {
       switchMap("https://regnumsolis.com/planner/images/mvmvmdfs.svg");
     }
 
-    // switchMap shows the loading overlay, fetches the SVG, then initializes pan/zoom and listeners.
+    // switchMap shows loading overlay, fetches SVG, then initializes pan/zoom and listeners.
     function switchMap(url) {
       if (panZoomInstance) {
         panZoomInstance.destroy();
@@ -527,7 +509,6 @@
         .then(svgText => {
           container.innerHTML = svgText;
           setupPanZoomLayers();
-          setupZoomControls();
           setupDragAndDrop();
           setupLineDrawing();
           listenForMarkers();
@@ -542,19 +523,28 @@
         });
     }
 
-    // Setup the map change buttons with new names and URLs.
+    // Setup map change buttons with new names/URLs.
     function setupMapSwitchControls() {
-      // New button: Visibility Map
       document.getElementById("visibility-map").addEventListener("click", () => {
-        switchMap("https://regnumsolis.com/planner/images/visibilitymap.svg");
+        switchMap("https://regnumsolis.com/planner/images/mvmvmdfs.svg");
       });
-      // Renamed from Tactical Map to Color Scan (old main map)
       document.getElementById("color-scan").addEventListener("click", () => {
         switchMap("https://regnumsolis.com/planner/images/map.svg");
       });
-      // Renamed from current Visibility Map to Dark Scan
       document.getElementById("dark-scan").addEventListener("click", () => {
         switchMap("https://regnumsolis.com/planner/images/darkmap.svg");
+      });
+      document.getElementById("dark-vis-map").addEventListener("click", () => {
+        switchMap("https://regnumsolis.com/planner/images/mvmvmdfsdark.svg");
+      });
+    }
+
+    function setupCopyAudit() {
+      document.getElementById("copy-audit").addEventListener("click", () => {
+        const auditText = document.getElementById("audit-log").innerText;
+        navigator.clipboard.writeText(auditText)
+          .then(() => alert("Audit log copied!"))
+          .catch(err => alert("Copy failed: " + err));
       });
     }
 
@@ -594,64 +584,6 @@
           return true;
         }
       });
-    }
-
-    function setupZoomControls() {
-      document.getElementById("zoom-in").addEventListener("click", () => panZoomInstance.zoomIn());
-      document.getElementById("zoom-out").addEventListener("click", () => panZoomInstance.zoomOut());
-      document.getElementById("reset-zoom").addEventListener("click", () => panZoomInstance.resetZoom());
-    }
-
-    function setupToolbox() {
-      document.querySelectorAll(".tool").forEach((tool) => {
-        const type = tool.dataset.type;
-        if (type === "line") {
-          tool.addEventListener("click", () => {
-            activeTool = "line";
-            lineDrawingState = 0;
-            markerLayer.style.pointerEvents = "none";
-            document.querySelectorAll(".tool").forEach(t => t.style.borderColor = "rgba(223,197,136,0.5)");
-            tool.style.borderColor = "red";
-          });
-        } else {
-          tool.addEventListener("dragstart", (e) => {
-            e.dataTransfer.setData("text/plain", type);
-          });
-        }
-      });
-    }
-
-    function setupAuditControls() {
-      document.getElementById("delete-audit").addEventListener("click", async () => {
-        if (confirm("Delete all audit logs?")) {
-          try {
-            const auditSnapshot = await getDocs(collection(db, "auditLogs"));
-            auditSnapshot.forEach(async (docSnap) => {
-              await deleteDoc(doc(db, "auditLogs", docSnap.id));
-            });
-          } catch (error) {
-            console.error("Error deleting audit logs:", error);
-          }
-        }
-      });
-
-      document.getElementById("minimize-audit").addEventListener("click", () => {
-        const auditLogDiv = document.getElementById("audit-log");
-        if (auditLogDiv.style.display === "none") {
-          auditLogDiv.style.display = "block";
-          document.getElementById("minimize-audit").textContent = "➖";
-        } else {
-          auditLogDiv.style.display = "none";
-          document.getElementById("minimize-audit").textContent = "➕";
-        }
-      });
-    }
-
-    function getSVGPoint(e) {
-      const pt = svgRoot.createSVGPoint();
-      pt.x = e.clientX;
-      pt.y = e.clientY;
-      return pt.matrixTransform(panLayer.getScreenCTM().inverse());
     }
 
     function setupDragAndDrop() {
@@ -1099,7 +1031,7 @@
     function animate() {
       ctx.clearRect(0, 0, width, height);
       
-      // New gradient: top rgb(24,35,38) and bottom rgb(24,35,49)
+      // Updated gradient: top rgb(24,35,38) and bottom rgb(24,35,49)
       const bgGradient = ctx.createLinearGradient(0, 0, 0, height);
       bgGradient.addColorStop(0, 'rgb(24,35,38)');
       bgGradient.addColorStop(1, 'rgb(24,35,49)');
