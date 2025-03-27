@@ -196,7 +196,7 @@
       margin-bottom: 5px;
       position: relative;
     }
-    /* Adjusted Arrow Toggle Button Styling */
+    /* Arrow Toggle Button Styling */
     .menu-toggle {
       position: absolute;
       left: -45px;
@@ -210,6 +210,8 @@
       line-height: 1;
       width: 22px !important;
       height: 23px !important;
+      z-index: 100;
+      pointer-events: auto;
     }
     /* Styling for the content inside each menu */
     .menu-content {
@@ -469,8 +471,7 @@
       <div id="map-change-container" class="menu-container hidden">
         <div class="menu-header">
           <span>Change Maps</span>
-          <!-- Initially minimized, so show left arrow (&#9664;) -->
-          <button class="menu-toggle">&#9664;</button>
+          <button class="menu-toggle">&#9654;</button>
         </div>
         <div class="menu-content">
           <button id="tactical-map">Tactical Map</button>
@@ -482,7 +483,7 @@
       <div id="zoom-controls" class="menu-container hidden">
         <div class="menu-header">
           <span>Zoom</span>
-          <button class="menu-toggle">&#9664;</button>
+          <button class="menu-toggle">&#9654;</button>
         </div>
         <div class="menu-content">
           <button id="zoom-in">Zoom In</button>
@@ -491,19 +492,17 @@
         </div>
       </div>
 
-      <!-- Settings (formerly Marker Text Toggle) -->
+      <!-- Settings -->
       <div id="text-toggle-right" class="menu-container hidden">
         <div class="menu-header">
           <span>Settings</span>
-          <button class="menu-toggle">&#9664;</button>
+          <button class="menu-toggle">&#9654;</button>
         </div>
         <div class="menu-content">
-          <!-- Existing Hover Text Toggle -->
           <div id="toggle-container">
             <input type="checkbox" id="toggle-marker-text" class="toggle-switch">
             <label for="toggle-marker-text" id="toggle-marker-text-label">HOVER TEXT</label>
           </div>
-          <!-- New Marker Visibility Toggles -->
           <div id="marker-visibility-container">
             <h3>Marker Visibility</h3>
             <div class="toggle-item">
@@ -557,7 +556,6 @@
 
     <!-- Toolbox -->
     <div id="toolbox">
-      <!-- Renamed Homestead tool (formerly Text Marker) -->
       <div class="tool" draggable="true" data-type="homestead" title="Homestead">
         <img src="https://regnumsolis.com/planner/images/marker.svg" alt="Homestead">
       </div>
@@ -677,7 +675,7 @@
     document.addEventListener("DOMContentLoaded", () => {
       setupLogin();
       setupToolbox();
-      setupAuditControls();
+      // Removed call to undefined setupAuditControls();
       setupMapSwitchControls();
       setupMenuToggles();
 
@@ -709,16 +707,10 @@
 
     function setupMenuToggles() {
       document.querySelectorAll(".menu-toggle").forEach(btn => {
-        btn.addEventListener("click", () => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
           const menu = btn.closest(".menu-container");
           menu.classList.toggle("hidden");
-          // When hidden, show right arrow (&#9654;) to indicate "minimize" action is available when open.
-          // When visible, show left arrow (&#9664;) to indicate clicking will close (slide out) the menu.
-          if (menu.classList.contains("hidden")) {
-            btn.innerHTML = "&#9654;";
-          } else {
-            btn.innerHTML = "&#9664;";
-          }
         });
       });
     }
@@ -878,11 +870,9 @@
         } else {
           tool.addEventListener("dragstart", (e) => {
             e.dataTransfer.setData("text/plain", type);
-            // Hide default ghost image
             const emptyImg = new Image();
             emptyImg.src = "";
             e.dataTransfer.setDragImage(emptyImg, 0, 0);
-            // Create a clone element for visual feedback
             const dragClone = tool.cloneNode(true);
             dragClone.classList.add("drag-clone");
             dragClone.style.position = "fixed";
