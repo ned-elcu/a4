@@ -636,13 +636,13 @@
 
   <div id="error-overlay">Database connection failed. The app cannot be used at this time.</div>
 
-  <!-- Custom Prompt Modal -->
+  <!-- Custom Prompt Modal (updated to center input and align elements) -->
   <div id="custom-prompt-overlay" style="display:none; position: fixed; top: 0; left: 0; width:100%; height:100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); align-items: center; justify-content: center; z-index: 2000;">
-    <div id="custom-prompt" style="background: #1e1e1e; border: 1px solid rgba(223,197,136,0.8); padding: 20px; border-radius: 8px; text-align: center; color: white; min-width: 300px;">
-      <p id="custom-prompt-message" style="margin-bottom: 15px;"></p>
-      <input id="custom-prompt-input" type="text" style="width: 80%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 15px;" />
-      <div>
-        <button id="custom-prompt-ok" style="padding: 8px 15px; margin-right: 10px; background: rgba(223,197,136,0.8); border: none; border-radius: 4px; cursor: pointer;">OK</button>
+    <div id="custom-prompt" style="background: #1e1e1e; border: 1px solid rgba(223,197,136,0.8); padding: 20px; border-radius: 8px; color: white; min-width: 300px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
+      <p id="custom-prompt-message" style="margin-bottom: 15px; width:100%;"></p>
+      <input id="custom-prompt-input" type="text" style="width: 80%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 15px; text-align: center;" />
+      <div style="display: flex; justify-content: center; gap: 10px; width: 100%;">
+        <button id="custom-prompt-ok" style="padding: 8px 15px; background: rgba(223,197,136,0.8); border: none; border-radius: 4px; cursor: pointer;">OK</button>
         <button id="custom-prompt-cancel" style="padding: 8px 15px; background: rgba(223,197,136,0.8); border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
       </div>
     </div>
