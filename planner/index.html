@@ -660,6 +660,19 @@
       ram: true
     };
 
+    // Global variable for the active drag clone
+    let currentDragClone = null;
+
+    // Document-level dragover listener to update the clone's position
+    document.addEventListener("dragover", (e) => {
+      if (currentDragClone) {
+        const offsetX = 10;
+        const offsetY = 10;
+        currentDragClone.style.left = e.clientX + offsetX + "px";
+        currentDragClone.style.top = e.clientY + offsetY + "px";
+      }
+    });
+
     function updateMarkerVisibility() {
       markerLayer.querySelectorAll("[data-marker='true']").forEach(markerEl => {
         const type = markerEl.getAttribute("data-type");
@@ -888,19 +901,13 @@
             dragClone.style.pointerEvents = "none";
             dragClone.style.zIndex = "1000";
             document.body.appendChild(dragClone);
-            tool.dragClone = dragClone;
+            currentDragClone = dragClone;
           });
-          tool.addEventListener("drag", (e) => {
-            if (!tool.dragClone) return;
-            const offsetX = 10;
-            const offsetY = 10;
-            tool.dragClone.style.left = e.clientX + offsetX + "px";
-            tool.dragClone.style.top = e.clientY + offsetY + "px";
-          });
+          // Remove individual drag event - clone is updated by the document-level dragover
           tool.addEventListener("dragend", (e) => {
-            if (tool.dragClone) {
-              tool.dragClone.remove();
-              tool.dragClone = null;
+            if (currentDragClone) {
+              currentDragClone.remove();
+              currentDragClone = null;
             }
           });
         }
