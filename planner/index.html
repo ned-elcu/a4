@@ -154,7 +154,7 @@
       text-shadow: 0 0 5px rgba(223,197,136,0.8);
       animation: neonGlow 1.5s infinite alternate ease-in-out;
     }
-    /* Right-side menus (map change, zoom controls, and markers menu) */
+    /* Right-side menus (map change, zoom controls, and toggle) */
     .menu-container {
       width: 180px;
       background: rgba(30,30,30,0.9);
@@ -185,8 +185,8 @@
       right: 20px;
       z-index: 20;
     }
-    /* Markers menu (Right Side) */
-    #markers-menu {
+    /* Marker text toggle container on right */
+    #text-toggle-right {
       position: fixed;
       top: 420px;
       right: 20px;
@@ -199,17 +199,11 @@
       box-shadow: 0 0 10px rgba(223,197,136,0.5);
       text-align: center;
     }
-    #markers-menu h2 {
+    #text-toggle-right h2 {
       font-size: 1em;
       margin-bottom: 5px;
     }
-    /* Marker text toggle inside markers menu */
-    #marker-text-toggle-container {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 10px;
-    }
+    /* Modern toggle switch styling */
     #toggle-marker-text {
       appearance: none;
       -webkit-appearance: none;
@@ -221,7 +215,6 @@
       outline: none;
       cursor: pointer;
       transition: background 0.3s;
-      margin-right: 8px;
     }
     #toggle-marker-text:checked {
       background: #dfc588;
@@ -240,15 +233,14 @@
     #toggle-marker-text:checked::before {
       transform: translateX(20px);
     }
-    #toggle-marker-text-label {
-      font-size: 0.9em;
+    /* Align the switch container with centered text to the right of the checkbox */
+    #toggle-container {
+      display: flex;
+      align-items: center;
     }
-    /* Markers filter checkboxes */
-    #markers-filter label {
-      display: block;
-      font-size: 0.9em;
-      margin-bottom: 5px;
-      cursor: pointer;
+    #toggle-marker-text-label {
+      margin-left: 10px;
+      line-height: 20px;
     }
     /* Toolbox */
     #toolbox {
@@ -388,17 +380,16 @@
   </style>
 </head>
 <body>
+  <!-- Animated waves background -->
   <!-- Animated waves background using WebGL -->
   <div id="background-container">
     <canvas id="waveCanvas"></canvas>
   </div>
-
   <!-- Loading overlay -->
   <div id="loading-overlay">
     <img src="https://regnumsolis.com/planner/images/loading.gif" alt="Loading">
     <div id="loading-text">0%</div>
   </div>
-
   <!-- Login Screen -->
   <div id="login-screen">
     <h2>Login</h2>
@@ -407,56 +398,35 @@
     <button id="login-button">Login</button>
     <div id="login-error"></div>
   </div>
-
   <!-- Main App -->
   <div id="app">
     <!-- Header -->
     <div id="header-logo">
       <h1>REGNUM SOLIS R&D / REMNANT SENATE</h1>
     </div>
-
     <!-- Map Change Menu -->
     <div id="map-change-container" class="menu-container">
       <h2>Change Maps</h2>
       <button id="tactical-map">Tactical Map</button>
       <button id="style-map">Style Map</button>
     </div>
-
     <!-- Zoom Controls -->
     <div id="zoom-controls" class="menu-container">
       <button id="zoom-in">Zoom In</button>
       <button id="zoom-out">Zoom Out</button>
       <button id="reset-zoom">Reset</button>
     </div>
-
-    <!-- Markers Menu (Right Side) -->
-    <div id="markers-menu">
-      <h2>Markers Menu</h2>
-      <!-- Marker Text Toggle -->
-      <div id="marker-text-toggle-container">
+    <!-- Marker Text Toggle (Right Side) -->
+    <div id="text-toggle-right">
+      <h2>Marker Text</h2>
+      <div id="toggle-container">
         <input type="checkbox" id="toggle-marker-text">
-        <label for="toggle-marker-text" id="toggle-marker-text-label">SWITCH TO ALL</label>
-      </div>
-      <!-- Markers Filter -->
-      <div id="markers-filter">
-        <label><input type="checkbox" value="marker" checked> homestead</label>
-        <label><input type="checkbox" value="citadel" checked> Citadel</label>
-        <label><input type="checkbox" value="torch" checked> Torch</label>
-        <label><input type="checkbox" value="cave" checked> Cave</label>
-        <label><input type="checkbox" value="sword" checked> Sword</label>
-        <label><input type="checkbox" value="spear" checked> Spear</label>
-        <label><input type="checkbox" value="bow" checked> Bow</label>
-        <label><input type="checkbox" value="beacon" checked> Beacon</label>
-        <label><input type="checkbox" value="camp" checked> Camp</label>
-        <label><input type="checkbox" value="catapult" checked> Catapult</label>
-        <label><input type="checkbox" value="ram" checked> Ram</label>
-        <label><input type="checkbox" value="line" checked> Lines</label>
+        <label for="toggle-marker-text" id="toggle-marker-text-label">ALWAYS TEXT</label>
       </div>
     </div>
-
     <!-- Toolbox -->
     <div id="toolbox">
-      <div class="tool" draggable="true" data-type="marker" title="homestead">
+      <div class="tool" draggable="true" data-type="marker" title="Text Marker">
         <img src="https://regnumsolis.com/planner/images/marker.svg" alt="Marker">
       </div>
       <div class="tool" draggable="true" data-type="citadel" title="Citadel">
@@ -494,12 +464,10 @@
         <img src="https://regnumsolis.com/planner/images/ram.svg" alt="Ram">
       </div>
     </div>
-
     <!-- Map Container -->
     <div id="map-container">
       <div id="map-svg-container"></div>
     </div>
-
     <!-- Admin Panel -->
     <div id="admin-panel">
       <h3>
@@ -514,14 +482,11 @@
       <button id="delete-all">Delete All Markers</button>
     </div>
   </div>
-
   <div id="error-overlay">Database connection failed. The app cannot be used at this time.</div>
-
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
     import { getFirestore, collection, addDoc, orderBy, query, onSnapshot, deleteDoc, doc, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
-
     const firebaseConfig = {
       apiKey: "AIzaSyAIws_FKV_CTaiHdnwc8WigDqRkyUCOjtE",
       authDomain: "regnum-d3ddf.firebaseapp.com",
@@ -531,35 +496,39 @@
       appId: "1:565532905074:web:a4cc38363376e49540fceb",
       measurementId: "G-4RG5NP4FZ3"
     };
-
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const auth = getAuth(app);
-
     let panZoomInstance, svgRoot, panLayer, lineLayer, markerLayer;
     let isMapReady = false;
     const adminEmail = "gryves_dev@yahoo.com";
-
     let activeTool = null;
     let lineDrawingState = 0;
     let currentLine = null;
     let currentLineGroup = null;
-
     // Loading simulation
     let loadingInterval;
     let currentProgress = 0;
     const loadingOverlay = document.getElementById("loading-overlay");
     const loadingText = document.getElementById("loading-text");
-
     document.addEventListener("DOMContentLoaded", () => {
       setupLogin();
       setupToolbox();
       setupAuditControls();
       setupMapSwitchControls();
-      setupMarkerFilter();
-      setupMarkerTextToggle();
+      // Setup marker text toggle functionality
+      const toggleMarkerTextCheckbox = document.getElementById("toggle-marker-text");
+      const toggleLabel = document.getElementById("toggle-marker-text-label");
+      toggleMarkerTextCheckbox.addEventListener("change", function() {
+        if (this.checked) {
+          document.body.classList.add("text-hover-only");
+          toggleLabel.textContent = "HOVER TEXT";
+        } else {
+          document.body.classList.remove("text-hover-only");
+          toggleLabel.textContent = "ALWAYS TEXT";
+        }
+      });
     });
-
     function showLoading() {
       currentProgress = 0;
       loadingText.textContent = "0%";
@@ -572,7 +541,6 @@
         }
       }, 100);
     }
-
     function hideLoading() {
       clearInterval(loadingInterval);
       loadingText.textContent = "100%";
@@ -580,13 +548,11 @@
         loadingOverlay.style.display = "none";
       }, 300);
     }
-
     function setupLogin() {
       document.getElementById("login-button").addEventListener("click", () => {
         const email = document.getElementById("email").value.trim();
         const password = document.getElementById("password").value.trim();
         const errorDiv = document.getElementById("login-error");
-
         signInWithEmailAndPassword(auth, email, password)
           .then(() => {
             errorDiv.textContent = "";
@@ -598,7 +564,6 @@
             errorDiv.textContent = error.message;
           });
       });
-
       onAuthStateChanged(auth, (user) => {
         if (user) {
           document.getElementById("login-screen").style.display = "none";
@@ -615,12 +580,10 @@
         }
       });
     }
-
     // Set default map to Style Map.
     function initializeMap() {
       switchMap("https://regnumsolis.com/planner/images/mvmvmdfs.svg");
     }
-
     // switchMap shows the loading overlay, fetches the SVG, then initializes pan/zoom and listeners.
     function switchMap(url) {
       if (panZoomInstance) {
@@ -648,7 +611,6 @@
           hideLoading();
         });
     }
-
     // Setup the map switch controls.
     function setupMapSwitchControls() {
       document.getElementById("tactical-map").addEventListener("click", () => {
@@ -658,28 +620,23 @@
         switchMap("https://regnumsolis.com/planner/images/mvmvmdfs.svg");
       });
     }
-
     function setupPanZoomLayers() {
       svgRoot = document.getElementById("map-svg-container").querySelector("svg");
       svgRoot.setAttribute("width", "100%");
       svgRoot.setAttribute("height", "100%");
       svgRoot.setAttribute("preserveAspectRatio", "xMidYMid meet");
-
       panLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
       panLayer.id = "pan-layer";
       while (svgRoot.firstChild) {
         panLayer.appendChild(svgRoot.firstChild);
       }
       svgRoot.appendChild(panLayer);
-
       lineLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
       lineLayer.id = "line-layer";
       panLayer.appendChild(lineLayer);
-
       markerLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
       markerLayer.id = "marker-layer";
       panLayer.appendChild(markerLayer);
-
       panZoomInstance = svgPanZoom(svgRoot, {
         zoomEnabled: true,
         panEnabled: true,
@@ -696,13 +653,11 @@
         }
       });
     }
-
     function setupZoomControls() {
       document.getElementById("zoom-in").addEventListener("click", () => panZoomInstance.zoomIn());
       document.getElementById("zoom-out").addEventListener("click", () => panZoomInstance.zoomOut());
       document.getElementById("reset-zoom").addEventListener("click", () => panZoomInstance.resetZoom());
     }
-
     function setupToolbox() {
       document.querySelectorAll(".tool").forEach((tool) => {
         const type = tool.dataset.type;
@@ -721,7 +676,6 @@
         }
       });
     }
-
     function setupAuditControls() {
       document.getElementById("delete-audit").addEventListener("click", async () => {
         if (confirm("Delete all audit logs?")) {
@@ -735,7 +689,6 @@
           }
         }
       });
-
       document.getElementById("minimize-audit").addEventListener("click", () => {
         const auditLogDiv = document.getElementById("audit-log");
         if (auditLogDiv.style.display === "none") {
@@ -746,7 +699,6 @@
           document.getElementById("minimize-audit").textContent = "➕";
         }
       });
-      
       document.getElementById("copy-audit").addEventListener("click", () => {
         const auditLogContainer = document.getElementById("audit-log");
         const textToCopy = auditLogContainer.textContent;
@@ -759,71 +711,17 @@
           });
       });
     }
-
-    // Setup the marker filter checkboxes (including the new Lines option).
-    function setupMarkerFilter() {
-      const checkboxes = document.querySelectorAll("#markers-filter input[type='checkbox']");
-      checkboxes.forEach(cb => {
-        cb.addEventListener("change", updateVisibility);
-      });
-    }
-
-    // Update marker and line visibility based on filter checkboxes.
-    function updateVisibility() {
-      const checkboxes = document.querySelectorAll("#markers-filter input[type='checkbox']");
-      let visibleTypes = {};
-      checkboxes.forEach(cb => {
-        visibleTypes[cb.value] = cb.checked;
-      });
-      // Update markers
-      if (markerLayer) {
-        Array.from(markerLayer.children).forEach(marker => {
-          if (marker.dataset && marker.dataset.type) {
-            marker.style.display = visibleTypes[marker.dataset.type] ? "block" : "none";
-          }
-        });
-      }
-      // Update lines (lineLayer)
-      if (lineLayer) {
-        lineLayer.style.display = visibleTypes["line"] ? "block" : "none";
-      }
-    }
-
-    // Setup the marker text toggle inside the markers menu.
-    function setupMarkerTextToggle() {
-      const toggle = document.getElementById("toggle-marker-text");
-      const toggleLabel = document.getElementById("toggle-marker-text-label");
-      // Default: text-hover-only is active (i.e. marker text only on hover)
-      document.body.classList.add("text-hover-only");
-      toggle.checked = false;
-      toggleLabel.textContent = "SWITCH TO ALL";
-      
-      toggle.addEventListener("change", function() {
-        if (this.checked) {
-          // When checked, remove the hover-only class so that marker text is always visible.
-          document.body.classList.remove("text-hover-only");
-          toggleLabel.textContent = "SWITCH TO HOVER";
-        } else {
-          // When unchecked, add the class so that marker text is visible only on hover.
-          document.body.classList.add("text-hover-only");
-          toggleLabel.textContent = "SWITCH TO ALL";
-        }
-      });
-    }
-
     function getSVGPoint(e) {
       const pt = svgRoot.createSVGPoint();
       pt.x = e.clientX;
       pt.y = e.clientY;
       return pt.matrixTransform(panLayer.getScreenCTM().inverse());
     }
-
     function setupDragAndDrop() {
       svgRoot.addEventListener("dragover", (e) => {
         e.preventDefault();
         e.dataTransfer.dropEffect = "move";
       });
-
       svgRoot.addEventListener("drop", async (e) => {
         if (!isMapReady || activeTool === "line") return;
         e.preventDefault();
@@ -832,19 +730,15 @@
         await addMarkerToFirestore(type, cursorPos.x, cursorPos.y);
       });
     }
-
     function setupLineDrawing() {
       svgRoot.addEventListener("click", async (e) => {
         if (activeTool !== "line") return;
         e.preventDefault();
         const pt = getSVGPoint(e);
-
         if (lineDrawingState === 0) {
           currentLineGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
           currentLineGroup.classList.add("line-group");
-
           const lineColor = prompt("Enter line color (e.g., red or #ff0000):") || "white";
-          
           currentLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
           currentLine.setAttribute("x1", pt.x);
           currentLine.setAttribute("y1", pt.y);
@@ -852,38 +746,31 @@
           currentLine.setAttribute("y2", pt.y);
           currentLine.setAttribute("stroke-width", "3.2");
           currentLine.setAttribute("stroke", lineColor);
-
           currentLineGroup.startPoint = { x: pt.x, y: pt.y };
           currentLineGroup.lineColor = lineColor;
           currentLineGroup.appendChild(currentLine);
           lineLayer.appendChild(currentLineGroup);
-
           lineDrawingState = 1;
         } else if (lineDrawingState === 1) {
           const x1 = currentLineGroup.startPoint.x;
           const y1 = currentLineGroup.startPoint.y;
           const x2 = pt.x;
           const y2 = pt.y;
-
           currentLine.setAttribute("x2", x2);
           currentLine.setAttribute("y2", y2);
-
           const midX = (x1 + x2) / 2;
           const midY = (y1 + y2) / 2;
           const angle = Math.atan2(y2 - y1, x2 - x1) * (180 / Math.PI);
-
           const arrow = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
           arrow.setAttribute("points", "0,-8 16,0 0,8");
           arrow.setAttribute("fill", currentLineGroup.lineColor);
           arrow.setAttribute("transform", `translate(${midX},${midY}) rotate(${angle})`);
           currentLineGroup.appendChild(arrow);
-
           await addLineToFirestore({
             x1, y1, x2, y2,
             color: currentLineGroup.lineColor,
             midX, midY, angle
           });
-
           activeTool = null;
           lineDrawingState = 0;
           currentLine = null;
@@ -893,15 +780,13 @@
         }
       });
     }
-
     async function addMarkerToFirestore(type, x, y) {
       let markerData = { type, x, y, timestamp: serverTimestamp() };
       if (["marker", "citadel", "torch", "cave", "sword", "spear", "bow", "beacon", "camp", "catapult", "ram"].includes(type)) {
         markerData.text = prompt("Enter marker text:") || "";
         markerData.color = prompt("Enter marker color (e.g., red or #ff0000):") || "black";
         if (type === "marker" && markerData.text === "") {
-          // Default changed from "M" to "homestead"
-          markerData.text = "homestead";
+          markerData.text = "M";
         }
       }
       try {
@@ -911,7 +796,6 @@
         console.error("Error adding marker:", error);
       }
     }
-
     async function addLineToFirestore(lineData) {
       try {
         const docRef = await addDoc(collection(db, "lines"), {
@@ -923,7 +807,6 @@
         console.error("Error adding line:", error);
       }
     }
-
     function listenForMarkers() {
       let snapshotReceived = false;
       const markersQuery = query(collection(db, "markers"), orderBy("timestamp"));
@@ -935,12 +818,10 @@
         snapshot.forEach((docSnap) => {
           createMarkerElement(docSnap.id, docSnap.data());
         });
-        updateVisibility();
       }, (error) => {
         console.error("Firestore connection error:", error);
         displayErrorOverlay("Firestore connection failed.");
       });
-
       setTimeout(() => {
         if (!snapshotReceived) {
           console.error("No Firestore snapshot received within timeout.");
@@ -949,7 +830,6 @@
         }
       }, 5000);
     }
-
     function listenForLines() {
       const linesQuery = query(collection(db, "lines"), orderBy("timestamp"));
       onSnapshot(linesQuery, (snapshot) => {
@@ -959,12 +839,9 @@
         });
       });
     }
-
     function createMarkerElement(id, data) {
       let markerEl = document.createElementNS("http://www.w3.org/2000/svg", "g");
       markerEl.setAttribute("data-marker", "true");
-      markerEl.dataset.type = data.type;
-      
       let imgSrc, imgWidth, imgHeight, imgXOffset, imgYOffset, fontSize;
       if (data.type === "marker") {
         imgSrc = "https://regnumsolis.com/planner/images/marker.svg";
@@ -1015,106 +892,403 @@
         imgXOffset = -15 * 1.7;
         imgYOffset = -15 * 1.7;
         fontSize = 14 * 1.7;
-      } else if (data.type === "beacon") {
+      }
+      else if (data.type === "beacon") {
         imgSrc = "https://regnumsolis.com/planner/images/beacon.svg";
-        imgWidth = 30 * 1.7;
-        imgHeight = 30 * 1.7;
-        imgXOffset = -15 * 1.7;
-        imgYOffset = -15 * 1.7;
-        fontSize = 14 * 1.7;
+        imgWidth = 30 * 1.7 * 1.2;
+        imgHeight = 30 * 1.7 * 1.2;
+        imgXOffset = -15 * 1.7 * 1.2;
+        imgYOffset = -15 * 1.7 * 1.2;
+        fontSize = 14 * 1.7 * 1.2;
       } else if (data.type === "camp") {
         imgSrc = "https://regnumsolis.com/planner/images/camp.svg";
-        imgWidth = 30 * 1.7;
-        imgHeight = 30 * 1.7;
-        imgXOffset = -15 * 1.7;
-        imgYOffset = -15 * 1.7;
-        fontSize = 14 * 1.7;
+        imgWidth = 30 * 1.7 * 1.2;
+        imgHeight = 30 * 1.7 * 1.2;
+        imgXOffset = -15 * 1.7 * 1.2;
+        imgYOffset = -15 * 1.7 * 1.2;
+        fontSize = 14 * 1.7 * 1.2;
       } else if (data.type === "catapult") {
         imgSrc = "https://regnumsolis.com/planner/images/catapult.svg";
-        imgWidth = 30 * 1.7;
-        imgHeight = 30 * 1.7;
-        imgXOffset = -15 * 1.7;
-        imgYOffset = -15 * 1.7;
-        fontSize = 14 * 1.7;
+        imgWidth = 30 * 1.7 * 1.2;
+        imgHeight = 30 * 1.7 * 1.2;
+        imgXOffset = -15 * 1.7 * 1.2;
+        imgYOffset = -15 * 1.7 * 1.2;
+        fontSize = 14 * 1.7 * 1.2;
       } else if (data.type === "ram") {
         imgSrc = "https://regnumsolis.com/planner/images/ram.svg";
-        imgWidth = 30 * 1.7;
-        imgHeight = 30 * 1.7;
-        imgXOffset = -15 * 1.7;
-        imgYOffset = -15 * 1.7;
-        fontSize = 14 * 1.7;
+        imgWidth = 30 * 1.7 * 1.2;
+        imgHeight = 30 * 1.7 * 1.2;
+        imgXOffset = -15 * 1.7 * 1.2;
+        imgYOffset = -15 * 1.7 * 1.2;
+        fontSize = 14 * 1.7 * 1.2;
       }
-      
-      const image = document.createElementNS("http://www.w3.org/2000/svg", "image");
-      image.setAttributeNS(null, "href", imgSrc);
-      image.setAttribute("width", imgWidth);
-      image.setAttribute("height", imgHeight);
-      image.setAttribute("x", imgXOffset);
-      image.setAttribute("y", imgYOffset);
-      markerEl.appendChild(image);
-      
-      if (data.text) {
-        const textEl = document.createElementNS("http://www.w3.org/2000/svg", "text");
-        textEl.textContent = data.text;
-        textEl.setAttribute("x", 0);
-        textEl.setAttribute("y", imgYOffset + imgHeight + fontSize);
-        textEl.setAttribute("font-size", fontSize);
-        textEl.setAttribute("fill", data.color || "black");
-        textEl.setAttribute("text-anchor", "middle");
-        markerEl.appendChild(textEl);
-      }
-      
+      let textXOffset = imgXOffset + imgWidth;
+      const imgEl = document.createElementNS("http://www.w3.org/2000/svg", "image");
+      imgEl.setAttributeNS("http://www.w3.org/1999/xlink", "href", imgSrc);
+      imgEl.setAttribute("width", imgWidth);
+      imgEl.setAttribute("height", imgHeight);
+      imgEl.setAttribute("x", data.x + imgXOffset);
+      imgEl.setAttribute("y", data.y + imgYOffset);
+      markerEl.appendChild(imgEl);
+      const textEl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      textEl.textContent = data.text;
+      textEl.setAttribute("fill", data.color);
+      textEl.setAttribute("font-size", fontSize);
+      textEl.setAttribute("x", data.x + textXOffset);
+      textEl.setAttribute("y", data.y);
+      textEl.setAttribute("text-anchor", "start");
+      textEl.setAttribute("dominant-baseline", "middle");
+      textEl.style.fontFamily = "'Bebas Neue', sans-serif";
+      markerEl.appendChild(textEl);
+      requestAnimationFrame(() => {
+        const bbox = textEl.getBBox();
+        const textLength = textEl.getComputedTextLength();
+        const rectEl = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        rectEl.setAttribute("x", bbox.x);
+        rectEl.setAttribute("y", bbox.y);
+        rectEl.setAttribute("width", textLength);
+        rectEl.setAttribute("height", bbox.height);
+        rectEl.setAttribute("fill", "#1e1e1e");
+        rectEl.setAttribute("opacity", "0.63");
+        markerEl.insertBefore(rectEl, textEl);
+      });
+      markerEl.classList.add("marker");
+      markerEl.dataset.id = id;
+      markerEl.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        if (activeTool === "line") return;
+        if (confirm("Delete this marker?")) {
+          try {
+            await deleteDoc(doc(db, "markers", id));
+            recordAuditLog("delete", { markerId: id, markerType: data.type });
+          } catch (error) {
+            console.error("Error deleting marker:", error);
+          }
+        }
+      });
       markerLayer.appendChild(markerEl);
     }
-
     function createLineElement(id, data) {
-      const lineGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
-      lineGroup.classList.add("line-group");
-      
-      const lineEl = document.createElementNS("http://www.w3.org/2000/svg", "line");
-      lineEl.setAttribute("x1", data.x1);
-      lineEl.setAttribute("y1", data.y1);
-      lineEl.setAttribute("x2", data.x2);
-      lineEl.setAttribute("y2", data.y2);
-      lineEl.setAttribute("stroke-width", "3.2");
-      lineEl.setAttribute("stroke", data.color);
-      lineGroup.appendChild(lineEl);
-      
-      // Recreate the arrow indicator
+      const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      group.classList.add("line-group");
+      group.dataset.id = id;
+      const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      line.setAttribute("x1", data.x1);
+      line.setAttribute("y1", data.y1);
+      line.setAttribute("x2", data.x2);
+      line.setAttribute("y2", data.y2);
+      line.setAttribute("stroke", data.color);
+      line.setAttribute("stroke-width", "3.2");
       const arrow = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
       arrow.setAttribute("points", "0,-8 16,0 0,8");
       arrow.setAttribute("fill", data.color);
       arrow.setAttribute("transform", `translate(${data.midX},${data.midY}) rotate(${data.angle})`);
-      lineGroup.appendChild(arrow);
-      
-      lineLayer.appendChild(lineGroup);
+      group.appendChild(line);
+      group.appendChild(arrow);
+      group.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        if (confirm("Delete this line?")) {
+          await deleteDoc(doc(db, "lines", id));
+          recordAuditLog("delete_line", { lineId: id });
+        }
+      });
+      lineLayer.appendChild(group);
     }
-
     function recordAuditLog(action, details) {
-      // Placeholder function for audit logging.
-      // In production, this would record details to your auditLogs collection.
-      console.log("Audit log:", action, details);
+      const user = auth.currentUser;
+      if (!user) return;
+      const logData = {
+        action,
+        details,
+        user: user.email,
+        timestamp: serverTimestamp()
+      };
+      addDoc(collection(db, "auditLogs"), logData)
+        .catch(error => console.error("Error writing audit log:", error));
     }
-
-    function displayErrorOverlay(message) {
-      document.getElementById("error-overlay").textContent = message;
-      document.getElementById("error-overlay").style.display = "flex";
-    }
-
-    // Placeholder for audit log listener.
     function listenForAuditLogs() {
-      // Implementation for listening to audit logs.
+      const auditLogContainer = document.getElementById("audit-log");
+      const auditQuery = query(collection(db, "auditLogs"), orderBy("timestamp", "asc"));
+      onSnapshot(auditQuery, (snapshot) => {
+        const logs = [];
+        snapshot.forEach((docSnap) => {
+          const log = docSnap.data();
+          const ts = log.timestamp ? log.timestamp.seconds : 0;
+          logs.push({ timestamp: ts, log });
+        });
+        const groupedLogs = [];
+        const groupingThreshold = 300;
+        let currentGroup = null;
+        logs.forEach(item => {
+          const { timestamp, log } = item;
+          const applicable = (log.action === "add" || log.action === "delete" || log.action === "add_line" || log.action === "delete_line") && log.details;
+          if (applicable) {
+            if (
+              currentGroup &&
+              currentGroup.key.user === log.user &&
+              currentGroup.key.action === log.action &&
+              currentGroup.key.markerType === (log.details.markerType || log.details.lineId?.substr(0, 5))
+              currentGroup.key.markerType === log.details.markerType
+            ) {
+              if (timestamp - currentGroup.lastTimestamp <= groupingThreshold) {
+                currentGroup.count += 1;
+                currentGroup.lastTimestamp = timestamp;
+              } else {
+                groupedLogs.push(currentGroup);
+                currentGroup = {
+                  key: { 
+                    user: log.user, 
+                    action: log.action,
+                    markerType: log.details.markerType || "line"
+                  },
+                  count: 1,
+                  timestamp: timestamp,
+                  lastTimestamp: timestamp
+                };
+              }
+            } else {
+              if (currentGroup) {
+                groupedLogs.push(currentGroup);
+              }
+              currentGroup = {
+                key: { 
+                  user: log.user, 
+                  action: log.action,
+                  markerType: log.details.markerType || "line"
+                },
+                count: 1,
+                timestamp: timestamp,
+                lastTimestamp: timestamp
+              };
+            }
+          } else {
+            if (currentGroup) {
+              groupedLogs.push(currentGroup);
+              currentGroup = null;
+            }
+            groupedLogs.push({
+              key: { 
+                user: log.user, 
+                action: log.action,
+                markerType: (log.details && log.details.markerType) ? log.details.markerType : null 
+              },
+              count: 1,
+              timestamp: timestamp,
+              lastTimestamp: timestamp
+            });
+          }
+        });
+        if (currentGroup) groupedLogs.push(currentGroup);
+        groupedLogs.sort((a, b) => b.lastTimestamp - a.lastTimestamp);
+        auditLogContainer.innerHTML = "";
+        groupedLogs.forEach(group => {
+          const dateStr = new Date(group.lastTimestamp * 1000).toLocaleString();
+          let actionText = "";
+          if (group.key.action === "add") actionText = "add marker";
+          else if (group.key.action === "delete") actionText = "delete marker";
+          else if (group.key.action === "delete_all") actionText = "delete all content";
+          else if (group.key.action === "add_line") actionText = "add line";
+          else if (group.key.action === "delete_line") actionText = "delete line";
+          else actionText = group.key.action;
+          let entryHTML = `[${dateStr}] <b>${group.key.user}</b> ${actionText}`;
+          if (group.key.markerType) entryHTML += ` <b>[${group.key.markerType}]</b>`;
+          if (group.count > 1) entryHTML += ` (<b>x${group.count}</b>)`;
+          const entry = document.createElement("div");
+          entry.innerHTML = entryHTML;
+          auditLogContainer.appendChild(entry);
+        });
+      });
     }
-
-    // Placeholder for delete all markers functionality.
     function setupDeleteAll() {
-      document.getElementById("delete-all").addEventListener("click", () => {
-        if (confirm("Are you sure you want to delete all markers?")) {
-          // Implementation to delete markers.
-          console.log("Delete all markers clicked.");
+      document.getElementById("delete-all").addEventListener("click", async () => {
+        if (confirm("Delete all markers and lines?")) {
+          try {
+            const markersSnapshot = await getDocs(collection(db, "markers"));
+            markersSnapshot.forEach(async (docSnap) => {
+              await deleteDoc(doc(db, "markers", docSnap.id));
+            });
+            const linesSnapshot = await getDocs(collection(db, "lines"));
+            linesSnapshot.forEach(async (docSnap) => {
+              await deleteDoc(doc(db, "lines", docSnap.id));
+            });
+            recordAuditLog("delete_all", { 
+              markers: markersSnapshot.size,
+              lines: linesSnapshot.size
+            });
+            lineLayer.innerHTML = "";
+          } catch (error) {
+            console.error("Error deleting all content:", error);
+          }
         }
       });
     }
+    function displayErrorOverlay(message) {
+      const overlay = document.getElementById("error-overlay");
+      overlay.textContent = message;
+      overlay.style.display = "flex";
+      console.warn("Error overlay activated:", message);
+    }
+  </script>
+  <!-- Animated Waves Background Script Using WebGL -->
+  <script>
+    // Animated waves background script with updated gradient colors
+    // Setup WebGL on the canvas with id "waveCanvas"
+    const canvas = document.getElementById('waveCanvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    function resize() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+    let phase = 0;
+    const numWaves = 20;
+    const amplitude = 20;
+    const wavelength = width / 2;
+    const speed = 0.003;
+    function animate() {
+      ctx.clearRect(0, 0, width, height);
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const gl = canvas.getContext("webgl");
+    if (!gl) {
+      alert("WebGL is not supported in your browser.");
+    }
+    // Vertex shader: full-screen quad.
+    const vertexShaderSource = `
+      attribute vec2 a_position;
+      varying vec2 v_uv;
+      void main() {
+        v_uv = a_position * 0.5 + 0.5;
+        gl_Position = vec4(a_position, 0.0, 1.0);
+      }
+    `;
+    // Fragment shader: sums eight sine waves with varied parameters and extra phase offsets,
+    // then darkens the result by reducing lightness by 90%.
+    const fragmentShaderSource = `
+      precision mediump float;
+      uniform float u_time;
+      uniform vec2 u_resolution;
+      varying vec2 v_uv;
+      // New gradient: top rgb(24,35,38) and bottom rgb(24,35,49)
+      const bgGradient = ctx.createLinearGradient(0, 0, 0, height);
+      bgGradient.addColorStop(0, 'rgb(24,35,38)');
+      bgGradient.addColorStop(1, 'rgb(24,35,49)');
+      ctx.fillStyle = bgGradient;
+      ctx.fillRect(0, 0, width, height);
+      float wave(vec2 st, float angle, float frequency, float amplitude, float speed) {
+        vec2 dir = vec2(cos(angle), sin(angle));
+        float phaseOffset = angle * 7.0;
+        return sin(dot(st, dir) * frequency + u_time * speed + phaseOffset) * amplitude;
+      }
+      for (let i = 0; i < numWaves; i++) {
+        const yPos = ((i + 0.5) / numWaves) * height;
+        ctx.beginPath();
+        ctx.moveTo(0, yPos);
+        for (let x = 0; x <= width; x++) {
+          const offset = amplitude * Math.sin((x / wavelength) * Math.PI * 2 + phase + i);
+          ctx.lineTo(x, yPos + offset);
+        }
+        ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      float waveHeight(vec2 st) {
+        float h = 0.0;
+        h += wave(st, 0.0,   30.1, 0.0020, 0.81);
+        h += wave(st, 0.7,   40.3, 0.0017, 0.63);
+        h += wave(st, 1.4,   55.7, 0.0010, 1.04);
+        h += wave(st, 2.1,   65.2, 0.0012, 0.91);
+        h += wave(st, 2.8,   50.5, 0.0015, 1.12);
+        h += wave(st, 3.3,   60.9, 0.0013, 0.87);
+        h += wave(st, 4.0,   45.6, 0.0014, 1.05);
+        h += wave(st, 4.7,   70.8, 0.0011, 0.99);
+        return h;
+      }
+      vec3 computeNormal(vec2 st, float h) {
+        float eps = 0.001;
+        float hx = waveHeight(st + vec2(eps, 0.0));
+        float hy = waveHeight(st + vec2(0.0, eps));
+        float dFdx = (hx - h) / eps;
+        float dFdy = (hy - h) / eps;
+        return normalize(vec3(-dFdx, -dFdy, 1.0));
+      }
+      void main(){
+        vec2 st = gl_FragCoord.xy / u_resolution.xy;
+        st.y *= u_resolution.y / u_resolution.x;
+        float h = waveHeight(st);
+        vec3 normal = computeNormal(st, h);
+        vec3 deepWater = vec3(0.0, 0.15, 0.35);
+        vec3 shallowWater = vec3(0.0, 0.45, 0.75);
+        vec3 baseColor = mix(deepWater, shallowWater, st.y + h * 0.5);
+        vec3 sunDir = normalize(vec3(0.3, 0.8, 1.0));
+        float diffuse = max(dot(normal, sunDir), 0.0);
+        vec3 viewDir = normalize(vec3(0.0, 0.0, 1.0));
+        vec3 halfDir = normalize(sunDir + viewDir);
+        float spec = pow(max(dot(normal, halfDir), 0.0), 50.0);
+        float fresnel = pow(1.0 - max(dot(viewDir, normal), 0.0), 3.0) * 0.6;
+        vec3 color = baseColor * (0.4 + 0.6 * diffuse) + vec3(1.0, 0.95, 0.8) * spec;
+        color = mix(color, vec3(1.0), fresnel);
+        // Darken by reducing lightness by 90%
+        color *= 0.1;
+        gl_FragColor = vec4(color, 1.0);
+      }
+    `;
+    function createShader(gl, type, source) {
+      const shader = gl.createShader(type);
+      gl.shaderSource(shader, source);
+      gl.compileShader(shader);
+      if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+        console.error("Shader compile failed: " + gl.getShaderInfoLog(shader));
+        gl.deleteShader(shader);
+        return null;
+      }
+      return shader;
+    }
+    const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
+    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+    const program = gl.createProgram();
+    gl.attachShader(program, vertexShader);
+    gl.attachShader(program, fragmentShader);
+    gl.linkProgram(program);
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+      console.error("Program linking failed: " + gl.getProgramInfoLog(program));
+    }
+    const positionAttributeLocation = gl.getAttribLocation(program, "a_position");
+    const timeUniformLocation = gl.getUniformLocation(program, "u_time");
+    const resolutionUniformLocation = gl.getUniformLocation(program, "u_resolution");
+    const positionBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    const positions = [
+      -1, -1,
+       1, -1,
+      -1,  1,
+      -1,  1,
+       1, -1,
+       1,  1
+    ];
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+    function render(time) {
+      time *= 0.001;
+      gl.viewport(0, 0, canvas.width, canvas.height);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      gl.useProgram(program);
+      gl.enableVertexAttribArray(positionAttributeLocation);
+      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+      gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
+      phase += speed;
+      requestAnimationFrame(animate);
+      gl.uniform1f(timeUniformLocation, time);
+      gl.uniform2f(resolutionUniformLocation, canvas.width, canvas.height);
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+      requestAnimationFrame(render);
+    }
+    animate();
+    render(0);
+    window.addEventListener("resize", () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
   </script>
 </body>
 </html>
