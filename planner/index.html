@@ -422,7 +422,7 @@
   <!-- Footer (single line with inline link) -->
   <footer id="footer-info">
     <p>
-      Build version: v1.10.0rc |
+      Build version: v1.10.2rc |
       Encrypted database connection: <span id="db-connection-status">🟢</span> |
       Status: <span id="user-status">user</span> |
       <a href="https://regnumsolis.com">Return to Home</a>
@@ -588,6 +588,14 @@
             linesSnapshot.forEach(async (docSnap) => {
               await deleteDoc(doc(db, "lines", docSnap.id));
             });
+            const bezierSnapshot = await getDocs(collection(db, "bezierCurves"));
+            bezierSnapshot.forEach(async (docSnap) => {
+              await deleteDoc(doc(db, "bezierCurves", docSnap.id));
+            });
+            const polygonsSnapshot = await getDocs(collection(db, "polygons"));
+            polygonsSnapshot.forEach(async (docSnap) => {
+              await deleteDoc(doc(db, "polygons", docSnap.id));
+            });
           } catch (error) {
             console.error("Error deleting markers:", error);
           }
@@ -655,7 +663,9 @@
       });
     }
 
-    function initializeMap() { switchMap("https://regnumsolis.com/planner/images/mvmvmdfs.svg"); }
+    function initializeMap() { 
+      switchMap("https://regnumsolis.com/planner/images/mvmvmdfs.svg");
+    }
 
     function switchMap(url) {
       if (panZoomInstance) { panZoomInstance.destroy(); }
@@ -672,6 +682,8 @@
           setupDrawingTools();
           listenForMarkers();
           listenForLines();
+          listenForBezierCurves();
+          listenForPolygons();
           isMapReady = true;
           hideLoading();
         })
@@ -813,10 +825,8 @@
 
     // Combined drawing tool event listener for line, bezier and polygon
     function setupDrawingTools() {
-      // Remove any existing listener to avoid duplicate bindings
       svgRoot.removeEventListener("click", drawingToolHandler);
       svgRoot.addEventListener("click", drawingToolHandler);
-      // Listen for right-click to commit bezier or polygon drawings
       svgRoot.addEventListener("contextmenu", (e) => {
         if (activeTool === "bezier") {
           e.preventDefault();
@@ -831,11 +841,10 @@
     async function drawingToolHandler(e) {
       const pt = getSVGPoint(e);
       if (activeTool === "line") {
-        // Line tool logic (same as before)
         if (lineDrawingState === 0) {
           currentLineGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
           currentLineGroup.classList.add("line-group");
-          const lineColor = await customPrompt("Enter line color (e.g., red or #ff0000):", "") || "white";
+          const lineColor = await customPrompt("Enter line color (e.g. red or #ff0000):", "") || "white";
           currentLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
           currentLine.setAttribute("x1", pt.x);
           currentLine.setAttribute("y1", pt.y);
@@ -873,18 +882,16 @@
         }
       }
       else if (activeTool === "bezier") {
-        // Bezier tool: add control points and draw preview
         bezierControlPoints.push({ x: pt.x, y: pt.y });
         updateBezierPreview();
       }
       else if (activeTool === "polygon") {
-        // Polygon tool: add vertex and update preview
         polygonVertices.push({ x: pt.x, y: pt.y });
         updatePolygonPreview();
       }
     }
 
-    // Helper: sample bezier curve using de Casteljau algorithm
+    // Bezier helper: de Casteljau algorithm
     function calculateBezier(points, t) {
       let temp = points.map(p => ({...p}));
       for (let i = temp.length - 1; i > 0; i--) {
@@ -899,7 +906,6 @@
     }
 
     function updateBezierPreview() {
-      // Remove old preview if exists
       if (currentBezierPath) { currentBezierPath.remove(); }
       if (bezierControlPoints.length < 2) return;
       currentBezierPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
@@ -923,18 +929,18 @@
       currentPolygonElement = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
       const pointsStr = polygonVertices.map(p => `${p.x},${p.y}`).join(" ");
       currentPolygonElement.setAttribute("points", pointsStr);
+      // Preview: yellow stroke and semi-transparent fill
       currentPolygonElement.setAttribute("stroke", "yellow");
       currentPolygonElement.setAttribute("stroke-width", "2");
-      currentPolygonElement.setAttribute("fill", "rgba(255,255,0,0.3)");
+      currentPolygonElement.setAttribute("fill", "yellow");
+      currentPolygonElement.setAttribute("fill-opacity", "0.3");
       lineLayer.appendChild(currentPolygonElement);
     }
 
     async function commitBezier() {
       if (bezierControlPoints.length < 2) return;
-      // Remove preview element
       if (currentBezierPath) { currentBezierPath.remove(); currentBezierPath = null; }
       const bezierColor = await customPrompt("Enter bezier curve color (e.g., red or #ff0000):", "") || "white";
-      // Create a finalized path element
       const pathElem = document.createElementNS("http://www.w3.org/2000/svg", "path");
       let d = "";
       const samples = 100;
@@ -948,7 +954,6 @@
       pathElem.setAttribute("stroke-width", "3");
       pathElem.setAttribute("fill", "none");
       lineLayer.appendChild(pathElem);
-      // Save to Firestore (e.g., in collection "bezierCurves")
       try {
         const docRef = await addDoc(collection(db, "bezierCurves"), {
           controlPoints: bezierControlPoints,
@@ -957,9 +962,23 @@
           owner: auth.currentUser.uid
         });
         recordAuditLog("add_bezier", { bezierId: docRef.id });
+        pathElem.dataset.id = docRef.id;
       } catch (error) {
         console.error("Error adding bezier curve:", error);
       }
+      // Attach deletion on click
+      pathElem.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        if (await customConfirm("Delete this bezier curve?")) {
+          try {
+            await deleteDoc(doc(db, "bezierCurves", pathElem.dataset.id));
+            recordAuditLog("delete_bezier", { bezierId: pathElem.dataset.id });
+            pathElem.remove();
+          } catch (error) {
+            console.error("Error deleting bezier curve:", error);
+          }
+        }
+      });
       activeTool = null;
       bezierControlPoints = [];
       markerLayer.style.pointerEvents = "auto";
@@ -969,25 +988,40 @@
     async function commitPolygon() {
       if (polygonVertices.length < 3) return;
       if (currentPolygonElement) { currentPolygonElement.remove(); currentPolygonElement = null; }
-      const polygonColor = await customPrompt("Enter polygon stroke color (e.g., red or #ff0000):", "") || "white";
+      // Use fixed style: yellow stroke and semi-transparent fill
       const polygonElem = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
       const pointsStr = polygonVertices.map(p => `${p.x},${p.y}`).join(" ");
       polygonElem.setAttribute("points", pointsStr);
-      polygonElem.setAttribute("stroke", polygonColor);
+      polygonElem.setAttribute("stroke", "yellow");
       polygonElem.setAttribute("stroke-width", "2");
-      polygonElem.setAttribute("fill", polygonColor + "40");
+      polygonElem.setAttribute("fill", "yellow");
+      polygonElem.setAttribute("fill-opacity", "0.3");
       lineLayer.appendChild(polygonElem);
       try {
         const docRef = await addDoc(collection(db, "polygons"), {
           vertices: polygonVertices,
-          color: polygonColor,
+          color: "yellow",
           timestamp: serverTimestamp(),
           owner: auth.currentUser.uid
         });
         recordAuditLog("add_polygon", { polygonId: docRef.id });
+        polygonElem.dataset.id = docRef.id;
       } catch (error) {
         console.error("Error adding polygon:", error);
       }
+      // Attach deletion on click
+      polygonElem.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        if (await customConfirm("Delete this polygon?")) {
+          try {
+            await deleteDoc(doc(db, "polygons", polygonElem.dataset.id));
+            recordAuditLog("delete_polygon", { polygonId: polygonElem.dataset.id });
+            polygonElem.remove();
+          } catch (error) {
+            console.error("Error deleting polygon:", error);
+          }
+        }
+      });
       activeTool = null;
       polygonVertices = [];
       markerLayer.style.pointerEvents = "auto";
@@ -1023,6 +1057,83 @@
       } catch (error) {
         console.error("Error adding line:", error);
       }
+    }
+
+    // Listener for bezier curves from Firestore
+    function listenForBezierCurves() {
+      const bezierQuery = query(collection(db, "bezierCurves"), orderBy("timestamp"));
+      onSnapshot(bezierQuery, (snapshot) => {
+        lineLayer.querySelectorAll("path[data-bezier='true']").forEach(elem => elem.remove());
+        snapshot.forEach(docSnap => {
+          createBezierElement(docSnap.id, docSnap.data());
+        });
+      });
+    }
+
+    function createBezierElement(id, data) {
+      const pathElem = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      let d = "";
+      const samples = 100;
+      for (let i = 0; i <= samples; i++) {
+        let t = i / samples;
+        let pt = calculateBezier(data.controlPoints, t);
+        d += (i === 0 ? `M ${pt.x} ${pt.y}` : ` L ${pt.x} ${pt.y}`);
+      }
+      pathElem.setAttribute("d", d);
+      pathElem.setAttribute("stroke", data.color);
+      pathElem.setAttribute("stroke-width", "3");
+      pathElem.setAttribute("fill", "none");
+      pathElem.dataset.id = id;
+      pathElem.setAttribute("data-bezier", "true");
+      pathElem.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        if (await customConfirm("Delete this bezier curve?")) {
+          try {
+            await deleteDoc(doc(db, "bezierCurves", id));
+            recordAuditLog("delete_bezier", { bezierId: id });
+            pathElem.remove();
+          } catch (error) {
+            console.error("Error deleting bezier curve:", error);
+          }
+        }
+      });
+      lineLayer.appendChild(pathElem);
+    }
+
+    // Listener for polygons from Firestore
+    function listenForPolygons() {
+      const polyQuery = query(collection(db, "polygons"), orderBy("timestamp"));
+      onSnapshot(polyQuery, (snapshot) => {
+        lineLayer.querySelectorAll("polygon[data-polygon='true']").forEach(elem => elem.remove());
+        snapshot.forEach(docSnap => {
+          createPolygonElement(docSnap.id, docSnap.data());
+        });
+      });
+    }
+
+    function createPolygonElement(id, data) {
+      const polygonElem = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+      const pointsStr = data.vertices.map(p => `${p.x},${p.y}`).join(" ");
+      polygonElem.setAttribute("points", pointsStr);
+      polygonElem.setAttribute("stroke", data.color);
+      polygonElem.setAttribute("stroke-width", "2");
+      polygonElem.setAttribute("fill", data.color);
+      polygonElem.setAttribute("fill-opacity", "0.3");
+      polygonElem.dataset.id = id;
+      polygonElem.setAttribute("data-polygon", "true");
+      polygonElem.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        if (await customConfirm("Delete this polygon?")) {
+          try {
+            await deleteDoc(doc(db, "polygons", id));
+            recordAuditLog("delete_polygon", { polygonId: id });
+            polygonElem.remove();
+          } catch (error) {
+            console.error("Error deleting polygon:", error);
+          }
+        }
+      });
+      lineLayer.appendChild(polygonElem);
     }
 
     function listenForMarkers() {
@@ -1140,6 +1251,7 @@
           try {
             await deleteDoc(doc(db, "markers", id));
             recordAuditLog("delete", { markerId: id, markerType: data.type });
+            markerEl.remove();
           } catch (error) {
             console.error("Error deleting marker:", error);
           }
@@ -1168,8 +1280,13 @@
       group.addEventListener("click", async (e) => {
         e.stopPropagation();
         if (await customConfirm("Delete this line?")) {
-          await deleteDoc(doc(db, "lines", id));
-          recordAuditLog("delete_line", { lineId: id });
+          try {
+            await deleteDoc(doc(db, "lines", id));
+            recordAuditLog("delete_line", { lineId: id });
+            group.remove();
+          } catch (error) {
+            console.error("Error deleting line:", error);
+          }
         }
       });
       lineLayer.appendChild(group);
@@ -1291,10 +1408,13 @@
     }
   </script>
   <script>
+    // WebGL background shader setup restored
     const canvas = document.getElementById('waveCanvas');
-    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+    canvas.width = window.innerWidth; 
+    canvas.height = window.innerHeight;
     const gl = canvas.getContext("webgl");
     if (!gl) { alert("WebGL is not supported in your browser."); }
+
     const vertexShaderSource = `
       attribute vec2 a_position;
       varying vec2 v_uv;
@@ -1353,51 +1473,65 @@
         gl_FragColor = vec4(color, 1.0);
       }
     `;
+
     function createShader(gl, type, source) {
       const shader = gl.createShader(type);
       gl.shaderSource(shader, source);
       gl.compileShader(shader);
-      if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-        console.error("Shader compile failed: " + gl.getShaderInfoLog(shader));
+      if(!gl.getShaderParameter(shader, gl.COMPILE_STATUS)){
+        console.error("Shader compile error: ", gl.getShaderInfoLog(shader));
         gl.deleteShader(shader);
         return null;
       }
       return shader;
     }
+
+    function createProgram(gl, vertexShader, fragmentShader) {
+      const program = gl.createProgram();
+      gl.attachShader(program, vertexShader);
+      gl.attachShader(program, fragmentShader);
+      gl.linkProgram(program);
+      if(!gl.getProgramParameter(program, gl.LINK_STATUS)){
+        console.error("Program link error: ", gl.getProgramInfoLog(program));
+        gl.deleteProgram(program);
+        return null;
+      }
+      return program;
+    }
+
     const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
     const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
-    const program = gl.createProgram();
-    gl.attachShader(program, vertexShader);
-    gl.attachShader(program, fragmentShader);
-    gl.linkProgram(program);
-    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-      console.error("Program linking failed: " + gl.getProgramInfoLog(program));
-    }
+    const program = createProgram(gl, vertexShader, fragmentShader);
+    gl.useProgram(program);
+
     const positionAttributeLocation = gl.getAttribLocation(program, "a_position");
-    const timeUniformLocation = gl.getUniformLocation(program, "u_time");
-    const resolutionUniformLocation = gl.getUniformLocation(program, "u_resolution");
     const positionBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-    const positions = [ -1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1 ];
+    const positions = [
+      -1, -1,
+      1, -1,
+      -1, 1,
+      -1, 1,
+      1, -1,
+      1, 1,
+    ];
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(positionAttributeLocation);
+    gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
+
+    const resolutionUniformLocation = gl.getUniformLocation(program, "u_resolution");
+    const timeUniformLocation = gl.getUniformLocation(program, "u_time");
+
     function render(time) {
       time *= 0.001;
-      gl.viewport(0, 0, canvas.width, canvas.height);
+      gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
       gl.clear(gl.COLOR_BUFFER_BIT);
-      gl.useProgram(program);
-      gl.enableVertexAttribArray(positionAttributeLocation);
-      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-      gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
+      gl.uniform2f(resolutionUniformLocation, gl.canvas.width, gl.canvas.height);
       gl.uniform1f(timeUniformLocation, time);
-      gl.uniform2f(resolutionUniformLocation, canvas.width, canvas.height);
       gl.drawArrays(gl.TRIANGLES, 0, 6);
       requestAnimationFrame(render);
     }
-    render(0);
-    window.addEventListener("resize", () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    });
+    requestAnimationFrame(render);
   </script>
 </body>
 </html>
