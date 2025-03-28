@@ -280,7 +280,7 @@
         <div class="menu-content">
           <div id="toggle-container">
             <input type="checkbox" id="toggle-marker-text" class="toggle-switch" />
-            <label for="toggle-marker-text" id="toggle-marker-text-label">HOVER TEXT</label>
+            <label for="toggle-marker-text" id="toggle-marker-text-label">Text on Hover</label>
           </div>
           <div id="marker-visibility-container">
             <h3>Marker Visibility</h3>
@@ -407,7 +407,7 @@
   <!-- Footer (single line with inline link) -->
   <footer id="footer-info">
     <p>
-      Build version: v1.09.6 |
+      Build version: v1.09.7rc |
       Encrypted database connection: <span id="db-connection-status">🟢</span> |
       Status: <span id="user-status">user</span> |
       <a href="https://regnumsolis.com">Return to Home</a>
@@ -488,10 +488,10 @@
       toggleMarkerTextCheckbox.addEventListener("change", function() {
         if (this.checked) {
           document.body.classList.add("text-hover-only");
-          toggleLabel.textContent = "HOVER TEXT";
+          toggleLabel.textContent = "Text on Hover";
         } else {
           document.body.classList.remove("text-hover-only");
-          toggleLabel.textContent = "ALWAYS TEXT";
+          toggleLabel.textContent = "All Text Active";
         }
       });
 
@@ -784,7 +784,7 @@
         if (lineDrawingState === 0) {
           currentLineGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
           currentLineGroup.classList.add("line-group");
-          const lineColor = await customPrompt("Enter line color (e.g., red or #ff0000):", "white") || "white";
+          const lineColor = await customPrompt("Enter line color (e.g., red or #ff0000):", "") || "white";
           currentLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
           currentLine.setAttribute("x1", pt.x);
           currentLine.setAttribute("y1", pt.y);
@@ -829,10 +829,7 @@
       let markerData = { type, x, y, timestamp: serverTimestamp(), owner: user.uid };
       if (["homestead", "keep", "torch", "cave", "sword", "spear", "bow", "beacon", "camp", "catapult", "ram"].includes(type)) {
         markerData.text = await customPrompt("Enter marker text:", "") || "";
-        markerData.color = await customPrompt("Enter marker color (e.g., red or #ff0000):", "black") || "black";
-        // Set default text if empty for keep and homestead
-        if (type === "keep" && markerData.text === "") { markerData.text = "keep"; }
-        if (type === "homestead" && markerData.text === "") { markerData.text = "homestead"; }
+        markerData.color = await customPrompt("Enter marker color (e.g., red or #ff0000):", "") || "";
       }
       try {
         const docRef = await addDoc(collection(db, "markers"), markerData);
@@ -893,7 +890,6 @@
         imgWidth = 30 * 1.7; imgHeight = 30 * 1.7;
         imgXOffset = -(imgWidth / 2); imgYOffset = -20 * 1.7; fontSize = 16 * 1.7;
       } else if (data.type === "keep") {
-        // Use Citadel icon and parameters for the keep tool
         imgSrc = "https://regnumsolis.com/planner/images/citadel.svg";
         imgWidth = 30 * 1.7 * 1.2; imgHeight = 30 * 1.7 * 1.2;
         imgXOffset = -15 * 1.7 * 1.2; imgYOffset = -15 * 1.7 * 1.2; fontSize = 14 * 1.7 * 1.2;
@@ -998,7 +994,6 @@
       arrow.setAttribute("transform", `translate(${data.midX},${data.midY}) rotate(${data.angle})`);
       group.appendChild(line);
       group.appendChild(arrow);
-      // Use the custom modal prompt for deleting lines
       group.addEventListener("click", async (e) => {
         e.stopPropagation();
         if (await customConfirm("Delete this line?")) {
@@ -1021,13 +1016,10 @@
       const auditContainer = document.getElementById("audit-log-container");
       const auditQuery = query(collection(db, "auditLogs"), orderBy("timestamp", "asc"));
       onSnapshot(auditQuery, (snapshot) => {
-        // Gather logs from snapshot in order
         const logs = [];
         snapshot.forEach(docSnap => {
           logs.push(docSnap.data());
         });
-        // Group consecutive entries with the same action
-        // For marker events (add/delete), also check if the markerType matches.
         const grouped = [];
         logs.forEach(log => {
           if (grouped.length === 0) {
@@ -1092,11 +1084,14 @@
           overlay.style.display = "none";
           okButton.removeEventListener("click", onOk);
           cancelButton.removeEventListener("click", onCancel);
+          promptInput.removeEventListener("keydown", onKeyDown);
         }
         function onOk() { resolve(promptInput.value); cleanup(); }
         function onCancel() { resolve(null); cleanup(); }
+        function onKeyDown(e) { if (e.key === "Enter") { onOk(); } }
         okButton.addEventListener("click", onOk);
         cancelButton.addEventListener("click", onCancel);
+        promptInput.addEventListener("keydown", onKeyDown);
       });
     }
   </script>
