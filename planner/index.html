@@ -72,7 +72,6 @@
       from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
     }
-    /* (Removed neon glow animations for header, kept them here in case they are used elsewhere) */
     @keyframes neonGlow {
       0% {
         text-shadow: 0 0 5px rgba(223,197,136,0.6),
@@ -83,6 +82,19 @@
         text-shadow: 0 0 20px rgba(223,197,136,1),
                      0 0 30px rgba(223,197,136,1),
                      0 0 40px rgba(223,197,136,1);
+      }
+    }
+    /* Reduced glow animation for header title (60% reduction) */
+    @keyframes reducedNeonGlow {
+      0% {
+        text-shadow: 0 0 2px rgba(223,197,136,0.24),
+                     0 0 4px rgba(223,197,136,0.24),
+                     0 0 6px rgba(223,197,136,0.24);
+      }
+      100% {
+        text-shadow: 0 0 8px rgba(223,197,136,0.4),
+                     0 0 12px rgba(223,197,136,0.4),
+                     0 0 16px rgba(223,197,136,0.4);
       }
     }
     /* Swinging animation for drag clone */
@@ -151,7 +163,7 @@
       animation: fadeIn 1s ease-out;
       z-index: 1;
     }
-    /* Header text - Updated to white, no bold and no glow */
+    /* Header text */
     #header-logo {
       text-align: center;
       padding: 10px 0;
@@ -160,11 +172,11 @@
     #header-logo h1 {
       font-size: 1.05em;
       margin: 0;
-      color: white;
-      font-weight: normal;
-      animation: none;
+      color: rgb(223,197,136);
+      /* Override glow with reducedNeonGlow */
+      animation: reducedNeonGlow 1.5s infinite alternate ease-in-out;
     }
-    /* Right menus container */
+    /* Right menus container to prevent overlap */
     #right-menus {
       position: fixed;
       top: 100px;
@@ -188,7 +200,7 @@
     .menu-container.hidden {
       transform: translateX(109%);
     }
-    /* Menu header styling */
+    /* Menu header styling with toggle arrow */
     .menu-header {
       display: flex;
       align-items: center;
@@ -197,6 +209,7 @@
       margin-bottom: 5px;
       position: relative;
     }
+    /* Arrow Toggle Button Styling */
     .menu-toggle {
       position: absolute;
       left: -45px;
@@ -213,12 +226,13 @@
       z-index: 100;
       pointer-events: auto;
     }
-    /* Menu content */
+    /* Styling for the content inside each menu */
     .menu-content {
       display: flex;
       flex-direction: column;
       gap: 5px;
     }
+    /* Buttons for map change and zoom inside menus */
     .menu-content button {
       width: 100%;
       height: 40px;
@@ -234,7 +248,7 @@
       transform: scale(1.05);
       box-shadow: 0 4px 15px rgba(223,197,136,0.9);
     }
-    /* Settings section */
+    /* Settings */
     #text-toggle-right h2 {
       font-size: 1em;
       margin-bottom: 5px;
@@ -269,12 +283,7 @@
     .toggle-switch:checked::before {
       transform: translateX(20px);
     }
-    /* Use default sans-serif (Arial) for the switch labels */
-    #toggle-marker-text-label,
-    #marker-visibility-container label {
-      font-family: Arial, sans-serif;
-      font-weight: normal;
-    }
+    /* Align the switch container with centered text */
     #toggle-container {
       display: flex;
       align-items: center;
@@ -284,6 +293,7 @@
       margin-left: 10px;
       line-height: 20px;
     }
+    /* Marker Visibility toggles inside Settings */
     #marker-visibility-container {
       margin-top: 10px;
       text-align: left;
@@ -438,24 +448,6 @@
       transform: scale(1.05);
       box-shadow: 0 4px 15px rgba(223,197,136,0.9);
     }
-    /* Footer Styles - Adjusted so the text fully fits */
-    footer {
-      position: fixed;
-      bottom: 0;
-      width: 100%;
-      background: transparent;
-      color: white;
-      text-align: center;
-      padding: 2px 0;
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 1em;
-      line-height: 1.2em;
-      z-index: 5;
-    }
-    footer a {
-      color: white;
-      text-decoration: underline;
-    }
   </style>
 </head>
 <body>
@@ -523,7 +515,7 @@
           <!-- Existing Hover Text Toggle -->
           <div id="toggle-container">
             <input type="checkbox" id="toggle-marker-text" class="toggle-switch" />
-            <label for="toggle-marker-text" id="toggle-marker-text-label">All text visible</label>
+            <label for="toggle-marker-text" id="toggle-marker-text-label">HOVER TEXT</label>
           </div>
           <!-- Marker Visibility Toggles (including Lines) -->
           <div id="marker-visibility-container">
@@ -656,13 +648,6 @@
     </div>
   </div>
 
-  <!-- Footer -->
-  <footer>
-    <span id="build-version">Build version: 1.10.1rc</span> | 
-    <span id="db-status">Secure Database Connection: <span id="db-indicator">🟢</span></span> | 
-    <a href="https://regnumsolis.com/home/" target="_blank">Go to home</a>
-  </footer>
-
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
     import { getFirestore, collection, addDoc, orderBy, query, onSnapshot, deleteDoc, doc, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
@@ -691,6 +676,7 @@
     let currentLine = null;
     let currentLineGroup = null;
 
+    // Global visibility state for markers and lines
     const visibilityState = {
       homestead: true,
       citadel: true,
@@ -716,6 +702,7 @@
       lineLayer.style.display = visibilityState.lines ? "" : "none";
     }
 
+    // Loading simulation
     let loadingInterval;
     let currentProgress = 0;
     const loadingOverlay = document.getElementById("loading-overlay");
@@ -728,18 +715,20 @@
       setupMenuToggles();
       setupAdminControls();
 
+      // Setup marker text toggle functionality
       const toggleMarkerTextCheckbox = document.getElementById("toggle-marker-text");
       const toggleLabel = document.getElementById("toggle-marker-text-label");
       toggleMarkerTextCheckbox.addEventListener("change", function() {
         if (this.checked) {
           document.body.classList.add("text-hover-only");
-          toggleLabel.textContent = "Text on hover";
+          toggleLabel.textContent = "HOVER TEXT";
         } else {
           document.body.classList.remove("text-hover-only");
-          toggleLabel.textContent = "All text visible";
+          toggleLabel.textContent = "ALWAYS TEXT";
         }
       });
 
+      // Setup visibility toggles (markers and lines)
       Object.keys(visibilityState).forEach(key => {
         const checkbox = document.getElementById(`toggle-${key}`);
         if (checkbox) {
@@ -752,17 +741,23 @@
       });
     });
 
+    // Toggle menu visibility with arrow icon updates.
     function setupMenuToggles() {
       document.querySelectorAll(".menu-toggle").forEach(btn => {
         btn.addEventListener("click", (e) => {
           e.stopPropagation();
           const menu = btn.closest(".menu-container");
           menu.classList.toggle("hidden");
-          btn.innerHTML = menu.classList.contains("hidden") ? "&#9654;" : "&#9664;";
+          if (menu.classList.contains("hidden")) {
+            btn.innerHTML = "&#9654;";
+          } else {
+            btn.innerHTML = "&#9664;";
+          }
         });
       });
     }
 
+    // Admin panel controls: minimize audit log toggle.
     function setupAdminControls() {
       const minimizeBtn = document.getElementById("minimize-audit");
       const auditLog = document.getElementById("audit-log");
@@ -834,6 +829,7 @@
       });
     }
 
+    // Set default map to Style Map.
     function initializeMap() {
       switchMap("https://regnumsolis.com/planner/images/mvmvmdfs.svg");
     }
@@ -862,7 +858,6 @@
           console.error("Error loading SVG:", error);
           displayErrorOverlay("Error loading map data.");
           hideLoading();
-          document.getElementById("db-indicator").textContent = "🔴";
         });
     }
 
@@ -1047,7 +1042,12 @@
     }
 
     async function addMarkerToFirestore(type, x, y) {
-      let markerData = { type, x, y, timestamp: serverTimestamp() };
+      const user = auth.currentUser;
+      if (!user) {
+        console.error("User not authenticated");
+        return;
+      }
+      let markerData = { type, x, y, timestamp: serverTimestamp(), owner: user.uid };
       if (["homestead", "citadel", "torch", "cave", "sword", "spear", "bow", "beacon", "camp", "catapult", "ram"].includes(type)) {
         markerData.text = await customPrompt("Enter marker text:", "") || "";
         markerData.color = await customPrompt("Enter marker color (e.g., red or #ff0000):", "black") || "black";
@@ -1064,10 +1064,16 @@
     }
 
     async function addLineToFirestore(lineData) {
+      const user = auth.currentUser;
+      if (!user) {
+        console.error("User not authenticated");
+        return;
+      }
       try {
         const docRef = await addDoc(collection(db, "lines"), {
           ...lineData,
-          timestamp: serverTimestamp()
+          timestamp: serverTimestamp(),
+          owner: user.uid
         });
         recordAuditLog("add_line", { lineId: docRef.id });
       } catch (error) {
@@ -1080,7 +1086,6 @@
       const markersQuery = query(collection(db, "markers"), orderBy("timestamp"));
       const unsubscribe = onSnapshot(markersQuery, (snapshot) => {
         snapshotReceived = true;
-        document.getElementById("db-indicator").textContent = "🟢";
         while (markerLayer.firstChild) {
           markerLayer.removeChild(markerLayer.firstChild);
         }
@@ -1091,7 +1096,6 @@
       }, (error) => {
         console.error("Firestore connection error:", error);
         displayErrorOverlay("Firestore connection failed.");
-        document.getElementById("db-indicator").textContent = "🔴";
       });
 
       setTimeout(() => {
@@ -1099,7 +1103,6 @@
           console.error("No Firestore snapshot received within timeout.");
           displayErrorOverlay("Firestore connection failed.");
           unsubscribe();
-          document.getElementById("db-indicator").textContent = "🔴";
         }
       }, 5000);
     }
