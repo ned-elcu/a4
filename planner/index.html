@@ -380,7 +380,7 @@
       text-align: center;
       padding: 20px;
     }
-    /* Admin panel */
+    /* New Admin Panel */
     #admin-panel {
       position: fixed;
       bottom: 20px;
@@ -390,61 +390,65 @@
       border: 1px solid rgba(223,197,136,0.5);
       border-radius: 5px;
       box-shadow: 0 0 10px rgba(223,197,136,0.5);
-      padding: 10px;
       z-index: 30;
       display: none;
       animation: fadeIn 1s ease-out;
     }
-    #admin-panel h3 {
-      margin-top: 0;
-      font-size: 1.8em;
+    #admin-panel header {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      padding: 10px;
       border-bottom: 1px solid rgba(223,197,136,0.5);
-      padding-bottom: 5px;
-      margin-bottom: 10px;
+      background: rgba(30,30,30,0.95);
     }
-    #admin-panel h3 span.icon {
+    #admin-panel header h3 {
+      margin: 0;
+      font-size: 1.8em;
+    }
+    #admin-panel header .admin-controls button {
+      background: none;
+      border: none;
+      font-size: 1.2em;
+      color: rgb(223,197,136);
       cursor: pointer;
       margin-left: 5px;
+    }
+    #audit-log-container {
+      max-height: 200px;
+      overflow-y: auto;
+      padding: 10px;
       font-size: 1.2em;
     }
-    #audit-log {
-      font-size: 1.5em;
-      height: 200px;
-      overflow-y: auto;
-      margin-bottom: 10px;
+    #audit-log-container div {
+      margin-bottom: 5px;
+    }
+    /* Audit log coloring for user and action */
+    .log-user {
+      color: #dfc588;
+      font-weight: bold;
+    }
+    .log-action {
+      color: #8ac6d1;
+    }
+    #admin-panel footer {
+      display: flex;
+      justify-content: space-around;
+      padding: 10px;
       border-top: 1px solid rgba(223,197,136,0.5);
-      padding-top: 5px;
+      background: rgba(30,30,30,0.95);
     }
-    .menu-container button {
-      width: 100%;
-      height: 40px;
+    #admin-panel footer button {
+      padding: 8px 12px;
+      font-size: 1em;
       border: none;
       border-radius: 4px;
       background: rgba(223,197,136,0.8);
       color: white;
       cursor: pointer;
       transition: transform 0.3s, box-shadow 0.3s;
-      box-shadow: 0 4px 15px rgba(223,197,136,0.5);
     }
-    .menu-container button:hover {
-      transform: scale(1.05);
-      box-shadow: 0 4px 15px rgba(223,197,136,0.9);
-    }
-    #delete-all {
-      width: 100%;
-      height: 40px;
-      border: none;
-      border-radius: 4px;
-      background: rgba(223,197,136,0.8);
-      color: white;
-      cursor: pointer;
-      transition: transform 0.3s, box-shadow 0.3s;
-      box-shadow: 0 4px 15px rgba(223,197,136,0.5);
-    }
-    #delete-all:hover {
+    #admin-panel footer button:hover {
       transform: scale(1.05);
       box-shadow: 0 4px 15px rgba(223,197,136,0.9);
     }
@@ -619,18 +623,22 @@
       <div id="map-svg-container"></div>
     </div>
 
-    <!-- Admin Panel -->
+    <!-- New Admin Panel (only for admin users) -->
     <div id="admin-panel">
-      <h3>
-        ADMIN panel
-        <span>
-          <span id="delete-audit" class="icon" title="Delete all audit logs">🗑️</span>
-          <span id="minimize-audit" class="icon" title="Minimize audit log">➖</span>
-          <span id="copy-audit" class="icon" title="Copy audit log">📋</span>
-        </span>
-      </h3>
-      <div id="audit-log"></div>
-      <button id="delete-all">Delete All Markers</button>
+      <header>
+        <h3>Admin Panel</h3>
+        <div class="admin-controls">
+          <button id="minimize-panel" title="Minimize/Maximize">➖</button>
+          <button id="copy-log" title="Copy Audit Log">📋</button>
+          <button id="clear-logs" title="Delete All Audit Logs">🗑️</button>
+        </div>
+      </header>
+      <div id="audit-log-container">
+        <!-- Audit log entries will be appended here -->
+      </div>
+      <footer>
+        <button id="delete-all-markers">Delete All Markers</button>
+      </footer>
     </div>
   </div>
 
@@ -712,7 +720,7 @@
       setupToolbox();
       setupMapSwitchControls();
       setupMenuToggles();
-      setupAdminControls();
+      setupAdminPanelControls();
 
       // Setup marker text toggle functionality
       const toggleMarkerTextCheckbox = document.getElementById("toggle-marker-text");
@@ -756,18 +764,64 @@
       });
     }
 
-    // Admin panel controls: minimize audit log toggle.
-    function setupAdminControls() {
-      const minimizeBtn = document.getElementById("minimize-audit");
-      const auditLog = document.getElementById("audit-log");
-      minimizeBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        if (auditLog.style.display === "none" || auditLog.style.display === "") {
-          auditLog.style.display = "block";
-          minimizeBtn.textContent = "➖";
-        } else {
-          auditLog.style.display = "none";
+    // Admin Panel Controls
+    function setupAdminPanelControls() {
+      // Minimize/Maximize toggle
+      const minimizeBtn = document.getElementById("minimize-panel");
+      const adminPanel = document.getElementById("admin-panel");
+      const auditContainer = document.getElementById("audit-log-container");
+      let isMinimized = false;
+      minimizeBtn.addEventListener("click", () => {
+        if (!isMinimized) {
+          auditContainer.style.display = "none";
           minimizeBtn.textContent = "➕";
+          isMinimized = true;
+        } else {
+          auditContainer.style.display = "block";
+          minimizeBtn.textContent = "➖";
+          isMinimized = false;
+        }
+      });
+
+      // Copy audit log functionality
+      document.getElementById("copy-log").addEventListener("click", () => {
+        let logText = "";
+        auditContainer.querySelectorAll("div").forEach(entry => {
+          logText += entry.innerText + "\n";
+        });
+        navigator.clipboard.writeText(logText);
+      });
+
+      // Clear (delete) all audit logs
+      document.getElementById("clear-logs").addEventListener("click", async () => {
+        if (confirm("Delete all audit logs?")) {
+          try {
+            const auditSnapshot = await getDocs(collection(db, "auditLogs"));
+            auditSnapshot.forEach(async (docSnap) => {
+              await deleteDoc(doc(db, "auditLogs", docSnap.id));
+            });
+          } catch (error) {
+            console.error("Error deleting audit logs:", error);
+          }
+        }
+      });
+
+      // Delete all markers button in footer
+      document.getElementById("delete-all-markers").addEventListener("click", async () => {
+        if (confirm("Delete all markers?")) {
+          try {
+            const markersSnapshot = await getDocs(collection(db, "markers"));
+            markersSnapshot.forEach(async (docSnap) => {
+              await deleteDoc(doc(db, "markers", docSnap.id));
+            });
+            // Optionally clear any lines if desired:
+            const linesSnapshot = await getDocs(collection(db, "lines"));
+            linesSnapshot.forEach(async (docSnap) => {
+              await deleteDoc(doc(db, "lines", docSnap.id));
+            });
+          } catch (error) {
+            console.error("Error deleting markers:", error);
+          }
         }
       });
     }
@@ -816,14 +870,13 @@
           document.getElementById("login-screen").style.display = "none";
           document.getElementById("app").style.display = "block";
           initializeMap();
-          // Force token refresh and then check for admin custom claim
+          // Force token refresh then check for admin claim
           user.getIdToken(true)
             .then(() => user.getIdTokenResult())
             .then((idTokenResult) => {
               if (idTokenResult.claims.admin) {
                 document.getElementById("admin-panel").style.display = "block";
                 listenForAuditLogs();
-                setupDeleteAll();
               }
             });
         } else {
@@ -1303,127 +1356,17 @@
     }
 
     function listenForAuditLogs() {
-      const auditLogContainer = document.getElementById("audit-log");
+      const auditContainer = document.getElementById("audit-log-container");
       const auditQuery = query(collection(db, "auditLogs"), orderBy("timestamp", "asc"));
       onSnapshot(auditQuery, (snapshot) => {
-        const logs = [];
+        auditContainer.innerHTML = "";
         snapshot.forEach((docSnap) => {
           const log = docSnap.data();
-          const ts = log.timestamp ? log.timestamp.seconds : 0;
-          logs.push({ timestamp: ts, log });
-        });
-
-        const groupedLogs = [];
-        const groupingThreshold = 300;
-        let currentGroup = null;
-
-        logs.forEach(item => {
-          const { timestamp, log } = item;
-          const applicable = (log.action === "add" || log.action === "delete" || log.action === "add_line" || log.action === "delete_line") && log.details;
-          if (applicable) {
-            if (
-              currentGroup &&
-              currentGroup.key.user === log.user &&
-              currentGroup.key.action === log.action &&
-              currentGroup.key.markerType === log.details.markerType
-            ) {
-              if (timestamp - currentGroup.lastTimestamp <= groupingThreshold) {
-                currentGroup.count += 1;
-                currentGroup.lastTimestamp = timestamp;
-              } else {
-                groupedLogs.push(currentGroup);
-                currentGroup = {
-                  key: { 
-                    user: log.user, 
-                    action: log.action,
-                    markerType: log.details.markerType || "line"
-                  },
-                  count: 1,
-                  timestamp: timestamp,
-                  lastTimestamp: timestamp
-                };
-              }
-            } else {
-              if (currentGroup) {
-                groupedLogs.push(currentGroup);
-              }
-              currentGroup = {
-                key: { 
-                  user: log.user, 
-                  action: log.action,
-                  markerType: log.details.markerType || "line"
-                },
-                count: 1,
-                timestamp: timestamp,
-                lastTimestamp: timestamp
-              };
-            }
-          } else {
-            if (currentGroup) {
-              groupedLogs.push(currentGroup);
-              currentGroup = null;
-            }
-            groupedLogs.push({
-              key: { 
-                user: log.user, 
-                action: log.action,
-                markerType: (log.details && log.details.markerType) ? log.details.markerType : null 
-              },
-              count: 1,
-              timestamp: timestamp,
-              lastTimestamp: timestamp
-            });
-          }
-        });
-        if (currentGroup) groupedLogs.push(currentGroup);
-
-        groupedLogs.sort((a, b) => b.lastTimestamp - a.lastTimestamp);
-        auditLogContainer.innerHTML = "";
-        groupedLogs.forEach(group => {
-          const dateStr = new Date(group.lastTimestamp * 1000).toLocaleString();
-          let actionText = "";
-          if (group.key.action === "add") actionText = "add marker";
-          else if (group.key.action === "delete") actionText = "delete marker";
-          else if (group.key.action === "delete_all") actionText = "delete all content";
-          else if (group.key.action === "add_line") actionText = "add line";
-          else if (group.key.action === "delete_line") actionText = "delete line";
-          else actionText = group.key.action;
-
-          let entryHTML = `[${dateStr}] <b>${group.key.user}</b> ${actionText}`;
-          if (group.key.markerType) entryHTML += ` <b>[${group.key.markerType}]</b>`;
-          if (group.count > 1) entryHTML += ` (<b>x${group.count}</b>)`;
-
+          const dateStr = new Date(log.timestamp ? log.timestamp.seconds * 1000 : Date.now()).toLocaleString();
           const entry = document.createElement("div");
-          entry.innerHTML = entryHTML;
-          auditLogContainer.appendChild(entry);
+          entry.innerHTML = `[${dateStr}] <span class="log-user">${log.user}</span> <span class="log-action">${log.action}</span>`;
+          auditContainer.appendChild(entry);
         });
-      });
-    }
-
-    function setupDeleteAll() {
-      document.getElementById("delete-all").addEventListener("click", async () => {
-        if (confirm("Delete all markers and lines?")) {
-          try {
-            const markersSnapshot = await getDocs(collection(db, "markers"));
-            markersSnapshot.forEach(async (docSnap) => {
-              await deleteDoc(doc(db, "markers", docSnap.id));
-            });
-            
-            const linesSnapshot = await getDocs(collection(db, "lines"));
-            linesSnapshot.forEach(async (docSnap) => {
-              await deleteDoc(doc(db, "lines", docSnap.id));
-            });
-
-            recordAuditLog("delete_all", { 
-              markers: markersSnapshot.size,
-              lines: linesSnapshot.size
-            });
-            
-            lineLayer.innerHTML = "";
-          } catch (error) {
-            console.error("Error deleting all content:", error);
-          }
-        }
       });
     }
 
