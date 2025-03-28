@@ -9,433 +9,149 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" />
   <style>
     /* Reset and base styles */
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
-      width: 100%;
-      height: 100%;
+      width: 100%; height: 100%;
       background: transparent;
       color: white;
       font-family: 'Bebas Neue', sans-serif;
       overflow: hidden;
       position: relative;
     }
-    /* Global style for marker text and background toggle */
+    /* Global marker text hover */
     .text-hover-only .marker text,
     .text-hover-only .marker rect {
       opacity: 0;
       transition: opacity 0.3s ease;
     }
     .text-hover-only .marker:hover text,
-    .text-hover-only .marker:hover rect {
-      opacity: 1;
-    }
-    /* Background container and animated canvas */
+    .text-hover-only .marker:hover rect { opacity: 1; }
+    /* Background container */
     #background-container {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: -1;
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
     }
-    #waveCanvas {
-      display: block;
-      width: 100%;
-      height: 100%;
-    }
+    #waveCanvas { display: block; width: 100%; height: 100%; }
     /* Loading overlay */
     #loading-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.5);
-      z-index: 100;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      font-size: 2em;
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5); z-index: 100;
+      display: none; align-items: center; justify-content: center; flex-direction: column; font-size: 2em;
     }
-    #loading-overlay img {
-      width: 80px;
-      height: 80px;
-      margin-bottom: 20px;
-    }
+    #loading-overlay img { width: 80px; height: 80px; margin-bottom: 20px; }
     /* Animations */
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes neonGlow {
-      0% {
-        text-shadow: 0 0 5px rgba(223,197,136,0.6),
-                     0 0 10px rgba(223,197,136,0.6),
-                     0 0 15px rgba(223,197,136,0.6);
-      }
-      100% {
-        text-shadow: 0 0 20px rgba(223,197,136,1),
-                     0 0 30px rgba(223,197,136,1),
-                     0 0 40px rgba(223,197,136,1);
-      }
+      0% { text-shadow: 0 0 5px rgba(223,197,136,0.6), 0 0 10px rgba(223,197,136,0.6), 0 0 15px rgba(223,197,136,0.6); }
+      100% { text-shadow: 0 0 20px rgba(223,197,136,1), 0 0 30px rgba(223,197,136,1), 0 0 40px rgba(223,197,136,1); }
     }
     @keyframes reducedNeonGlow {
-      0% {
-        text-shadow: 0 0 2px rgba(223,197,136,0.24),
-                     0 0 4px rgba(223,197,136,0.24),
-                     0 0 6px rgba(223,197,136,0.24);
-      }
-      100% {
-        text-shadow: 0 0 8px rgba(223,197,136,0.4),
-                     0 0 12px rgba(223,197,136,0.4),
-                     0 0 16px rgba(223,197,136,0.4);
-      }
+      0% { text-shadow: 0 0 2px rgba(223,197,136,0.24), 0 0 4px rgba(223,197,136,0.24), 0 0 6px rgba(223,197,136,0.24); }
+      100% { text-shadow: 0 0 8px rgba(223,197,136,0.4), 0 0 12px rgba(223,197,136,0.4), 0 0 16px rgba(223,197,136,0.4); }
     }
-    @keyframes swing {
-      0%   { transform: rotate(-10deg); }
-      50%  { transform: rotate(10deg); }
-      100% { transform: rotate(-10deg); }
-    }
-    .drag-clone {
-      animation: swing 1s ease-in-out infinite;
-      opacity: 0.9;
-    }
+    @keyframes swing { 0% { transform: rotate(-10deg); } 50% { transform: rotate(10deg); } 100% { transform: rotate(-10deg); } }
+    .drag-clone { animation: swing 1s ease-in-out infinite; opacity: 0.9; }
     /* Login screen */
     #login-screen {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      background: rgba(30,30,30,0.9);
-      animation: fadeIn 1s ease-out;
-      text-align: center;
-      position: relative;
-      z-index: 1;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh;
+      background: rgba(30,30,30,0.9); animation: fadeIn 1s ease-out; text-align: center; position: relative; z-index: 1;
     }
-    #login-screen h2 {
-      font-size: 3em;
-      margin-bottom: 20px;
-      animation: neonGlow 1.5s infinite alternate ease-in-out;
-    }
+    #login-screen h2 { font-size: 3em; margin-bottom: 20px; animation: neonGlow 1.5s infinite alternate ease-in-out; }
     #login-screen input {
-      margin: 5px;
-      padding: 10px;
-      font-size: 1.2em;
-      width: 250px;
-      border: none;
-      border-radius: 4px;
-      text-align: center;
+      margin: 5px; padding: 10px; font-size: 1.2em; width: 250px; border: none; border-radius: 4px; text-align: center;
     }
     #login-screen button {
-      margin-top: 10px;
-      padding: 10px 20px;
-      font-size: 1.2em;
-      border: none;
-      border-radius: 4px;
-      background: rgba(223,197,136,0.8);
-      color: white;
-      cursor: pointer;
-      transition: transform 0.3s, box-shadow 0.3s;
-      box-shadow: 0 4px 15px rgba(223,197,136,0.5);
+      margin-top: 10px; padding: 10px 20px; font-size: 1.2em; border: none; border-radius: 4px;
+      background: rgba(223,197,136,0.8); color: white; cursor: pointer;
+      transition: transform 0.3s, box-shadow 0.3s; box-shadow: 0 4px 15px rgba(223,197,136,0.5);
     }
-    #login-screen button:hover {
-      transform: scale(1.05);
-      box-shadow: 0 4px 15px rgba(223,197,136,0.9);
-    }
-    #login-error {
-      margin-top: 10px;
-      color: #e74c3c;
-      font-weight: bold;
-    }
+    #login-screen button:hover { transform: scale(1.05); box-shadow: 0 4px 15px rgba(223,197,136,0.9); }
+    #login-error { margin-top: 10px; color: #e74c3c; font-weight: bold; }
     /* Main app container */
-    #app {
-      display: none;
-      height: 100vh;
-      position: relative;
-      animation: fadeIn 1s ease-out;
-      z-index: 1;
-    }
-    /* Header text */
-    #header-logo {
-      text-align: center;
-      padding: 10px 0;
-      background: transparent;
-    }
-    #header-logo h1 {
-      font-size: 1.05em;
-      margin: 0;
-      color: rgb(223,197,136);
-      animation: reducedNeonGlow 1.5s infinite alternate ease-in-out;
-    }
-    /* Right menus container */
-    #right-menus {
-      position: fixed;
-      top: 100px;
-      right: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-      z-index: 20;
-    }
+    #app { display: none; height: 100vh; position: relative; animation: fadeIn 1s ease-out; z-index: 1; }
+    /* Header */
+    #header-logo { text-align: center; padding: 10px 0; background: transparent; }
+    #header-logo h1 { font-size: 1.05em; margin: 0; color: rgb(223,197,136); animation: reducedNeonGlow 1.5s infinite alternate ease-in-out; }
+    /* Right menus */
+    #right-menus { position: fixed; top: 100px; right: 20px; display: flex; flex-direction: column; gap: 20px; z-index: 20; }
     .menu-container {
-      width: 180px;
-      background: rgba(30,30,30,0.9);
-      padding: 10px;
-      border: 1px solid rgba(223,197,136,0.5);
-      border-radius: 5px;
-      box-shadow: 0 0 10px rgba(223,197,136,0.5);
-      position: relative;
-      transition: transform 0.3s ease;
+      width: 180px; background: rgba(30,30,30,0.9); padding: 10px; border: 1px solid rgba(223,197,136,0.5);
+      border-radius: 5px; box-shadow: 0 0 10px rgba(223,197,136,0.5); position: relative; transition: transform 0.3s ease;
     }
-    .menu-container.hidden {
-      transform: translateX(109%);
-    }
-    .menu-header {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.2em;
-      margin-bottom: 5px;
-      position: relative;
-    }
+    .menu-container.hidden { transform: translateX(109%); }
+    .menu-header { display: flex; align-items: center; justify-content: center; font-size: 1.2em; margin-bottom: 5px; position: relative; }
     .menu-toggle {
-      position: absolute;
-      left: -45px;
-      top: -40%;
-      background: none;
-      border: none;
-      font-size: 1.05em;
-      color: rgb(223,197,136);
-      cursor: pointer;
-      padding: 0;
-      line-height: 1;
-      width: 22px !important;
-      height: 23px !important;
-      z-index: 100;
-      pointer-events: auto;
+      position: absolute; left: -45px; top: -40%; background: none; border: none; font-size: 1.05em;
+      color: rgb(223,197,136); cursor: pointer; padding: 0; line-height: 1; width: 22px !important; height: 23px !important; z-index: 100; pointer-events: auto;
     }
-    .menu-content {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
+    .menu-content { display: flex; flex-direction: column; gap: 5px; }
     .menu-content button {
-      width: 100%;
-      height: 40px;
-      border: none;
-      border-radius: 4px;
-      background: rgba(223,197,136,0.8);
-      color: white;
-      cursor: pointer;
-      transition: transform 0.3s, box-shadow 0.3s;
-      box-shadow: 0 4px 15px rgba(223,197,136,0.5);
+      width: 100%; height: 40px; border: none; border-radius: 4px; background: rgba(223,197,136,0.8);
+      color: white; cursor: pointer; transition: transform 0.3s, box-shadow 0.3s; box-shadow: 0 4px 15px rgba(223,197,136,0.5);
     }
-    .menu-content button:hover {
-      transform: scale(1.05);
-      box-shadow: 0 4px 15px rgba(223,197,136,0.9);
-    }
-    #text-toggle-right h2 {
-      font-size: 1em;
-      margin-bottom: 5px;
-    }
+    .menu-content button:hover { transform: scale(1.05); box-shadow: 0 4px 15px rgba(223,197,136,0.9); }
+    #text-toggle-right h2 { font-size: 1em; margin-bottom: 5px; }
     .toggle-switch {
-      appearance: none;
-      -webkit-appearance: none;
-      width: 40px;
-      height: 20px;
-      background: #ccc;
-      border-radius: 20px;
-      position: relative;
-      outline: none;
-      cursor: pointer;
-      transition: background 0.3s;
+      appearance: none; -webkit-appearance: none; width: 40px; height: 20px; background: #ccc; border-radius: 20px;
+      position: relative; outline: none; cursor: pointer; transition: background 0.3s;
     }
-    .toggle-switch:checked {
-      background: #dfc588;
-    }
+    .toggle-switch:checked { background: #dfc588; }
     .toggle-switch::before {
-      content: "";
-      position: absolute;
-      top: 2px;
-      left: 2px;
-      width: 16px;
-      height: 16px;
-      background: white;
-      border-radius: 50%;
-      transition: transform 0.3s;
+      content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background: white; border-radius: 50%; transition: transform 0.3s;
     }
-    .toggle-switch:checked::before {
-      transform: translateX(20px);
-    }
-    #toggle-container {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    #toggle-marker-text-label {
-      margin-left: 10px;
-      line-height: 20px;
-    }
-    #marker-visibility-container {
-      margin-top: 10px;
-      text-align: left;
-      width: 100%;
-    }
-    #marker-visibility-container h3 {
-      font-size: 0.9em;
-      margin-bottom: 5px;
-      text-align: center;
-    }
-    .toggle-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin: 3px 0;
-    }
-    .toggle-item label {
-      font-size: 0.85em;
-      flex-grow: 1;
-      margin-left: 5px;
-    }
+    .toggle-switch:checked::before { transform: translateX(20px); }
+    #toggle-container { display: flex; align-items: center; justify-content: center; }
+    #toggle-marker-text-label { margin-left: 10px; line-height: 20px; }
+    #marker-visibility-container { margin-top: 10px; text-align: left; width: 100%; }
+    #marker-visibility-container h3 { font-size: 0.9em; margin-bottom: 5px; text-align: center; }
+    .toggle-item { display: flex; justify-content: space-between; align-items: center; margin: 3px 0; }
+    .toggle-item label { font-size: 0.85em; flex-grow: 1; margin-left: 5px; }
+    /* Toolbox */
     #toolbox {
-      position: fixed;
-      top: 180px;
-      left: 20px;
-      background: rgba(30,30,30,0.9);
-      padding: 10px;
-      border: 1px solid rgba(223,197,136,0.5);
-      border-radius: 5px;
-      box-shadow: 0 0 10px rgba(223,197,136,0.5);
-      z-index: 20;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
+      position: fixed; top: 180px; left: 20px; background: rgba(30,30,30,0.9); padding: 10px;
+      border: 1px solid rgba(223,197,136,0.5); border-radius: 5px; box-shadow: 0 0 10px rgba(223,197,136,0.5); z-index: 20;
+      display: flex; flex-direction: column; gap: 10px;
     }
-    .tool {
-      width: 50px;
-      height: 50px;
-      border: 1px solid rgba(223,197,136,0.5);
-      background: rgba(30,30,30,0.9);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      border-radius: 5px;
-      transition: transform 0.3s;
+    .tool { width: 50px; height: 50px; border: 1px solid rgba(223,197,136,0.5); background: rgba(30,30,30,0.9);
+      display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 5px; transition: transform 0.3s;
     }
-    .tool:hover {
-      transform: scale(1.1);
-    }
-    .tool img {
-      max-width: 100%;
-      max-height: 100%;
-    }
-    #map-container {
-      width: 100vw;
-      height: calc(100vh - 60px);
-      overflow: hidden;
-    }
-    #map-svg-container {
-      width: 100%;
-      height: 100%;
-    }
-    .marker:hover {
-      opacity: 0.8;
-      cursor: pointer;
-    }
+    .tool:hover { transform: scale(1.1); }
+    .tool img { max-width: 100%; max-height: 100%; }
+    /* Map container */
+    #map-container { width: 100vw; height: calc(100vh - 60px); overflow: hidden; }
+    #map-svg-container { width: 100%; height: 100%; }
+    .marker:hover { opacity: 0.8; cursor: pointer; }
+    /* Error overlay */
     #error-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(30,30,30,0.95);
-      color: #ecf0f1;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 50;
-      font-size: 1.5em;
-      text-align: center;
-      padding: 20px;
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(30,30,30,0.95);
+      color: #ecf0f1; display: none; align-items: center; justify-content: center; z-index: 50; font-size: 1.5em; text-align: center; padding: 20px;
     }
     /* New Admin Panel */
     #admin-panel {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      width: 320px;
-      background: rgba(30,30,30,0.9);
-      border: 1px solid rgba(223,197,136,0.5);
-      border-radius: 5px;
-      box-shadow: 0 0 10px rgba(223,197,136,0.5);
-      z-index: 30;
-      display: none;
-      animation: fadeIn 1s ease-out;
+      position: fixed; bottom: 20px; right: 20px; width: 320px; background: rgba(30,30,30,0.9);
+      border: 1px solid rgba(223,197,136,0.5); border-radius: 5px; box-shadow: 0 0 10px rgba(223,197,136,0.5);
+      z-index: 30; display: none; animation: fadeIn 1s ease-out;
     }
     #admin-panel header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px;
-      border-bottom: 1px solid rgba(223,197,136,0.5);
+      display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid rgba(223,197,136,0.5);
       background: rgba(30,30,30,0.95);
     }
-    #admin-panel header h3 {
-      margin: 0;
-      font-size: 1.8em;
-    }
+    #admin-panel header h3 { margin: 0; font-size: 1.8em; }
     #admin-panel header .admin-controls button {
-      background: none;
-      border: none;
-      font-size: 1.2em;
-      color: rgb(223,197,136);
-      cursor: pointer;
-      margin-left: 5px;
+      background: none; border: none; font-size: 1.2em; color: rgb(223,197,136); cursor: pointer; margin-left: 5px;
     }
-    #audit-log-container {
-      max-height: 200px;
-      overflow-y: auto;
-      padding: 10px;
-      font-size: 1.2em;
-    }
-    #audit-log-container div {
-      margin-bottom: 5px;
-    }
-    .log-user {
-      color: #dfc588;
-      font-weight: bold;
-    }
-    .log-action {
-      color: #8ac6d1;
-    }
+    #audit-log-container { max-height: 200px; overflow-y: auto; padding: 10px; font-size: 1.2em; }
+    #audit-log-container div { margin-bottom: 5px; }
+    .log-user { color: #dfc588; font-weight: bold; }
+    .log-action { color: #8ac6d1; }
     #admin-panel footer {
-      display: flex;
-      justify-content: space-around;
-      padding: 10px;
-      border-top: 1px solid rgba(223,197,136,0.5);
+      display: flex; justify-content: space-around; padding: 10px; border-top: 1px solid rgba(223,197,136,0.5);
       background: rgba(30,30,30,0.95);
     }
     #admin-panel footer button {
-      padding: 8px 12px;
-      font-size: 1em;
-      border: none;
-      border-radius: 4px;
-      background: rgba(223,197,136,0.8);
-      color: white;
-      cursor: pointer;
-      transition: transform 0.3s, box-shadow 0.3s;
+      padding: 8px 12px; font-size: 1em; border: none; border-radius: 4px; background: rgba(223,197,136,0.8);
+      color: white; cursor: pointer; transition: transform 0.3s, box-shadow 0.3s;
     }
-    #admin-panel footer button:hover {
-      transform: scale(1.05);
-      box-shadow: 0 4px 15px rgba(223,197,136,0.9);
-    }
+    #admin-panel footer button:hover { transform: scale(1.05); box-shadow: 0 4px 15px rgba(223,197,136,0.9); }
   </style>
 </head>
 <body>
@@ -658,7 +374,6 @@
 
     let panZoomInstance, svgRoot, panLayer, lineLayer, markerLayer;
     let isMapReady = false;
-
     let activeTool = null;
     let lineDrawingState = 0;
     let currentLine = null;
@@ -666,18 +381,9 @@
 
     // Global visibility state for markers and lines
     const visibilityState = {
-      homestead: true,
-      citadel: true,
-      torch: true,
-      cave: true,
-      sword: true,
-      spear: true,
-      bow: true,
-      beacon: true,
-      camp: true,
-      catapult: true,
-      ram: true,
-      lines: true
+      homestead: true, citadel: true, torch: true, cave: true,
+      sword: true, spear: true, bow: true, beacon: true,
+      camp: true, catapult: true, ram: true, lines: true
     };
 
     function updateMarkerVisibility() {
@@ -690,7 +396,6 @@
       lineLayer.style.display = visibilityState.lines ? "" : "none";
     }
 
-    // Loading simulation
     let loadingInterval;
     let currentProgress = 0;
     const loadingOverlay = document.getElementById("loading-overlay");
@@ -703,7 +408,6 @@
       setupMenuToggles();
       setupAdminPanelControls();
 
-      // Setup marker text toggle functionality
       const toggleMarkerTextCheckbox = document.getElementById("toggle-marker-text");
       const toggleLabel = document.getElementById("toggle-marker-text-label");
       toggleMarkerTextCheckbox.addEventListener("change", function() {
@@ -716,7 +420,6 @@
         }
       });
 
-      // Setup visibility toggles (markers and lines)
       Object.keys(visibilityState).forEach(key => {
         const checkbox = document.getElementById(`toggle-${key}`);
         if (checkbox) {
@@ -729,23 +432,18 @@
       });
     });
 
-    // Toggle menu visibility with arrow icon updates.
     function setupMenuToggles() {
       document.querySelectorAll(".menu-toggle").forEach(btn => {
         btn.addEventListener("click", (e) => {
           e.stopPropagation();
           const menu = btn.closest(".menu-container");
           menu.classList.toggle("hidden");
-          if (menu.classList.contains("hidden")) {
-            btn.innerHTML = "&#9654;";
-          } else {
-            btn.innerHTML = "&#9664;";
-          }
+          btn.innerHTML = menu.classList.contains("hidden") ? "&#9654;" : "&#9664;";
         });
       });
     }
 
-    // Admin Panel Controls
+    // Admin Panel Controls using Firestore query
     function setupAdminPanelControls() {
       const minimizeBtn = document.getElementById("minimize-panel");
       const auditContainer = document.getElementById("audit-log-container");
@@ -817,9 +515,7 @@
     function hideLoading() {
       clearInterval(loadingInterval);
       loadingText.textContent = "100%";
-      setTimeout(() => {
-        loadingOverlay.style.display = "none";
-      }, 300);
+      setTimeout(() => { loadingOverlay.style.display = "none"; }, 300);
     }
 
     function setupLogin() {
@@ -835,9 +531,7 @@
             document.getElementById("app").style.display = "block";
             initializeMap();
           })
-          .catch((error) => {
-            errorDiv.textContent = error.message;
-          });
+          .catch((error) => { errorDiv.textContent = error.message; });
       });
 
       onAuthStateChanged(auth, (user) => {
@@ -845,7 +539,7 @@
           document.getElementById("login-screen").style.display = "none";
           document.getElementById("app").style.display = "block";
           initializeMap();
-          // Query Firestore to check if user is an admin
+          // Use Firestore query to check if the admin doc exists for this user.
           getDoc(doc(db, "admins", user.email))
             .then((docSnap) => {
               if (docSnap.exists()) {
@@ -863,14 +557,10 @@
       });
     }
 
-    function initializeMap() {
-      switchMap("https://regnumsolis.com/planner/images/mvmvmdfs.svg");
-    }
+    function initializeMap() { switchMap("https://regnumsolis.com/planner/images/mvmvmdfs.svg"); }
 
     function switchMap(url) {
-      if (panZoomInstance) {
-        panZoomInstance.destroy();
-      }
+      if (panZoomInstance) { panZoomInstance.destroy(); }
       isMapReady = false;
       const container = document.getElementById("map-svg-container");
       showLoading();
@@ -911,9 +601,7 @@
 
       panLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
       panLayer.id = "pan-layer";
-      while (svgRoot.firstChild) {
-        panLayer.appendChild(svgRoot.firstChild);
-      }
+      while (svgRoot.firstChild) { panLayer.appendChild(svgRoot.firstChild); }
       svgRoot.appendChild(panLayer);
 
       lineLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
@@ -925,17 +613,11 @@
       panLayer.appendChild(markerLayer);
 
       panZoomInstance = svgPanZoom(svgRoot, {
-        zoomEnabled: true,
-        panEnabled: true,
-        controlIconsEnabled: false,
-        minZoom: 0.5,
-        maxZoom: 5,
+        zoomEnabled: true, panEnabled: true, controlIconsEnabled: false, minZoom: 0.5, maxZoom: 5,
         beforeMouseDown: function(e) {
           if (activeTool === "line") return false;
           if (e.target.getAttribute("data-marker") === "true" ||
-              (e.target.parentNode && e.target.parentNode.getAttribute("data-marker") === "true")) {
-            return false;
-          }
+              (e.target.parentNode && e.target.parentNode.getAttribute("data-marker") === "true")) { return false; }
           return true;
         }
       });
@@ -1018,13 +700,10 @@
         if (activeTool !== "line") return;
         e.preventDefault();
         const pt = getSVGPoint(e);
-
         if (lineDrawingState === 0) {
           currentLineGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
           currentLineGroup.classList.add("line-group");
-
           const lineColor = await customPrompt("Enter line color (e.g., red or #ff0000):", "white") || "white";
-          
           currentLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
           currentLine.setAttribute("x1", pt.x);
           currentLine.setAttribute("y1", pt.y);
@@ -1032,38 +711,27 @@
           currentLine.setAttribute("y2", pt.y);
           currentLine.setAttribute("stroke-width", "3.2");
           currentLine.setAttribute("stroke", lineColor);
-
           currentLineGroup.startPoint = { x: pt.x, y: pt.y };
           currentLineGroup.lineColor = lineColor;
           currentLineGroup.appendChild(currentLine);
           lineLayer.appendChild(currentLineGroup);
-
           lineDrawingState = 1;
         } else if (lineDrawingState === 1) {
           const x1 = currentLineGroup.startPoint.x;
           const y1 = currentLineGroup.startPoint.y;
           const x2 = pt.x;
           const y2 = pt.y;
-
           currentLine.setAttribute("x2", x2);
           currentLine.setAttribute("y2", y2);
-
           const midX = (x1 + x2) / 2;
           const midY = (y1 + y2) / 2;
           const angle = Math.atan2(y2 - y1, x2 - x1) * (180 / Math.PI);
-
           const arrow = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
           arrow.setAttribute("points", "0,-8 16,0 0,8");
           arrow.setAttribute("fill", currentLineGroup.lineColor);
           arrow.setAttribute("transform", `translate(${midX},${midY}) rotate(${angle})`);
           currentLineGroup.appendChild(arrow);
-
-          await addLineToFirestore({
-            x1, y1, x2, y2,
-            color: currentLineGroup.lineColor,
-            midX, midY, angle
-          });
-
+          await addLineToFirestore({ x1, y1, x2, y2, color: currentLineGroup.lineColor, midX, midY, angle });
           activeTool = null;
           lineDrawingState = 0;
           currentLine = null;
@@ -1076,17 +744,12 @@
 
     async function addMarkerToFirestore(type, x, y) {
       const user = auth.currentUser;
-      if (!user) {
-        console.error("User not authenticated");
-        return;
-      }
+      if (!user) { console.error("User not authenticated"); return; }
       let markerData = { type, x, y, timestamp: serverTimestamp(), owner: user.uid };
       if (["homestead", "citadel", "torch", "cave", "sword", "spear", "bow", "beacon", "camp", "catapult", "ram"].includes(type)) {
         markerData.text = await customPrompt("Enter marker text:", "") || "";
         markerData.color = await customPrompt("Enter marker color (e.g., red or #ff0000):", "black") || "black";
-        if (type === "homestead" && markerData.text === "") {
-          markerData.text = "homestead";
-        }
+        if (type === "homestead" && markerData.text === "") { markerData.text = "homestead"; }
       }
       try {
         const docRef = await addDoc(collection(db, "markers"), markerData);
@@ -1098,10 +761,7 @@
 
     async function addLineToFirestore(lineData) {
       const user = auth.currentUser;
-      if (!user) {
-        console.error("User not authenticated");
-        return;
-      }
+      if (!user) { console.error("User not authenticated"); return; }
       try {
         const docRef = await addDoc(collection(db, "lines"), {
           ...lineData,
@@ -1119,24 +779,15 @@
       const markersQuery = query(collection(db, "markers"), orderBy("timestamp"));
       const unsubscribe = onSnapshot(markersQuery, (snapshot) => {
         snapshotReceived = true;
-        while (markerLayer.firstChild) {
-          markerLayer.removeChild(markerLayer.firstChild);
-        }
-        snapshot.forEach((docSnap) => {
-          createMarkerElement(docSnap.id, docSnap.data());
-        });
+        while (markerLayer.firstChild) { markerLayer.removeChild(markerLayer.firstChild); }
+        snapshot.forEach((docSnap) => { createMarkerElement(docSnap.id, docSnap.data()); });
         updateMarkerVisibility();
       }, (error) => {
         console.error("Firestore connection error:", error);
         displayErrorOverlay("Firestore connection failed.");
       });
-
       setTimeout(() => {
-        if (!snapshotReceived) {
-          console.error("No Firestore snapshot received within timeout.");
-          displayErrorOverlay("Firestore connection failed.");
-          unsubscribe();
-        }
+        if (!snapshotReceived) { console.error("No Firestore snapshot received within timeout."); displayErrorOverlay("Firestore connection failed."); unsubscribe(); }
       }, 5000);
     }
 
@@ -1144,9 +795,7 @@
       const linesQuery = query(collection(db, "lines"), orderBy("timestamp"));
       onSnapshot(linesQuery, (snapshot) => {
         lineLayer.innerHTML = "";
-        snapshot.forEach((docSnap) => {
-          createLineElement(docSnap.id, docSnap.data());
-        });
+        snapshot.forEach((docSnap) => { createLineElement(docSnap.id, docSnap.data()); });
         updateLineVisibility();
       });
     }
@@ -1155,88 +804,53 @@
       let markerEl = document.createElementNS("http://www.w3.org/2000/svg", "g");
       markerEl.setAttribute("data-marker", "true");
       markerEl.dataset.type = data.type;
-
       let imgSrc, imgWidth, imgHeight, imgXOffset, imgYOffset, fontSize;
       if (data.type === "homestead") {
         imgSrc = "https://regnumsolis.com/planner/images/marker.svg";
-        imgWidth = 30 * 1.7;
-        imgHeight = 30 * 1.7;
-        imgXOffset = -(imgWidth / 2);
-        imgYOffset = -20 * 1.7;
-        fontSize = 16 * 1.7;
+        imgWidth = 30 * 1.7; imgHeight = 30 * 1.7;
+        imgXOffset = -(imgWidth / 2); imgYOffset = -20 * 1.7; fontSize = 16 * 1.7;
       } else if (data.type === "citadel") {
         imgSrc = "https://regnumsolis.com/planner/images/citadel.svg";
-        imgWidth = 30 * 1.7 * 1.2;
-        imgHeight = 30 * 1.7 * 1.2;
-        imgXOffset = -15 * 1.7 * 1.2;
-        imgYOffset = -15 * 1.7 * 1.2;
-        fontSize = 14 * 1.7 * 1.2;
+        imgWidth = 30 * 1.7 * 1.2; imgHeight = 30 * 1.7 * 1.2;
+        imgXOffset = -15 * 1.7 * 1.2; imgYOffset = -15 * 1.7 * 1.2; fontSize = 14 * 1.7 * 1.2;
       } else if (data.type === "torch") {
         imgSrc = "https://regnumsolis.com/planner/images/torch.svg";
-        imgWidth = 30 * 1.7;
-        imgHeight = 30 * 1.7;
-        imgXOffset = -15 * 1.7;
-        imgYOffset = -15 * 1.7;
-        fontSize = 14 * 1.7;
+        imgWidth = 30 * 1.7; imgHeight = 30 * 1.7;
+        imgXOffset = -15 * 1.7; imgYOffset = -15 * 1.7; fontSize = 14 * 1.7;
       } else if (data.type === "cave") {
         imgSrc = "https://regnumsolis.com/planner/images/cave.svg";
-        imgWidth = 30 * 1.7;
-        imgHeight = 30 * 1.7;
-        imgXOffset = -15 * 1.7;
-        imgYOffset = -15 * 1.7;
-        fontSize = 14 * 1.7;
+        imgWidth = 30 * 1.7; imgHeight = 30 * 1.7;
+        imgXOffset = -15 * 1.7; imgYOffset = -15 * 1.7; fontSize = 14 * 1.7;
       } else if (data.type === "sword") {
         imgSrc = "https://regnumsolis.com/planner/images/sword.svg";
-        imgWidth = 30 * 1.7;
-        imgHeight = 30 * 1.7;
-        imgXOffset = -15 * 1.7;
-        imgYOffset = -15 * 1.7;
-        fontSize = 14 * 1.7;
+        imgWidth = 30 * 1.7; imgHeight = 30 * 1.7;
+        imgXOffset = -15 * 1.7; imgYOffset = -15 * 1.7; fontSize = 14 * 1.7;
       } else if (data.type === "spear") {
         imgSrc = "https://regnumsolis.com/planner/images/spear.svg";
-        imgWidth = 30 * 1.7;
-        imgHeight = 30 * 1.7;
-        imgXOffset = -15 * 1.7;
-        imgYOffset = -15 * 1.7;
-        fontSize = 14 * 1.7;
+        imgWidth = 30 * 1.7; imgHeight = 30 * 1.7;
+        imgXOffset = -15 * 1.7; imgYOffset = -15 * 1.7; fontSize = 14 * 1.7;
       } else if (data.type === "bow") {
         imgSrc = "https://regnumsolis.com/planner/images/bow.svg";
-        imgWidth = 30 * 1.7;
-        imgHeight = 30 * 1.7;
-        imgXOffset = -15 * 1.7;
-        imgYOffset = -15 * 1.7;
-        fontSize = 14 * 1.7;
+        imgWidth = 30 * 1.7; imgHeight = 30 * 1.7;
+        imgXOffset = -15 * 1.7; imgYOffset = -15 * 1.7; fontSize = 14 * 1.7;
       } else if (data.type === "beacon") {
         imgSrc = "https://regnumsolis.com/planner/images/beacon.svg";
-        imgWidth = 30 * 1.7 * 1.2;
-        imgHeight = 30 * 1.7 * 1.2;
-        imgXOffset = -15 * 1.7 * 1.2;
-        imgYOffset = -15 * 1.7 * 1.2;
-        fontSize = 14 * 1.7 * 1.2;
+        imgWidth = 30 * 1.7 * 1.2; imgHeight = 30 * 1.7 * 1.2;
+        imgXOffset = -15 * 1.7 * 1.2; imgYOffset = -15 * 1.7 * 1.2; fontSize = 14 * 1.7 * 1.2;
       } else if (data.type === "camp") {
         imgSrc = "https://regnumsolis.com/planner/images/camp.svg";
-        imgWidth = 30 * 1.7 * 1.2;
-        imgHeight = 30 * 1.7 * 1.2;
-        imgXOffset = -15 * 1.7 * 1.2;
-        imgYOffset = -15 * 1.7 * 1.2;
-        fontSize = 14 * 1.7 * 1.2;
+        imgWidth = 30 * 1.7 * 1.2; imgHeight = 30 * 1.7 * 1.2;
+        imgXOffset = -15 * 1.7 * 1.2; imgYOffset = -15 * 1.7 * 1.2; fontSize = 14 * 1.7 * 1.2;
       } else if (data.type === "catapult") {
         imgSrc = "https://regnumsolis.com/planner/images/catapult.svg";
-        imgWidth = 30 * 1.7 * 1.2;
-        imgHeight = 30 * 1.7 * 1.2;
-        imgXOffset = -15 * 1.7 * 1.2;
-        imgYOffset = -15 * 1.7 * 1.2;
-        fontSize = 14 * 1.7 * 1.2;
+        imgWidth = 30 * 1.7 * 1.2; imgHeight = 30 * 1.7 * 1.2;
+        imgXOffset = -15 * 1.7 * 1.2; imgYOffset = -15 * 1.7 * 1.2; fontSize = 14 * 1.7 * 1.2;
       } else if (data.type === "ram") {
         imgSrc = "https://regnumsolis.com/planner/images/ram.svg";
-        imgWidth = 30 * 1.7 * 1.2;
-        imgHeight = 30 * 1.7 * 1.2;
-        imgXOffset = -15 * 1.7 * 1.2;
-        imgYOffset = -15 * 1.7 * 1.2;
-        fontSize = 14 * 1.7 * 1.2;
+        imgWidth = 30 * 1.7 * 1.2; imgHeight = 30 * 1.7 * 1.2;
+        imgXOffset = -15 * 1.7 * 1.2; imgYOffset = -15 * 1.7 * 1.2; fontSize = 14 * 1.7 * 1.2;
       }
       let textXOffset = imgXOffset + imgWidth;
-
       const imgEl = document.createElementNS("http://www.w3.org/2000/svg", "image");
       imgEl.setAttributeNS("http://www.w3.org/1999/xlink", "href", imgSrc);
       imgEl.setAttribute("width", imgWidth);
@@ -1244,7 +858,6 @@
       imgEl.setAttribute("x", data.x + imgXOffset);
       imgEl.setAttribute("y", data.y + imgYOffset);
       markerEl.appendChild(imgEl);
-
       const textEl = document.createElementNS("http://www.w3.org/2000/svg", "text");
       textEl.textContent = data.text;
       textEl.setAttribute("fill", data.color);
@@ -1255,7 +868,6 @@
       textEl.setAttribute("dominant-baseline", "middle");
       textEl.style.fontFamily = "'Bebas Neue', sans-serif";
       markerEl.appendChild(textEl);
-
       requestAnimationFrame(() => {
         const bbox = textEl.getBBox();
         const textLength = textEl.getComputedTextLength();
@@ -1268,7 +880,6 @@
         rectEl.setAttribute("opacity", "0.63");
         markerEl.insertBefore(rectEl, textEl);
       });
-
       markerEl.classList.add("marker");
       markerEl.dataset.id = id;
       markerEl.addEventListener("click", async (e) => {
@@ -1290,7 +901,6 @@
       const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
       group.classList.add("line-group");
       group.dataset.id = id;
-
       const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
       line.setAttribute("x1", data.x1);
       line.setAttribute("y1", data.y1);
@@ -1298,15 +908,12 @@
       line.setAttribute("y2", data.y2);
       line.setAttribute("stroke", data.color);
       line.setAttribute("stroke-width", "3.2");
-
       const arrow = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
       arrow.setAttribute("points", "0,-8 16,0 0,8");
       arrow.setAttribute("fill", data.color);
       arrow.setAttribute("transform", `translate(${data.midX},${data.midY}) rotate(${data.angle})`);
-
       group.appendChild(line);
       group.appendChild(arrow);
-      
       group.addEventListener("click", async (e) => {
         e.stopPropagation();
         if (confirm("Delete this line?")) {
@@ -1314,19 +921,13 @@
           recordAuditLog("delete_line", { lineId: id });
         }
       });
-
       lineLayer.appendChild(group);
     }
 
     function recordAuditLog(action, details) {
       const user = auth.currentUser;
       if (!user) return;
-      const logData = {
-        action,
-        details,
-        user: user.email,
-        timestamp: serverTimestamp()
-      };
+      const logData = { action, details, user: user.email, timestamp: serverTimestamp() };
       addDoc(collection(db, "auditLogs"), logData)
         .catch(error => console.error("Error writing audit log:", error));
     }
@@ -1348,8 +949,7 @@
 
     function getSVGPoint(e) {
       const pt = svgRoot.createSVGPoint();
-      pt.x = e.clientX;
-      pt.y = e.clientY;
+      pt.x = e.clientX; pt.y = e.clientY;
       return pt.matrixTransform(panLayer.getScreenCTM().inverse());
     }
 
@@ -1368,29 +968,18 @@
         const promptInput = document.getElementById("custom-prompt-input");
         const okButton = document.getElementById("custom-prompt-ok");
         const cancelButton = document.getElementById("custom-prompt-cancel");
-        
         promptMessage.textContent = message;
         promptInput.value = defaultValue || "";
         promptInput.style.display = "block";
         overlay.style.display = "flex";
         promptInput.focus();
-        
         function cleanup() {
           overlay.style.display = "none";
           okButton.removeEventListener("click", onOk);
           cancelButton.removeEventListener("click", onCancel);
         }
-        
-        function onOk() {
-          resolve(promptInput.value);
-          cleanup();
-        }
-        
-        function onCancel() {
-          resolve(null);
-          cleanup();
-        }
-        
+        function onOk() { resolve(promptInput.value); cleanup(); }
+        function onCancel() { resolve(null); cleanup(); }
         okButton.addEventListener("click", onOk);
         cancelButton.addEventListener("click", onCancel);
       });
@@ -1404,28 +993,17 @@
         const promptInput = document.getElementById("custom-prompt-input");
         const okButton = document.getElementById("custom-prompt-ok");
         const cancelButton = document.getElementById("custom-prompt-cancel");
-        
         promptMessage.textContent = message;
         promptInput.style.display = "none";
         overlay.style.display = "flex";
-        
         function cleanup() {
           overlay.style.display = "none";
           promptInput.style.display = "block";
           okButton.removeEventListener("click", onOk);
           cancelButton.removeEventListener("click", onCancel);
         }
-        
-        function onOk() {
-          resolve(true);
-          cleanup();
-        }
-        
-        function onCancel() {
-          resolve(false);
-          cleanup();
-        }
-        
+        function onOk() { resolve(true); cleanup(); }
+        function onCancel() { resolve(false); cleanup(); }
         okButton.addEventListener("click", onOk);
         cancelButton.addEventListener("click", onCancel);
       });
@@ -1433,13 +1011,9 @@
   </script>
   <script>
     const canvas = document.getElementById('waveCanvas');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
     const gl = canvas.getContext("webgl");
-    if (!gl) {
-      alert("WebGL is not supported in your browser.");
-    }
-
+    if (!gl) { alert("WebGL is not supported in your browser."); }
     const vertexShaderSource = `
       attribute vec2 a_position;
       varying vec2 v_uv;
@@ -1448,32 +1022,28 @@
         gl_Position = vec4(a_position, 0.0, 1.0);
       }
     `;
-
     const fragmentShaderSource = `
       precision mediump float;
       uniform float u_time;
       uniform vec2 u_resolution;
       varying vec2 v_uv;
-      
       float wave(vec2 st, float angle, float frequency, float amplitude, float speed) {
         vec2 dir = vec2(cos(angle), sin(angle));
         float phaseOffset = angle * 7.0;
         return sin(dot(st, dir) * frequency + u_time * speed + phaseOffset) * amplitude;
       }
-      
       float waveHeight(vec2 st) {
         float h = 0.0;
-        h += wave(st, 0.0,   30.1, 0.0020, 0.81);
-        h += wave(st, 0.7,   40.3, 0.0017, 0.63);
-        h += wave(st, 1.4,   55.7, 0.0010, 1.04);
-        h += wave(st, 2.1,   65.2, 0.0012, 0.91);
-        h += wave(st, 2.8,   50.5, 0.0015, 1.12);
-        h += wave(st, 3.3,   60.9, 0.0013, 0.87);
-        h += wave(st, 4.0,   45.6, 0.0014, 1.05);
-        h += wave(st, 4.7,   70.8, 0.0011, 0.99);
+        h += wave(st, 0.0, 30.1, 0.0020, 0.81);
+        h += wave(st, 0.7, 40.3, 0.0017, 0.63);
+        h += wave(st, 1.4, 55.7, 0.0010, 1.04);
+        h += wave(st, 2.1, 65.2, 0.0012, 0.91);
+        h += wave(st, 2.8, 50.5, 0.0015, 1.12);
+        h += wave(st, 3.3, 60.9, 0.0013, 0.87);
+        h += wave(st, 4.0, 45.6, 0.0014, 1.05);
+        h += wave(st, 4.7, 70.8, 0.0011, 0.99);
         return h;
       }
-      
       vec3 computeNormal(vec2 st, float h) {
         float eps = 0.001;
         float hx = waveHeight(st + vec2(eps, 0.0));
@@ -1482,34 +1052,26 @@
         float dFdy = (hy - h) / eps;
         return normalize(vec3(-dFdx, -dFdy, 1.0));
       }
-      
       void main(){
         vec2 st = gl_FragCoord.xy / u_resolution.xy;
         st.y *= u_resolution.y / u_resolution.x;
-        
         float h = waveHeight(st);
         vec3 normal = computeNormal(st, h);
-        
         vec3 deepWater = vec3(0.0, 0.15, 0.35);
         vec3 shallowWater = vec3(0.0, 0.45, 0.75);
         vec3 baseColor = mix(deepWater, shallowWater, st.y + h * 0.5);
-        
         vec3 sunDir = normalize(vec3(0.3, 0.8, 1.0));
         float diffuse = max(dot(normal, sunDir), 0.0);
         vec3 viewDir = normalize(vec3(0.0, 0.0, 1.0));
         vec3 halfDir = normalize(sunDir + viewDir);
         float spec = pow(max(dot(normal, halfDir), 0.0), 50.0);
         float fresnel = pow(1.0 - max(dot(viewDir, normal), 0.0), 3.0) * 0.6;
-        
         vec3 color = baseColor * (0.4 + 0.6 * diffuse) + vec3(1.0, 0.95, 0.8) * spec;
         color = mix(color, vec3(1.0), fresnel);
-        
         color *= 0.1;
-        
         gl_FragColor = vec4(color, 1.0);
       }
     `;
-
     function createShader(gl, type, source) {
       const shader = gl.createShader(type);
       gl.shaderSource(shader, source);
@@ -1521,10 +1083,8 @@
       }
       return shader;
     }
-
     const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
     const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
-
     const program = gl.createProgram();
     gl.attachShader(program, vertexShader);
     gl.attachShader(program, fragmentShader);
@@ -1532,41 +1092,27 @@
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
       console.error("Program linking failed: " + gl.getProgramInfoLog(program));
     }
-
     const positionAttributeLocation = gl.getAttribLocation(program, "a_position");
     const timeUniformLocation = gl.getUniformLocation(program, "u_time");
     const resolutionUniformLocation = gl.getUniformLocation(program, "u_resolution");
-
     const positionBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-    const positions = [
-      -1, -1,
-       1, -1,
-      -1,  1,
-      -1,  1,
-       1, -1,
-       1,  1
-    ];
+    const positions = [ -1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1 ];
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
-
     function render(time) {
       time *= 0.001;
       gl.viewport(0, 0, canvas.width, canvas.height);
       gl.clear(gl.COLOR_BUFFER_BIT);
       gl.useProgram(program);
-      
       gl.enableVertexAttribArray(positionAttributeLocation);
       gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
       gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
-      
       gl.uniform1f(timeUniformLocation, time);
       gl.uniform2f(resolutionUniformLocation, canvas.width, canvas.height);
-      
       gl.drawArrays(gl.TRIANGLES, 0, 6);
       requestAnimationFrame(render);
     }
     render(0);
-
     window.addEventListener("resize", () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
