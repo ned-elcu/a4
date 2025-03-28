@@ -125,11 +125,33 @@
       border: 1px solid rgba(223,197,136,0.5); border-radius: 5px; box-shadow: 0 0 10px rgba(223,197,136,0.5); z-index: 20;
       display: flex; flex-direction: column; gap: 10px;
     }
-    .tool { width: 50px; height: 50px; border: 1px solid rgba(223,197,136,0.5); background: rgba(30,30,30,0.9);
+    /* Individual tool tooltip styling */
+    .tool {
+      position: relative;
+      width: 50px; height: 50px; border: 1px solid rgba(223,197,136,0.5); background: rgba(30,30,30,0.9);
       display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 5px; transition: transform 0.3s;
     }
     .tool:hover { transform: scale(1.1); }
     .tool img { max-width: 100%; max-height: 100%; }
+    .tool::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      top: 50%;
+      left: 105%;
+      transform: translateY(-50%);
+      white-space: nowrap;
+      background: transparent;
+      color: white;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1em;
+      opacity: 0;
+      pointer-events: none;
+      animation: whiteNeonGlow 1.5s infinite alternate ease-in-out;
+      transition: opacity 0.3s ease;
+    }
+    .tool:hover::after {
+      opacity: 1;
+    }
     /* Map container */
     #map-container { width: 100vw; height: calc(100vh - 60px); overflow: hidden; }
     #map-svg-container { width: 100%; height: 100%; }
@@ -316,40 +338,41 @@
 
     <!-- Toolbox -->
     <div id="toolbox">
-      <div class="tool" draggable="true" data-type="homestead" title="Homestead">
-        <img src="https://regnumsolis.com/planner/images/marker.svg" alt="Homestead" />
-      </div>
-      <div class="tool" draggable="true" data-type="citadel" title="Citadel">
-        <img src="https://regnumsolis.com/planner/images/citadel.svg" alt="Citadel" />
-      </div>
-      <div class="tool" draggable="true" data-type="torch" title="Torch">
-        <img src="https://regnumsolis.com/planner/images/torch.svg" alt="Torch" />
-      </div>
-      <div class="tool" draggable="true" data-type="cave" title="Cave">
-        <img src="https://regnumsolis.com/planner/images/cave.svg" alt="Cave" />
-      </div>
-      <div class="tool" draggable="true" data-type="sword" title="Sword">
-        <img src="https://regnumsolis.com/planner/images/sword.svg" alt="Sword" />
-      </div>
-      <div class="tool" draggable="true" data-type="spear" title="Spear">
-        <img src="https://regnumsolis.com/planner/images/spear.svg" alt="Spear" />
-      </div>
-      <div class="tool" draggable="true" data-type="bow" title="Bow">
-        <img src="https://regnumsolis.com/planner/images/bow.svg" alt="Bow" />
-      </div>
-      <div class="tool" data-type="line" title="Line Draw">
+      <!-- Tools re-ordered as specified with data-tooltip attributes -->
+      <div class="tool" data-type="line" data-tooltip="Draw Line">
         <img src="https://regnumsolis.com/planner/images/line.svg" alt="Line Draw" onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2250%22 height=%2250%22><text x=%220%22 y=%2230%22 fill=%22white%22 font-size=%2230%22>―</text></svg>'" />
       </div>
-      <div class="tool" draggable="true" data-type="beacon" title="Beacon">
-        <img src="https://regnumsolis.com/planner/images/beacon.svg" alt="Beacon" />
+      <div class="tool" draggable="true" data-type="torch" data-tooltip="Place Torch">
+        <img src="https://regnumsolis.com/planner/images/torch.svg" alt="Torch" />
       </div>
-      <div class="tool" draggable="true" data-type="camp" title="Camp">
+      <div class="tool" draggable="true" data-type="keep" data-tooltip="Place Keep">
+        <img src="https://regnumsolis.com/planner/images/citadel.svg" alt="Keep" />
+      </div>
+      <div class="tool" draggable="true" data-type="homestead" data-tooltip="Place Homestead">
+        <img src="https://regnumsolis.com/planner/images/marker.svg" alt="Homestead" />
+      </div>
+      <div class="tool" draggable="true" data-type="camp" data-tooltip="Place Camp">
         <img src="https://regnumsolis.com/planner/images/camp.svg" alt="Camp" />
       </div>
-      <div class="tool" draggable="true" data-type="catapult" title="Catapult">
+      <div class="tool" draggable="true" data-type="beacon" data-tooltip="Place Beacon">
+        <img src="https://regnumsolis.com/planner/images/beacon.svg" alt="Beacon" />
+      </div>
+      <div class="tool" draggable="true" data-type="cave" data-tooltip="Place Cave">
+        <img src="https://regnumsolis.com/planner/images/cave.svg" alt="Cave" />
+      </div>
+      <div class="tool" draggable="true" data-type="sword" data-tooltip="Place Sword">
+        <img src="https://regnumsolis.com/planner/images/sword.svg" alt="Sword" />
+      </div>
+      <div class="tool" draggable="true" data-type="spear" data-tooltip="Place Spear">
+        <img src="https://regnumsolis.com/planner/images/spear.svg" alt="Spear" />
+      </div>
+      <div class="tool" draggable="true" data-type="bow" data-tooltip="Place Bow">
+        <img src="https://regnumsolis.com/planner/images/bow.svg" alt="Bow" />
+      </div>
+      <div class="tool" draggable="true" data-type="catapult" data-tooltip="Place Catapult">
         <img src="https://regnumsolis.com/planner/images/catapult.svg" alt="Catapult" />
       </div>
-      <div class="tool" draggable="true" data-type="ram" title="Ram">
+      <div class="tool" draggable="true" data-type="ram" data-tooltip="Place Ram">
         <img src="https://regnumsolis.com/planner/images/ram.svg" alt="Ram" />
       </div>
     </div>
@@ -685,14 +708,14 @@
     }
 
     function setupToolbox() {
-      document.querySelectorAll(".tool").forEach((tool) => {
+      document.querySelectorAll("#toolbox .tool").forEach((tool) => {
         const type = tool.dataset.type;
         if (type === "line") {
           tool.addEventListener("click", () => {
             activeTool = "line";
             lineDrawingState = 0;
             markerLayer.style.pointerEvents = "none";
-            document.querySelectorAll(".tool").forEach(t => t.style.borderColor = "rgba(223,197,136,0.5)");
+            document.querySelectorAll("#toolbox .tool").forEach(t => t.style.borderColor = "rgba(223,197,136,0.5)");
             tool.style.borderColor = "red";
           });
         } else {
@@ -792,7 +815,7 @@
           currentLine = null;
           currentLineGroup = null;
           markerLayer.style.pointerEvents = "auto";
-          document.querySelectorAll(".tool").forEach(t => t.style.borderColor = "rgba(223,197,136,0.5)");
+          document.querySelectorAll("#toolbox .tool").forEach(t => t.style.borderColor = "rgba(223,197,136,0.5)");
         }
       });
     }
@@ -801,7 +824,7 @@
       const user = auth.currentUser;
       if (!user) { console.error("User not authenticated"); return; }
       let markerData = { type, x, y, timestamp: serverTimestamp(), owner: user.uid };
-      if (["homestead", "citadel", "torch", "cave", "sword", "spear", "bow", "beacon", "camp", "catapult", "ram"].includes(type)) {
+      if (["homestead", "keep", "torch", "cave", "sword", "spear", "bow", "beacon", "camp", "catapult", "ram"].includes(type)) {
         markerData.text = await customPrompt("Enter marker text:", "") || "";
         markerData.color = await customPrompt("Enter marker color (e.g., red or #ff0000):", "black") || "black";
         if (type === "homestead" && markerData.text === "") { markerData.text = "homestead"; }
@@ -864,8 +887,8 @@
         imgSrc = "https://regnumsolis.com/planner/images/marker.svg";
         imgWidth = 30 * 1.7; imgHeight = 30 * 1.7;
         imgXOffset = -(imgWidth / 2); imgYOffset = -20 * 1.7; fontSize = 16 * 1.7;
-      } else if (data.type === "citadel") {
-        imgSrc = "https://regnumsolis.com/planner/images/citadel.svg";
+      } else if (data.type === "keep") {
+        imgSrc = "https://regnumsolis.com/planner/images/keep.svg";
         imgWidth = 30 * 1.7 * 1.2; imgHeight = 30 * 1.7 * 1.2;
         imgXOffset = -15 * 1.7 * 1.2; imgYOffset = -15 * 1.7 * 1.2; fontSize = 14 * 1.7 * 1.2;
       } else if (data.type === "torch") {
