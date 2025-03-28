@@ -768,7 +768,6 @@
     function setupAdminPanelControls() {
       // Minimize/Maximize toggle
       const minimizeBtn = document.getElementById("minimize-panel");
-      const adminPanel = document.getElementById("admin-panel");
       const auditContainer = document.getElementById("audit-log-container");
       let isMinimized = false;
       minimizeBtn.addEventListener("click", () => {
@@ -814,7 +813,6 @@
             markersSnapshot.forEach(async (docSnap) => {
               await deleteDoc(doc(db, "markers", docSnap.id));
             });
-            // Optionally clear any lines if desired:
             const linesSnapshot = await getDocs(collection(db, "lines"));
             linesSnapshot.forEach(async (docSnap) => {
               await deleteDoc(doc(db, "lines", docSnap.id));
@@ -874,9 +872,12 @@
           user.getIdToken(true)
             .then(() => user.getIdTokenResult())
             .then((idTokenResult) => {
+              console.log("Token claims:", idTokenResult.claims);
               if (idTokenResult.claims.admin) {
                 document.getElementById("admin-panel").style.display = "block";
                 listenForAuditLogs();
+              } else {
+                console.log("Admin claim not present. Token claims:", idTokenResult.claims);
               }
             });
         } else {
