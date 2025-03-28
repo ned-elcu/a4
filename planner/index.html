@@ -22,6 +22,7 @@
       font-family: 'Bebas Neue', sans-serif;
       overflow: hidden;
       position: relative;
+      padding-bottom: 50px; /* reserve space for footer */
     }
     /* Global style for marker text and background toggle */
     .text-hover-only .marker text,
@@ -72,31 +73,7 @@
       from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
     }
-    @keyframes neonGlow {
-      0% {
-        text-shadow: 0 0 5px rgba(223,197,136,0.6),
-                     0 0 10px rgba(223,197,136,0.6),
-                     0 0 15px rgba(223,197,136,0.6);
-      }
-      100% {
-        text-shadow: 0 0 20px rgba(223,197,136,1),
-                     0 0 30px rgba(223,197,136,1),
-                     0 0 40px rgba(223,197,136,1);
-      }
-    }
-    /* Reduced glow animation for header title (60% reduction) */
-    @keyframes reducedNeonGlow {
-      0% {
-        text-shadow: 0 0 2px rgba(223,197,136,0.24),
-                     0 0 4px rgba(223,197,136,0.24),
-                     0 0 6px rgba(223,197,136,0.24);
-      }
-      100% {
-        text-shadow: 0 0 8px rgba(223,197,136,0.4),
-                     0 0 12px rgba(223,197,136,0.4),
-                     0 0 16px rgba(223,197,136,0.4);
-      }
-    }
+    /* Removed neon glow for header text */
     /* Swinging animation for drag clone */
     @keyframes swing {
       0%   { transform: rotate(-10deg); }
@@ -123,7 +100,6 @@
     #login-screen h2 {
       font-size: 3em;
       margin-bottom: 20px;
-      animation: neonGlow 1.5s infinite alternate ease-in-out;
     }
     #login-screen input {
       margin: 5px;
@@ -163,7 +139,7 @@
       animation: fadeIn 1s ease-out;
       z-index: 1;
     }
-    /* Header text */
+    /* Header text without glow and in white */
     #header-logo {
       text-align: center;
       padding: 10px 0;
@@ -172,9 +148,8 @@
     #header-logo h1 {
       font-size: 1.05em;
       margin: 0;
-      color: rgb(223,197,136);
-      /* Override glow with reducedNeonGlow */
-      animation: reducedNeonGlow 1.5s infinite alternate ease-in-out;
+      color: white;
+      text-shadow: none;
     }
     /* Right menus container to prevent overlap */
     #right-menus {
@@ -383,7 +358,7 @@
     /* Admin panel */
     #admin-panel {
       position: fixed;
-      bottom: 20px;
+      bottom: 70px;
       right: 20px;
       width: 320px;
       background: rgba(30,30,30,0.9);
@@ -447,6 +422,19 @@
     #delete-all:hover {
       transform: scale(1.05);
       box-shadow: 0 4px 15px rgba(223,197,136,0.9);
+    }
+    /* Footer styling */
+    #footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      padding: 10px;
+      background: rgba(30,30,30,0.9);
+      text-align: center;
+      font-size: 1em;
+      color: white;
+      z-index: 40;
     }
   </style>
 </head>
@@ -634,6 +622,11 @@
     </div>
   </div>
 
+  <!-- Footer -->
+  <footer id="footer">
+    Build version: 1.11.2 | Secure Database Connection: 🟢 | Encryption: 🟢 | Logged user status: Unknown
+  </footer>
+
   <div id="error-overlay">Database connection failed. The app cannot be used at this time.</div>
 
   <!-- Custom Prompt Modal -->
@@ -669,7 +662,6 @@
 
     let panZoomInstance, svgRoot, panLayer, lineLayer, markerLayer;
     let isMapReady = false;
-
     let activeTool = null;
     let lineDrawingState = 0;
     let currentLine = null;
@@ -713,6 +705,7 @@
       setupMapSwitchControls();
       setupMenuToggles();
       setupAdminControls();
+      setupDeleteAuditLogs();  // Set up the delete all audit logs button
 
       // Setup marker text toggle functionality
       const toggleMarkerTextCheckbox = document.getElementById("toggle-marker-text");
@@ -772,6 +765,23 @@
       });
     }
 
+    // New function to setup delete audit logs functionality
+    function setupDeleteAuditLogs() {
+      const deleteAuditBtn = document.getElementById("delete-audit");
+      deleteAuditBtn.addEventListener("click", async () => {
+        if (confirm("Delete all audit logs?")) {
+          try {
+            const auditSnapshot = await getDocs(collection(db, "auditLogs"));
+            auditSnapshot.forEach(async (docSnap) => {
+              await deleteDoc(doc(db, "auditLogs", docSnap.id));
+            });
+          } catch (error) {
+            console.error("Error deleting audit logs:", error);
+          }
+        }
+      });
+    }
+
     function showLoading() {
       currentProgress = 0;
       loadingText.textContent = "0%";
@@ -818,17 +828,28 @@
           initializeMap();
           // Check for admin custom claim
           user.getIdTokenResult().then((idTokenResult) => {
+            let loggedStatus = "normal";
             if (idTokenResult.claims.admin) {
               document.getElementById("admin-panel").style.display = "block";
               listenForAuditLogs();
               setupDeleteAll();
+              loggedStatus = "admin";
             }
+            updateFooter(loggedStatus);
           });
         } else {
           document.getElementById("login-screen").style.display = "flex";
           document.getElementById("app").style.display = "none";
+          updateFooter("Not logged in");
         }
       });
+    }
+
+    // Update footer with dynamic information
+    function updateFooter(loggedStatus) {
+      const footer = document.getElementById("footer");
+      let secureDbIcon = document.getElementById("error-overlay").style.display === "none" ? "🟢" : "🔴";
+      footer.textContent = "Build version: 1.11.2 | Secure Database Connection: " + secureDbIcon + " | Encryption: 🟢 | Logged user status: " + loggedStatus;
     }
 
     // Set default map to Style Map.
