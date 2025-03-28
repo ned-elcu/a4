@@ -115,6 +115,7 @@
     #text-toggle-right .menu-content label {
       font-family: Arial, sans-serif;
     }
+    /* Update the marker visibility toggles to use "keep" instead of "citadel" */
     #marker-visibility-container { margin-top: 10px; text-align: left; width: 100%; }
     #marker-visibility-container h3 { font-size: 0.9em; margin-bottom: 5px; text-align: center; }
     .toggle-item { display: flex; justify-content: space-between; align-items: center; margin: 3px 0; }
@@ -283,13 +284,14 @@
           </div>
           <div id="marker-visibility-container">
             <h3>Marker Visibility</h3>
+            <!-- Updated toggle: replacing citadel with keep -->
             <div class="toggle-item">
               <input type="checkbox" id="toggle-homestead" class="toggle-switch" checked />
               <label for="toggle-homestead">Homestead</label>
             </div>
             <div class="toggle-item">
-              <input type="checkbox" id="toggle-citadel" class="toggle-switch" checked />
-              <label for="toggle-citadel">Citadel</label>
+              <input type="checkbox" id="toggle-keep" class="toggle-switch" checked />
+              <label for="toggle-keep">Keep</label>
             </div>
             <div class="toggle-item">
               <input type="checkbox" id="toggle-torch" class="toggle-switch" checked />
@@ -346,6 +348,7 @@
         <img src="https://regnumsolis.com/planner/images/torch.svg" alt="Torch" />
       </div>
       <div class="tool" draggable="true" data-type="keep" data-tooltip="Place Keep">
+        <!-- keep now uses the Citadel icon -->
         <img src="https://regnumsolis.com/planner/images/citadel.svg" alt="Keep" />
       </div>
       <div class="tool" draggable="true" data-type="homestead" data-tooltip="Place Homestead">
@@ -451,9 +454,9 @@
     let currentLine = null;
     let currentLineGroup = null;
 
-    // Global visibility state for markers and lines
+    // Global visibility state now uses "keep" instead of "citadel"
     const visibilityState = {
-      homestead: true, citadel: true, torch: true, cave: true,
+      homestead: true, keep: true, torch: true, cave: true,
       sword: true, spear: true, bow: true, beacon: true,
       camp: true, catapult: true, ram: true, lines: true
     };
@@ -827,6 +830,8 @@
       if (["homestead", "keep", "torch", "cave", "sword", "spear", "bow", "beacon", "camp", "catapult", "ram"].includes(type)) {
         markerData.text = await customPrompt("Enter marker text:", "") || "";
         markerData.color = await customPrompt("Enter marker color (e.g., red or #ff0000):", "black") || "black";
+        // Set default text if empty for keep and homestead
+        if (type === "keep" && markerData.text === "") { markerData.text = "keep"; }
         if (type === "homestead" && markerData.text === "") { markerData.text = "homestead"; }
       }
       try {
@@ -888,7 +893,8 @@
         imgWidth = 30 * 1.7; imgHeight = 30 * 1.7;
         imgXOffset = -(imgWidth / 2); imgYOffset = -20 * 1.7; fontSize = 16 * 1.7;
       } else if (data.type === "keep") {
-        imgSrc = "https://regnumsolis.com/planner/images/keep.svg";
+        // Use Citadel icon and parameters for the keep tool
+        imgSrc = "https://regnumsolis.com/planner/images/citadel.svg";
         imgWidth = 30 * 1.7 * 1.2; imgHeight = 30 * 1.7 * 1.2;
         imgXOffset = -15 * 1.7 * 1.2; imgYOffset = -15 * 1.7 * 1.2; fontSize = 14 * 1.7 * 1.2;
       } else if (data.type === "torch") {
@@ -992,9 +998,10 @@
       arrow.setAttribute("transform", `translate(${data.midX},${data.midY}) rotate(${data.angle})`);
       group.appendChild(line);
       group.appendChild(arrow);
+      // Use the custom modal prompt for deleting lines
       group.addEventListener("click", async (e) => {
         e.stopPropagation();
-        if (confirm("Delete this line?")) {
+        if (await customConfirm("Delete this line?")) {
           await deleteDoc(doc(db, "lines", id));
           recordAuditLog("delete_line", { lineId: id });
         }
