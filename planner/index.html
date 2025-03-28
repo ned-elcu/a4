@@ -106,7 +106,8 @@
     }
     .toggle-switch:checked { background: #dfc588; }
     .toggle-switch::before {
-      content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background: white; border-radius: 50%; transition: transform 0.3s;
+      content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background: white; border-radius: 50%;
+      transition: transform 0.3s;
     }
     .toggle-switch:checked::before { transform: translateX(20px); }
     #toggle-container { display: flex; align-items: center; justify-content: center; }
@@ -130,7 +131,7 @@
     .tool {
       position: relative;
       width: 50px; height: 50px; border: 1px solid rgba(223,197,136,0.5); background: rgba(30,30,30,0.9);
-      display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 5px; transition: transform 0.3s;
+      display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 5px; transition: transform 0.3s, border-color 0.3s;
     }
     .tool:hover { transform: scale(1.1); }
     .tool img { max-width: 100%; max-height: 100%; }
@@ -340,15 +341,29 @@
 
     <!-- Toolbox -->
     <div id="toolbox">
-      <!-- Tools re-ordered as specified with data-tooltip attributes -->
+      <!-- Existing Line Tool -->
       <div class="tool" data-type="line" data-tooltip="Draw Line">
         <img src="https://regnumsolis.com/planner/images/line.svg" alt="Line Draw" onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2250%22 height=%2250%22><text x=%220%22 y=%2230%22 fill=%22white%22 font-size=%2230%22>―</text></svg>'" />
       </div>
+      <!-- New Bezier Tool -->
+      <div class="tool" data-type="bezier" data-tooltip="Draw Bezier Curve">
+        <!-- Inline SVG icon for bezier (simple curve icon) -->
+        <svg width="50" height="50" viewBox="0 0 50 50">
+          <path d="M10 40 Q25 10 40 40" stroke="white" stroke-width="3" fill="none" />
+        </svg>
+      </div>
+      <!-- New Polygon Tool -->
+      <div class="tool" data-type="polygon" data-tooltip="Draw Polygon">
+        <!-- Inline SVG icon for polygon (simple triangle icon) -->
+        <svg width="50" height="50" viewBox="0 0 50 50">
+          <polygon points="25,10 10,40 40,40" stroke="white" stroke-width="3" fill="none" />
+        </svg>
+      </div>
+      <!-- Other existing tools -->
       <div class="tool" draggable="true" data-type="torch" data-tooltip="Place Torch">
         <img src="https://regnumsolis.com/planner/images/torch.svg" alt="Torch" />
       </div>
       <div class="tool" draggable="true" data-type="keep" data-tooltip="Place Keep">
-        <!-- keep now uses the Citadel icon -->
         <img src="https://regnumsolis.com/planner/images/citadel.svg" alt="Keep" />
       </div>
       <div class="tool" draggable="true" data-type="homestead" data-tooltip="Place Homestead">
@@ -407,7 +422,7 @@
   <!-- Footer (single line with inline link) -->
   <footer id="footer-info">
     <p>
-      Build version: v1.09.7rc |
+      Build version: v1.10.0rc |
       Encrypted database connection: <span id="db-connection-status">🟢</span> |
       Status: <span id="user-status">user</span> |
       <a href="https://regnumsolis.com">Return to Home</a>
@@ -453,6 +468,12 @@
     let lineDrawingState = 0;
     let currentLine = null;
     let currentLineGroup = null;
+
+    // New globals for Bezier and Polygon tools
+    let bezierControlPoints = [];
+    let polygonVertices = [];
+    let currentBezierPath = null;
+    let currentPolygonElement = null;
 
     // Global visibility state now uses "keep" instead of "citadel"
     const visibilityState = {
@@ -591,7 +612,6 @@
       clearInterval(loadingInterval);
       loadingText.textContent = "100%";
       setTimeout(() => { loadingOverlay.style.display = "none"; }, 300);
-      // Update database connection indicator in footer (assume connection is good if loading completes)
       document.getElementById("db-connection-status").textContent = "🟢";
     }
 
@@ -616,7 +636,6 @@
           document.getElementById("login-screen").style.display = "none";
           document.getElementById("app").style.display = "block";
           initializeMap();
-          // Use Firestore query to check if the admin doc exists for this user.
           getDoc(doc(db, "admins", user.email))
             .then((docSnap) => {
               if (docSnap.exists()) {
@@ -650,7 +669,7 @@
           setupPanZoomLayers();
           setupZoomControls();
           setupDragAndDrop();
-          setupLineDrawing();
+          setupDrawingTools();
           listenForMarkers();
           listenForLines();
           isMapReady = true;
@@ -660,7 +679,6 @@
           console.error("Error loading SVG:", error);
           displayErrorOverlay("Error loading map data.");
           hideLoading();
-          // Update database connection indicator in footer
           document.getElementById("db-connection-status").textContent = "🔴";
         });
     }
@@ -696,7 +714,7 @@
       panZoomInstance = svgPanZoom(svgRoot, {
         zoomEnabled: true, panEnabled: true, controlIconsEnabled: false, minZoom: 0.5, maxZoom: 5,
         beforeMouseDown: function(e) {
-          if (activeTool === "line") return false;
+          if (activeTool === "line" || activeTool === "bezier" || activeTool === "polygon") return false;
           if (e.target.getAttribute("data-marker") === "true" ||
               (e.target.parentNode && e.target.parentNode.getAttribute("data-marker") === "true")) { return false; }
           return true;
@@ -717,6 +735,23 @@
           tool.addEventListener("click", () => {
             activeTool = "line";
             lineDrawingState = 0;
+            document.querySelectorAll("#toolbox .tool").forEach(t => t.style.borderColor = "rgba(223,197,136,0.5)");
+            tool.style.borderColor = "red";
+          });
+        } else if (type === "bezier") {
+          tool.addEventListener("click", () => {
+            activeTool = "bezier";
+            bezierControlPoints = [];
+            if (currentBezierPath) { currentBezierPath.remove(); currentBezierPath = null; }
+            markerLayer.style.pointerEvents = "none";
+            document.querySelectorAll("#toolbox .tool").forEach(t => t.style.borderColor = "rgba(223,197,136,0.5)");
+            tool.style.borderColor = "red";
+          });
+        } else if (type === "polygon") {
+          tool.addEventListener("click", () => {
+            activeTool = "polygon";
+            polygonVertices = [];
+            if (currentPolygonElement) { currentPolygonElement.remove(); currentPolygonElement = null; }
             markerLayer.style.pointerEvents = "none";
             document.querySelectorAll("#toolbox .tool").forEach(t => t.style.borderColor = "rgba(223,197,136,0.5)");
             tool.style.borderColor = "red";
@@ -768,7 +803,7 @@
       });
 
       svgRoot.addEventListener("drop", async (e) => {
-        if (!isMapReady || activeTool === "line") return;
+        if (!isMapReady || activeTool === "line" || activeTool === "bezier" || activeTool === "polygon") return;
         e.preventDefault();
         const type = e.dataTransfer.getData("text/plain");
         const cursorPos = getSVGPoint(e);
@@ -776,11 +811,27 @@
       });
     }
 
-    function setupLineDrawing() {
-      svgRoot.addEventListener("click", async (e) => {
-        if (activeTool !== "line") return;
-        e.preventDefault();
-        const pt = getSVGPoint(e);
+    // Combined drawing tool event listener for line, bezier and polygon
+    function setupDrawingTools() {
+      // Remove any existing listener to avoid duplicate bindings
+      svgRoot.removeEventListener("click", drawingToolHandler);
+      svgRoot.addEventListener("click", drawingToolHandler);
+      // Listen for right-click to commit bezier or polygon drawings
+      svgRoot.addEventListener("contextmenu", (e) => {
+        if (activeTool === "bezier") {
+          e.preventDefault();
+          commitBezier();
+        } else if (activeTool === "polygon") {
+          e.preventDefault();
+          commitPolygon();
+        }
+      });
+    }
+
+    async function drawingToolHandler(e) {
+      const pt = getSVGPoint(e);
+      if (activeTool === "line") {
+        // Line tool logic (same as before)
         if (lineDrawingState === 0) {
           currentLineGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
           currentLineGroup.classList.add("line-group");
@@ -820,7 +871,127 @@
           markerLayer.style.pointerEvents = "auto";
           document.querySelectorAll("#toolbox .tool").forEach(t => t.style.borderColor = "rgba(223,197,136,0.5)");
         }
-      });
+      }
+      else if (activeTool === "bezier") {
+        // Bezier tool: add control points and draw preview
+        bezierControlPoints.push({ x: pt.x, y: pt.y });
+        updateBezierPreview();
+      }
+      else if (activeTool === "polygon") {
+        // Polygon tool: add vertex and update preview
+        polygonVertices.push({ x: pt.x, y: pt.y });
+        updatePolygonPreview();
+      }
+    }
+
+    // Helper: sample bezier curve using de Casteljau algorithm
+    function calculateBezier(points, t) {
+      let temp = points.map(p => ({...p}));
+      for (let i = temp.length - 1; i > 0; i--) {
+        for (let j = 0; j < i; j++) {
+          temp[j] = {
+            x: temp[j].x + (temp[j+1].x - temp[j].x) * t,
+            y: temp[j].y + (temp[j+1].y - temp[j].y) * t
+          };
+        }
+      }
+      return temp[0];
+    }
+
+    function updateBezierPreview() {
+      // Remove old preview if exists
+      if (currentBezierPath) { currentBezierPath.remove(); }
+      if (bezierControlPoints.length < 2) return;
+      currentBezierPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      let d = "";
+      const samples = 50;
+      for (let i = 0; i <= samples; i++) {
+        let t = i / samples;
+        let pt = calculateBezier(bezierControlPoints, t);
+        d += (i === 0 ? `M ${pt.x} ${pt.y}` : ` L ${pt.x} ${pt.y}`);
+      }
+      currentBezierPath.setAttribute("d", d);
+      currentBezierPath.setAttribute("stroke", "yellow");
+      currentBezierPath.setAttribute("stroke-width", "3");
+      currentBezierPath.setAttribute("fill", "none");
+      lineLayer.appendChild(currentBezierPath);
+    }
+
+    function updatePolygonPreview() {
+      if (currentPolygonElement) { currentPolygonElement.remove(); }
+      if (polygonVertices.length < 2) return;
+      currentPolygonElement = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+      const pointsStr = polygonVertices.map(p => `${p.x},${p.y}`).join(" ");
+      currentPolygonElement.setAttribute("points", pointsStr);
+      currentPolygonElement.setAttribute("stroke", "yellow");
+      currentPolygonElement.setAttribute("stroke-width", "2");
+      currentPolygonElement.setAttribute("fill", "rgba(255,255,0,0.3)");
+      lineLayer.appendChild(currentPolygonElement);
+    }
+
+    async function commitBezier() {
+      if (bezierControlPoints.length < 2) return;
+      // Remove preview element
+      if (currentBezierPath) { currentBezierPath.remove(); currentBezierPath = null; }
+      const bezierColor = await customPrompt("Enter bezier curve color (e.g., red or #ff0000):", "") || "white";
+      // Create a finalized path element
+      const pathElem = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      let d = "";
+      const samples = 100;
+      for (let i = 0; i <= samples; i++) {
+        let t = i / samples;
+        let pt = calculateBezier(bezierControlPoints, t);
+        d += (i === 0 ? `M ${pt.x} ${pt.y}` : ` L ${pt.x} ${pt.y}`);
+      }
+      pathElem.setAttribute("d", d);
+      pathElem.setAttribute("stroke", bezierColor);
+      pathElem.setAttribute("stroke-width", "3");
+      pathElem.setAttribute("fill", "none");
+      lineLayer.appendChild(pathElem);
+      // Save to Firestore (e.g., in collection "bezierCurves")
+      try {
+        const docRef = await addDoc(collection(db, "bezierCurves"), {
+          controlPoints: bezierControlPoints,
+          color: bezierColor,
+          timestamp: serverTimestamp(),
+          owner: auth.currentUser.uid
+        });
+        recordAuditLog("add_bezier", { bezierId: docRef.id });
+      } catch (error) {
+        console.error("Error adding bezier curve:", error);
+      }
+      activeTool = null;
+      bezierControlPoints = [];
+      markerLayer.style.pointerEvents = "auto";
+      document.querySelectorAll("#toolbox .tool").forEach(t => t.style.borderColor = "rgba(223,197,136,0.5)");
+    }
+
+    async function commitPolygon() {
+      if (polygonVertices.length < 3) return;
+      if (currentPolygonElement) { currentPolygonElement.remove(); currentPolygonElement = null; }
+      const polygonColor = await customPrompt("Enter polygon stroke color (e.g., red or #ff0000):", "") || "white";
+      const polygonElem = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+      const pointsStr = polygonVertices.map(p => `${p.x},${p.y}`).join(" ");
+      polygonElem.setAttribute("points", pointsStr);
+      polygonElem.setAttribute("stroke", polygonColor);
+      polygonElem.setAttribute("stroke-width", "2");
+      polygonElem.setAttribute("fill", polygonColor + "40");
+      lineLayer.appendChild(polygonElem);
+      try {
+        const docRef = await addDoc(collection(db, "polygons"), {
+          vertices: polygonVertices,
+          color: polygonColor,
+          timestamp: serverTimestamp(),
+          owner: auth.currentUser.uid
+        });
+        recordAuditLog("add_polygon", { polygonId: docRef.id });
+      } catch (error) {
+        console.error("Error adding polygon:", error);
+      }
+      activeTool = null;
+      polygonVertices = [];
+      markerLayer.style.pointerEvents = "auto";
+      document.querySelectorAll("#toolbox .tool").forEach(t => t.style.borderColor = "rgba(223,197,136,0.5)");
     }
 
     async function addMarkerToFirestore(type, x, y) {
@@ -964,7 +1135,7 @@
       markerEl.dataset.id = id;
       markerEl.addEventListener("click", async (e) => {
         e.stopPropagation();
-        if (activeTool === "line") return;
+        if (activeTool === "line" || activeTool === "bezier" || activeTool === "polygon") return;
         if (await customConfirm("Delete this marker?")) {
           try {
             await deleteDoc(doc(db, "markers", id));
