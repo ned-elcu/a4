@@ -44,7 +44,6 @@
       0% { text-shadow: 0 0 5px rgba(223,197,136,0.6), 0 0 10px rgba(223,197,136,0.6), 0 0 15px rgba(223,197,136,0.6); }
       100% { text-shadow: 0 0 20px rgba(223,197,136,1), 0 0 30px rgba(223,197,136,1), 0 0 40px rgba(223,197,136,1); }
     }
-    /* Reduced white glow (60% less intensity) */
     @keyframes whiteNeonGlow {
       0% { text-shadow: 0 0 2px rgba(255,255,255,0.24), 0 0 4px rgba(255,255,255,0.24), 0 0 6px rgba(255,255,255,0.24); }
       100% { text-shadow: 0 0 8px rgba(255,255,255,0.4), 0 0 12px rgba(255,255,255,0.4), 0 0 16px rgba(255,255,255,0.4); }
@@ -55,6 +54,76 @@
     }
     @keyframes swing { 0% { transform: rotate(-10deg); } 50% { transform: rotate(10deg); } 100% { transform: rotate(-10deg); } }
     .drag-clone { animation: swing 1s ease-in-out infinite; opacity: 0.9; }
+    /* Paint Bucket Container */
+    #paint-bucket-container {
+      position: fixed;
+      top: 140px;
+      left: 20px;
+      width: 50px;
+      height: 50px;
+      z-index: 25;
+      cursor: pointer;
+    }
+    #paint-bucket-container:hover::after {
+      content: "change color";
+      position: absolute;
+      top: -25px;
+      left: 0;
+      background: rgba(30,30,30,0.9);
+      padding: 3px 6px;
+      border-radius: 3px;
+      font-family: Arial, sans-serif;
+      font-size: 0.9em;
+      color: #dfc588;
+      white-space: nowrap;
+    }
+    /* Paint bucket SVG styling */
+    #paint-bucket-svg {
+      width: 100%;
+      height: 100%;
+    }
+    /* Color Picker Modal */
+    #color-picker-modal {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(30,30,30,0.95);
+      border: 1px solid rgba(223,197,136,0.8);
+      border-radius: 8px;
+      padding: 20px;
+      z-index: 3000;
+    }
+    #color-picker-modal h3 {
+      text-align: center;
+      margin-bottom: 10px;
+      font-family: Arial, sans-serif;
+    }
+    #color-grid {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 5px;
+    }
+    .color-cell {
+      width: 30px;
+      height: 30px;
+      border: 1px solid #1e1e1e;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    /* Modal close button */
+    #color-picker-close {
+      margin-top: 10px;
+      display: block;
+      width: 100%;
+      padding: 8px;
+      background: rgba(223,197,136,0.8);
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: Arial, sans-serif;
+    }
     /* Login screen */
     #login-screen {
       display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh;
@@ -181,7 +250,6 @@
     #audit-log-container div { margin-bottom: 5px; }
     .log-user { color: #dfc588; font-weight: bold; }
     .log-action { color: #8ac6d1; }
-    /* Grouping counter styled like the user */
     .log-group { color: #dfc588; }
     #admin-panel footer {
       display: flex; justify-content: space-around; padding: 10px; border-top: 1px solid rgba(223,197,136,0.5);
@@ -227,6 +295,23 @@
   <div id="loading-overlay">
     <img src="https://regnumsolis.com/planner/images/loading.gif" alt="Loading" />
     <div id="loading-text">0%</div>
+  </div>
+
+  <!-- Paint Bucket Icon -->
+  <div id="paint-bucket-container">
+    <svg id="paint-bucket-svg" viewBox="0 0 64 64">
+      <!-- Bucket outline -->
+      <path d="M12 20 L52 20 L44 50 L20 50 Z" stroke="white" stroke-width="2" fill="none" />
+      <!-- Paint inside the bucket -->
+      <rect id="paint-fill" x="16" y="24" width="32" height="12" fill="#dfc588" />
+    </svg>
+  </div>
+
+  <!-- Color Picker Modal -->
+  <div id="color-picker-modal">
+    <h3>Select a Color</h3>
+    <div id="color-grid"></div>
+    <button id="color-picker-close">Close</button>
   </div>
 
   <!-- Login Screen -->
@@ -285,7 +370,6 @@
           </div>
           <div id="marker-visibility-container">
             <h3>Marker Visibility</h3>
-            <!-- Updated toggle: replacing citadel with keep -->
             <div class="toggle-item">
               <input type="checkbox" id="toggle-homestead" class="toggle-switch" checked />
               <label for="toggle-homestead">Homestead</label>
@@ -347,14 +431,12 @@
       </div>
       <!-- New Bezier Tool -->
       <div class="tool" data-type="bezier" data-tooltip="Draw Bezier Curve">
-        <!-- Inline SVG icon for bezier (simple curve icon) -->
         <svg width="50" height="50" viewBox="0 0 50 50">
           <path d="M10 40 Q25 10 40 40" stroke="white" stroke-width="3" fill="none" />
         </svg>
       </div>
       <!-- New Polygon Tool -->
       <div class="tool" data-type="polygon" data-tooltip="Draw Polygon">
-        <!-- Inline SVG icon for polygon (simple triangle icon) -->
         <svg width="50" height="50" viewBox="0 0 50 50">
           <polygon points="25,10 10,40 40,40" stroke="white" stroke-width="3" fill="none" />
         </svg>
@@ -410,19 +492,17 @@
           <button id="clear-logs" title="Delete All Audit Logs">🗑️</button>
         </div>
       </header>
-      <div id="audit-log-container">
-        <!-- Audit log entries will be appended here -->
-      </div>
+      <div id="audit-log-container"></div>
       <footer>
         <button id="delete-all-markers">Delete All Markers</button>
       </footer>
     </div>
   </div>
 
-  <!-- Footer (single line with inline link) -->
+  <!-- Footer -->
   <footer id="footer-info">
     <p>
-      Build version: v1.10.3rc |
+      Build version: v1.10.4rc |
       Encrypted database connection: <span id="db-connection-status">🟢</span> |
       Status: <span id="user-status">user</span> |
       <a href="https://regnumsolis.com">Return to Home</a>
@@ -448,6 +528,9 @@
     import { getFirestore, collection, addDoc, orderBy, query, onSnapshot, deleteDoc, doc, serverTimestamp, getDocs, getDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 
+    // Global selected color for tools. Default is set to "#dfc588"
+    let selectedColor = "#dfc588";
+
     const firebaseConfig = {
       apiKey: "AIzaSyAIws_FKV_CTaiHdnwc8WigDqRkyUCOjtE",
       authDomain: "regnum-d3ddf.firebaseapp.com",
@@ -469,13 +552,13 @@
     let currentLine = null;
     let currentLineGroup = null;
 
-    // New globals for Bezier and Polygon tools
+    // Globals for Bezier and Polygon tools
     let bezierControlPoints = [];
     let polygonVertices = [];
     let currentBezierPath = null;
     let currentPolygonElement = null;
 
-    // Global visibility state now uses "keep" instead of "citadel"
+    // Global visibility state
     const visibilityState = {
       homestead: true, keep: true, torch: true, cave: true,
       sword: true, spear: true, bow: true, beacon: true,
@@ -503,6 +586,7 @@
       setupMapSwitchControls();
       setupMenuToggles();
       setupAdminPanelControls();
+      setupColorPicker();
 
       const toggleMarkerTextCheckbox = document.getElementById("toggle-marker-text");
       const toggleLabel = document.getElementById("toggle-marker-text-label");
@@ -528,6 +612,43 @@
       });
     });
 
+    function setupColorPicker() {
+      // Populate the color grid with 64 default colors
+      const colorGrid = document.getElementById("color-grid");
+      const defaultColors = [
+        "#FF6633","#FFB399","#FF33FF","#FFFF99","#00B3E6","#E6B333","#3366E6","#999966",
+        "#99FF99","#B34D4D","#80B300","#809900","#E6B3B3","#6680B3","#66991A","#FF99E6",
+        "#CCFF1A","#FF1A66","#E6331A","#33FFCC","#66994D","#B366CC","#4D8000","#B33300",
+        "#CC80CC","#66664D","#991AFF","#E666FF","#4DB3FF","#1AB399","#E666B3","#33991A",
+        "#CC9999","#B3B31A","#00E680","#4D8066","#809980","#E6FF80","#1AFF33","#999933",
+        "#FF3380","#CCCC00","#66E64D","#4D80CC","#9900B3","#E64D66","#4DB380","#FF4D4D",
+        "#99E6E6","#6666FF","#FF6666","#FF9933","#FFCC33","#CCCC33","#99CC33","#66CC33",
+        "#33CC33","#33CC66","#33CC99","#33CCCC","#3399CC","#3366CC","#3333CC","#6633CC"
+      ];
+      defaultColors.forEach(color => {
+        const cell = document.createElement("div");
+        cell.className = "color-cell";
+        cell.style.backgroundColor = color;
+        cell.addEventListener("click", () => {
+          selectedColor = color;
+          document.getElementById("paint-fill").setAttribute("fill", selectedColor);
+          closeColorPicker();
+        });
+        colorGrid.appendChild(cell);
+      });
+
+      document.getElementById("paint-bucket-container").addEventListener("click", openColorPicker);
+      document.getElementById("color-picker-close").addEventListener("click", closeColorPicker);
+    }
+
+    function openColorPicker() {
+      document.getElementById("color-picker-modal").style.display = "block";
+    }
+
+    function closeColorPicker() {
+      document.getElementById("color-picker-modal").style.display = "none";
+    }
+
     function setupMenuToggles() {
       document.querySelectorAll(".menu-toggle").forEach(btn => {
         btn.addEventListener("click", (e) => {
@@ -539,7 +660,6 @@
       });
     }
 
-    // Admin Panel Controls using Firestore query
     function setupAdminPanelControls() {
       const minimizeBtn = document.getElementById("minimize-panel");
       const auditContainer = document.getElementById("audit-log-container");
@@ -844,7 +964,8 @@
         if (lineDrawingState === 0) {
           currentLineGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
           currentLineGroup.classList.add("line-group");
-          const lineColor = await customPrompt("Enter line color (e.g. red or #ff0000):", "") || "white";
+          // Use selectedColor instead of prompting for color
+          const lineColor = selectedColor;
           currentLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
           currentLine.setAttribute("x1", pt.x);
           currentLine.setAttribute("y1", pt.y);
@@ -905,7 +1026,7 @@
       return temp[0];
     }
     
-    // Helper: approximate midpoint along the bezier curve based on arc length
+    // Helper: approximate arc-length midpoint along the bezier curve
     function getBezierArcMidpoint(controlPoints, samples = 100) {
       let pts = [];
       for (let i = 0; i <= samples; i++) {
@@ -921,7 +1042,7 @@
         totalLength += d;
         cumulative.push(totalLength);
       }
-      let half = totalLength/2;
+      let half = totalLength / 2;
       let index = cumulative.findIndex(val => val >= half);
       if (index <= 0) return pts[0];
       let d0 = cumulative[index-1];
@@ -956,9 +1077,9 @@
       currentPolygonElement = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
       const pointsStr = polygonVertices.map(p => `${p.x},${p.y}`).join(" ");
       currentPolygonElement.setAttribute("points", pointsStr);
-      currentPolygonElement.setAttribute("stroke", "yellow");
+      currentPolygonElement.setAttribute("stroke", selectedColor);
       currentPolygonElement.setAttribute("stroke-width", "2");
-      currentPolygonElement.setAttribute("fill", "yellow");
+      currentPolygonElement.setAttribute("fill", selectedColor);
       currentPolygonElement.setAttribute("fill-opacity", "0.3");
       lineLayer.appendChild(currentPolygonElement);
     }
@@ -966,7 +1087,8 @@
     async function commitBezier() {
       if (bezierControlPoints.length < 2) return;
       if (currentBezierPath) { currentBezierPath.remove(); currentBezierPath = null; }
-      const bezierColor = await customPrompt("Enter bezier curve color (e.g., red or #ff0000):", "") || "white";
+      // Use the globally selectedColor
+      const bezierColor = selectedColor;
       
       // Create a group to hold the bezier path and its arrows
       const bezierGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
@@ -996,7 +1118,7 @@
       arrowEnd.setAttribute("transform", `translate(${pt2.x},${pt2.y}) rotate(${angleEnd})`);
       bezierGroup.appendChild(arrowEnd);
 
-      // Calculate arc-length midpoint using our helper
+      // Calculate arc-length midpoint and arrow in the middle
       let midPt = getBezierArcMidpoint(bezierControlPoints, 100);
       let angleMid = Math.atan2(pt2.y - midPt.y, pt2.x - midPt.x) * (180/Math.PI);
       const arrowMid = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
@@ -1044,15 +1166,15 @@
       const polygonElem = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
       const pointsStr = polygonVertices.map(p => `${p.x},${p.y}`).join(" ");
       polygonElem.setAttribute("points", pointsStr);
-      polygonElem.setAttribute("stroke", "yellow");
+      polygonElem.setAttribute("stroke", selectedColor);
       polygonElem.setAttribute("stroke-width", "2");
-      polygonElem.setAttribute("fill", "yellow");
+      polygonElem.setAttribute("fill", selectedColor);
       polygonElem.setAttribute("fill-opacity", "0.3");
       lineLayer.appendChild(polygonElem);
       try {
         const docRef = await addDoc(collection(db, "polygons"), {
           vertices: polygonVertices,
-          color: "yellow",
+          color: selectedColor,
           timestamp: serverTimestamp(),
           owner: auth.currentUser.uid
         });
@@ -1085,7 +1207,7 @@
       let markerData = { type, x, y, timestamp: serverTimestamp(), owner: user.uid };
       if (["homestead", "keep", "torch", "cave", "sword", "spear", "bow", "beacon", "camp", "catapult", "ram"].includes(type)) {
         markerData.text = await customPrompt("Enter marker text:", "") || "";
-        markerData.color = await customPrompt("Enter marker color (e.g., red or #ff0000):", "") || "";
+        markerData.color = selectedColor;
       }
       try {
         const docRef = await addDoc(collection(db, "markers"), markerData);
@@ -1110,7 +1232,6 @@
       }
     }
 
-    // Listener for bezier curves from Firestore
     function listenForBezierCurves() {
       const bezierQuery = query(collection(db, "bezierCurves"), orderBy("timestamp"));
       onSnapshot(bezierQuery, (snapshot) => {
@@ -1140,7 +1261,6 @@
       pathElem.setAttribute("fill", "none");
       bezierGroup.appendChild(pathElem);
 
-      // Arrow at the end
       let pt1 = calculateBezier(data.controlPoints, 0.98);
       let pt2 = calculateBezier(data.controlPoints, 1.0);
       let angleEnd = Math.atan2(pt2.y - pt1.y, pt2.x - pt1.x) * (180/Math.PI);
@@ -1150,7 +1270,6 @@
       arrowEnd.setAttribute("transform", `translate(${pt2.x},${pt2.y}) rotate(${angleEnd})`);
       bezierGroup.appendChild(arrowEnd);
 
-      // Middle arrow using arc-length midpoint
       let midPt = getBezierArcMidpoint(data.controlPoints, 100);
       let angleMid = Math.atan2(pt2.y - midPt.y, pt2.x - midPt.x) * (180/Math.PI);
       const arrowMid = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
@@ -1174,7 +1293,6 @@
       lineLayer.appendChild(bezierGroup);
     }
 
-    // Listener for polygons from Firestore
     function listenForPolygons() {
       const polyQuery = query(collection(db, "polygons"), orderBy("timestamp"));
       onSnapshot(polyQuery, (snapshot) => {
