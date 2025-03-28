@@ -816,14 +816,16 @@
           document.getElementById("login-screen").style.display = "none";
           document.getElementById("app").style.display = "block";
           initializeMap();
-          // Check for admin custom claim
-          user.getIdTokenResult().then((idTokenResult) => {
-            if (idTokenResult.claims.admin) {
-              document.getElementById("admin-panel").style.display = "block";
-              listenForAuditLogs();
-              setupDeleteAll();
-            }
-          });
+          // Force token refresh and then check for admin custom claim
+          user.getIdToken(true)
+            .then(() => user.getIdTokenResult())
+            .then((idTokenResult) => {
+              if (idTokenResult.claims.admin) {
+                document.getElementById("admin-panel").style.display = "block";
+                listenForAuditLogs();
+                setupDeleteAll();
+              }
+            });
         } else {
           document.getElementById("login-screen").style.display = "flex";
           document.getElementById("app").style.display = "none";
