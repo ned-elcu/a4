@@ -669,7 +669,6 @@
 
     let panZoomInstance, svgRoot, panLayer, lineLayer, markerLayer;
     let isMapReady = false;
-    const adminEmail = "gryves_dev@yahoo.com";
 
     let activeTool = null;
     let lineDrawingState = 0;
@@ -817,11 +816,14 @@
           document.getElementById("login-screen").style.display = "none";
           document.getElementById("app").style.display = "block";
           initializeMap();
-          if (user.email === adminEmail) {
-            document.getElementById("admin-panel").style.display = "block";
-            listenForAuditLogs();
-            setupDeleteAll();
-          }
+          // Check for admin custom claim
+          user.getIdTokenResult().then((idTokenResult) => {
+            if (idTokenResult.claims.admin) {
+              document.getElementById("admin-panel").style.display = "block";
+              listenForAuditLogs();
+              setupDeleteAll();
+            }
+          });
         } else {
           document.getElementById("login-screen").style.display = "flex";
           document.getElementById("app").style.display = "none";
