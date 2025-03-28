@@ -422,7 +422,7 @@
   <!-- Footer (single line with inline link) -->
   <footer id="footer-info">
     <p>
-      Build version: v1.10.2rc |
+      Build version: v1.10.3rc |
       Encrypted database connection: <span id="db-connection-status">🟢</span> |
       Status: <span id="user-status">user</span> |
       <a href="https://regnumsolis.com">Return to Home</a>
@@ -904,6 +904,33 @@
       }
       return temp[0];
     }
+    
+    // Helper: approximate midpoint along the bezier curve based on arc length
+    function getBezierArcMidpoint(controlPoints, samples = 100) {
+      let pts = [];
+      for (let i = 0; i <= samples; i++) {
+        let t = i / samples;
+        pts.push(calculateBezier(controlPoints, t));
+      }
+      let totalLength = 0;
+      let cumulative = [0];
+      for (let i = 1; i < pts.length; i++) {
+        let dx = pts[i].x - pts[i-1].x;
+        let dy = pts[i].y - pts[i-1].y;
+        let d = Math.sqrt(dx*dx+dy*dy);
+        totalLength += d;
+        cumulative.push(totalLength);
+      }
+      let half = totalLength/2;
+      let index = cumulative.findIndex(val => val >= half);
+      if (index <= 0) return pts[0];
+      let d0 = cumulative[index-1];
+      let d1 = cumulative[index];
+      let factor = (half - d0) / (d1 - d0);
+      let p0 = pts[index-1];
+      let p1 = pts[index];
+      return { x: p0.x + factor*(p1.x - p0.x), y: p0.y + factor*(p1.y - p0.y) };
+    }
 
     function updateBezierPreview() {
       if (currentBezierPath) { currentBezierPath.remove(); }
@@ -929,7 +956,6 @@
       currentPolygonElement = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
       const pointsStr = polygonVertices.map(p => `${p.x},${p.y}`).join(" ");
       currentPolygonElement.setAttribute("points", pointsStr);
-      // Preview: yellow stroke and semi-transparent fill
       currentPolygonElement.setAttribute("stroke", "yellow");
       currentPolygonElement.setAttribute("stroke-width", "2");
       currentPolygonElement.setAttribute("fill", "yellow");
@@ -941,6 +967,11 @@
       if (bezierControlPoints.length < 2) return;
       if (currentBezierPath) { currentBezierPath.remove(); currentBezierPath = null; }
       const bezierColor = await customPrompt("Enter bezier curve color (e.g., red or #ff0000):", "") || "white";
+      
+      // Create a group to hold the bezier path and its arrows
+      const bezierGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+
+      // Create the bezier path element
       const pathElem = document.createElementNS("http://www.w3.org/2000/svg", "path");
       let d = "";
       const samples = 100;
@@ -953,7 +984,29 @@
       pathElem.setAttribute("stroke", bezierColor);
       pathElem.setAttribute("stroke-width", "3");
       pathElem.setAttribute("fill", "none");
-      lineLayer.appendChild(pathElem);
+      bezierGroup.appendChild(pathElem);
+
+      // Arrow at the end (using t=0.98 to t=1.0)
+      let pt1 = calculateBezier(bezierControlPoints, 0.98);
+      let pt2 = calculateBezier(bezierControlPoints, 1.0);
+      let angleEnd = Math.atan2(pt2.y - pt1.y, pt2.x - pt1.x) * (180/Math.PI);
+      const arrowEnd = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+      arrowEnd.setAttribute("points", "0,-8 16,0 0,8");
+      arrowEnd.setAttribute("fill", bezierColor);
+      arrowEnd.setAttribute("transform", `translate(${pt2.x},${pt2.y}) rotate(${angleEnd})`);
+      bezierGroup.appendChild(arrowEnd);
+
+      // Calculate arc-length midpoint using our helper
+      let midPt = getBezierArcMidpoint(bezierControlPoints, 100);
+      let angleMid = Math.atan2(pt2.y - midPt.y, pt2.x - midPt.x) * (180/Math.PI);
+      const arrowMid = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+      arrowMid.setAttribute("points", "0,-8 16,0 0,8");
+      arrowMid.setAttribute("fill", bezierColor);
+      arrowMid.setAttribute("transform", `translate(${midPt.x},${midPt.y}) rotate(${angleMid})`);
+      bezierGroup.appendChild(arrowMid);
+
+      lineLayer.appendChild(bezierGroup);
+
       try {
         const docRef = await addDoc(collection(db, "bezierCurves"), {
           controlPoints: bezierControlPoints,
@@ -962,18 +1015,18 @@
           owner: auth.currentUser.uid
         });
         recordAuditLog("add_bezier", { bezierId: docRef.id });
-        pathElem.dataset.id = docRef.id;
+        bezierGroup.dataset.id = docRef.id;
       } catch (error) {
         console.error("Error adding bezier curve:", error);
       }
-      // Attach deletion on click
-      pathElem.addEventListener("click", async (e) => {
+      // Attach deletion event to the entire bezier group
+      bezierGroup.addEventListener("click", async (e) => {
         e.stopPropagation();
         if (await customConfirm("Delete this bezier curve?")) {
           try {
-            await deleteDoc(doc(db, "bezierCurves", pathElem.dataset.id));
-            recordAuditLog("delete_bezier", { bezierId: pathElem.dataset.id });
-            pathElem.remove();
+            await deleteDoc(doc(db, "bezierCurves", bezierGroup.dataset.id));
+            recordAuditLog("delete_bezier", { bezierId: bezierGroup.dataset.id });
+            bezierGroup.remove();
           } catch (error) {
             console.error("Error deleting bezier curve:", error);
           }
@@ -988,7 +1041,6 @@
     async function commitPolygon() {
       if (polygonVertices.length < 3) return;
       if (currentPolygonElement) { currentPolygonElement.remove(); currentPolygonElement = null; }
-      // Use fixed style: yellow stroke and semi-transparent fill
       const polygonElem = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
       const pointsStr = polygonVertices.map(p => `${p.x},${p.y}`).join(" ");
       polygonElem.setAttribute("points", pointsStr);
@@ -1009,7 +1061,6 @@
       } catch (error) {
         console.error("Error adding polygon:", error);
       }
-      // Attach deletion on click
       polygonElem.addEventListener("click", async (e) => {
         e.stopPropagation();
         if (await customConfirm("Delete this polygon?")) {
@@ -1063,7 +1114,7 @@
     function listenForBezierCurves() {
       const bezierQuery = query(collection(db, "bezierCurves"), orderBy("timestamp"));
       onSnapshot(bezierQuery, (snapshot) => {
-        lineLayer.querySelectorAll("path[data-bezier='true']").forEach(elem => elem.remove());
+        lineLayer.querySelectorAll("g[data-bezier='true']").forEach(elem => elem.remove());
         snapshot.forEach(docSnap => {
           createBezierElement(docSnap.id, docSnap.data());
         });
@@ -1071,6 +1122,10 @@
     }
 
     function createBezierElement(id, data) {
+      const bezierGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      bezierGroup.dataset.id = id;
+      bezierGroup.setAttribute("data-bezier", "true");
+      
       const pathElem = document.createElementNS("http://www.w3.org/2000/svg", "path");
       let d = "";
       const samples = 100;
@@ -1083,21 +1138,40 @@
       pathElem.setAttribute("stroke", data.color);
       pathElem.setAttribute("stroke-width", "3");
       pathElem.setAttribute("fill", "none");
-      pathElem.dataset.id = id;
-      pathElem.setAttribute("data-bezier", "true");
-      pathElem.addEventListener("click", async (e) => {
+      bezierGroup.appendChild(pathElem);
+
+      // Arrow at the end
+      let pt1 = calculateBezier(data.controlPoints, 0.98);
+      let pt2 = calculateBezier(data.controlPoints, 1.0);
+      let angleEnd = Math.atan2(pt2.y - pt1.y, pt2.x - pt1.x) * (180/Math.PI);
+      const arrowEnd = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+      arrowEnd.setAttribute("points", "0,-8 16,0 0,8");
+      arrowEnd.setAttribute("fill", data.color);
+      arrowEnd.setAttribute("transform", `translate(${pt2.x},${pt2.y}) rotate(${angleEnd})`);
+      bezierGroup.appendChild(arrowEnd);
+
+      // Middle arrow using arc-length midpoint
+      let midPt = getBezierArcMidpoint(data.controlPoints, 100);
+      let angleMid = Math.atan2(pt2.y - midPt.y, pt2.x - midPt.x) * (180/Math.PI);
+      const arrowMid = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+      arrowMid.setAttribute("points", "0,-8 16,0 0,8");
+      arrowMid.setAttribute("fill", data.color);
+      arrowMid.setAttribute("transform", `translate(${midPt.x},${midPt.y}) rotate(${angleMid})`);
+      bezierGroup.appendChild(arrowMid);
+
+      bezierGroup.addEventListener("click", async (e) => {
         e.stopPropagation();
         if (await customConfirm("Delete this bezier curve?")) {
           try {
             await deleteDoc(doc(db, "bezierCurves", id));
             recordAuditLog("delete_bezier", { bezierId: id });
-            pathElem.remove();
+            bezierGroup.remove();
           } catch (error) {
             console.error("Error deleting bezier curve:", error);
           }
         }
       });
-      lineLayer.appendChild(pathElem);
+      lineLayer.appendChild(bezierGroup);
     }
 
     // Listener for polygons from Firestore
