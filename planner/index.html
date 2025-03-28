@@ -44,6 +44,11 @@
       0% { text-shadow: 0 0 5px rgba(223,197,136,0.6), 0 0 10px rgba(223,197,136,0.6), 0 0 15px rgba(223,197,136,0.6); }
       100% { text-shadow: 0 0 20px rgba(223,197,136,1), 0 0 30px rgba(223,197,136,1), 0 0 40px rgba(223,197,136,1); }
     }
+    /* Reduced white glow (60% less intensity) */
+    @keyframes whiteNeonGlow {
+      0% { text-shadow: 0 0 2px rgba(255,255,255,0.24), 0 0 4px rgba(255,255,255,0.24), 0 0 6px rgba(255,255,255,0.24); }
+      100% { text-shadow: 0 0 8px rgba(255,255,255,0.4), 0 0 12px rgba(255,255,255,0.4), 0 0 16px rgba(255,255,255,0.4); }
+    }
     @keyframes reducedNeonGlow {
       0% { text-shadow: 0 0 2px rgba(223,197,136,0.24), 0 0 4px rgba(223,197,136,0.24), 0 0 6px rgba(223,197,136,0.24); }
       100% { text-shadow: 0 0 8px rgba(223,197,136,0.4), 0 0 12px rgba(223,197,136,0.4), 0 0 16px rgba(223,197,136,0.4); }
@@ -70,7 +75,12 @@
     #app { display: none; height: 100vh; position: relative; animation: fadeIn 1s ease-out; z-index: 1; }
     /* Header */
     #header-logo { text-align: center; padding: 10px 0; background: transparent; }
-    #header-logo h1 { font-size: 1.05em; margin: 0; color: rgb(223,197,136); animation: reducedNeonGlow 1.5s infinite alternate ease-in-out; }
+    #header-logo h1 {
+      font-size: 1.05em;
+      margin: 0;
+      color: white;
+      animation: whiteNeonGlow 1.5s infinite alternate ease-in-out;
+    }
     /* Right menus */
     #right-menus { position: fixed; top: 100px; right: 20px; display: flex; flex-direction: column; gap: 20px; z-index: 20; }
     .menu-container {
@@ -101,6 +111,10 @@
     .toggle-switch:checked::before { transform: translateX(20px); }
     #toggle-container { display: flex; align-items: center; justify-content: center; }
     #toggle-marker-text-label { margin-left: 10px; line-height: 20px; }
+    /* Override switch label fonts to use normal sans-serif */
+    #text-toggle-right .menu-content label {
+      font-family: Arial, sans-serif;
+    }
     #marker-visibility-container { margin-top: 10px; text-align: left; width: 100%; }
     #marker-visibility-container h3 { font-size: 0.9em; margin-bottom: 5px; text-align: center; }
     .toggle-item { display: flex; justify-content: space-between; align-items: center; margin: 3px 0; }
@@ -152,6 +166,29 @@
       color: white; cursor: pointer; transition: transform 0.3s, box-shadow 0.3s;
     }
     #admin-panel footer button:hover { transform: scale(1.05); box-shadow: 0 4px 15px rgba(223,197,136,0.9); }
+    /* Footer styles */
+    #footer-info {
+      position: fixed;
+      bottom: 0;
+      width: calc(100% - 40px);
+      left: 20px;
+      background: transparent;
+      text-align: center;
+      padding: 10px 0;
+      font-size: 1em;
+      animation: whiteNeonGlow 1.5s infinite alternate ease-in-out;
+      z-index: 10;
+    }
+    #footer-info p {
+      margin: 0;
+      display: inline;
+    }
+    #footer-info a {
+      color: white;
+      text-decoration: underline;
+      margin-left: 5px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -179,7 +216,7 @@
   <div id="app">
     <!-- Header -->
     <div id="header-logo">
-      <h1>REGNUM SOLIS R&D / REMNANT SENATE</h1>
+      <h1>Regnum Solis Research and Development for the Remnant Senate</h1>
     </div>
 
     <!-- Right-side menus container -->
@@ -338,6 +375,16 @@
       </footer>
     </div>
   </div>
+
+  <!-- Footer (single line with inline link) -->
+  <footer id="footer-info">
+    <p>
+      Build version: v1.09.5 |
+      Encrypted database connection: <span id="db-connection-status">🟢</span> |
+      Status: <span id="user-status">user</span> |
+      <a href="https://regnumsolis.com">Return to Home</a>
+    </p>
+  </footer>
 
   <div id="error-overlay">Database connection failed. The app cannot be used at this time.</div>
 
@@ -516,6 +563,8 @@
       clearInterval(loadingInterval);
       loadingText.textContent = "100%";
       setTimeout(() => { loadingOverlay.style.display = "none"; }, 300);
+      // Update database connection indicator in footer (assume connection is good if loading completes)
+      document.getElementById("db-connection-status").textContent = "🟢";
     }
 
     function setupLogin() {
@@ -544,9 +593,11 @@
             .then((docSnap) => {
               if (docSnap.exists()) {
                 document.getElementById("admin-panel").style.display = "block";
+                document.getElementById("user-status").textContent = "admin";
                 listenForAuditLogs();
               } else {
                 console.log("User is not an admin according to Firestore");
+                document.getElementById("user-status").textContent = "user";
               }
             })
             .catch((err) => console.error("Error checking admin status:", err));
@@ -581,6 +632,8 @@
           console.error("Error loading SVG:", error);
           displayErrorOverlay("Error loading map data.");
           hideLoading();
+          // Update database connection indicator in footer
+          document.getElementById("db-connection-status").textContent = "🔴";
         });
     }
 
