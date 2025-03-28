@@ -84,7 +84,6 @@
                      0 0 40px rgba(223,197,136,1);
       }
     }
-    /* Reduced glow animation for header title (60% reduction) */
     @keyframes reducedNeonGlow {
       0% {
         text-shadow: 0 0 2px rgba(223,197,136,0.24),
@@ -97,7 +96,6 @@
                      0 0 16px rgba(223,197,136,0.4);
       }
     }
-    /* Swinging animation for drag clone */
     @keyframes swing {
       0%   { transform: rotate(-10deg); }
       50%  { transform: rotate(10deg); }
@@ -173,10 +171,9 @@
       font-size: 1.05em;
       margin: 0;
       color: rgb(223,197,136);
-      /* Override glow with reducedNeonGlow */
       animation: reducedNeonGlow 1.5s infinite alternate ease-in-out;
     }
-    /* Right menus container to prevent overlap */
+    /* Right menus container */
     #right-menus {
       position: fixed;
       top: 100px;
@@ -186,7 +183,6 @@
       gap: 20px;
       z-index: 20;
     }
-    /* Right-side menus */
     .menu-container {
       width: 180px;
       background: rgba(30,30,30,0.9);
@@ -200,7 +196,6 @@
     .menu-container.hidden {
       transform: translateX(109%);
     }
-    /* Menu header styling with toggle arrow */
     .menu-header {
       display: flex;
       align-items: center;
@@ -209,7 +204,6 @@
       margin-bottom: 5px;
       position: relative;
     }
-    /* Arrow Toggle Button Styling */
     .menu-toggle {
       position: absolute;
       left: -45px;
@@ -226,13 +220,11 @@
       z-index: 100;
       pointer-events: auto;
     }
-    /* Styling for the content inside each menu */
     .menu-content {
       display: flex;
       flex-direction: column;
       gap: 5px;
     }
-    /* Buttons for map change and zoom inside menus */
     .menu-content button {
       width: 100%;
       height: 40px;
@@ -248,12 +240,10 @@
       transform: scale(1.05);
       box-shadow: 0 4px 15px rgba(223,197,136,0.9);
     }
-    /* Settings */
     #text-toggle-right h2 {
       font-size: 1em;
       margin-bottom: 5px;
     }
-    /* Modern toggle switch styling */
     .toggle-switch {
       appearance: none;
       -webkit-appearance: none;
@@ -283,7 +273,6 @@
     .toggle-switch:checked::before {
       transform: translateX(20px);
     }
-    /* Align the switch container with centered text */
     #toggle-container {
       display: flex;
       align-items: center;
@@ -293,7 +282,6 @@
       margin-left: 10px;
       line-height: 20px;
     }
-    /* Marker Visibility toggles inside Settings */
     #marker-visibility-container {
       margin-top: 10px;
       text-align: left;
@@ -315,7 +303,6 @@
       flex-grow: 1;
       margin-left: 5px;
     }
-    /* Toolbox */
     #toolbox {
       position: fixed;
       top: 180px;
@@ -349,7 +336,6 @@
       max-width: 100%;
       max-height: 100%;
     }
-    /* Map container */
     #map-container {
       width: 100vw;
       height: calc(100vh - 60px);
@@ -363,7 +349,6 @@
       opacity: 0.8;
       cursor: pointer;
     }
-    /* Error overlay */
     #error-overlay {
       position: fixed;
       top: 0;
@@ -423,7 +408,6 @@
     #audit-log-container div {
       margin-bottom: 5px;
     }
-    /* Audit log coloring for user and action */
     .log-user {
       color: #dfc588;
       font-weight: bold;
@@ -516,12 +500,10 @@
           <button class="menu-toggle">&#9654;</button>
         </div>
         <div class="menu-content">
-          <!-- Existing Hover Text Toggle -->
           <div id="toggle-container">
             <input type="checkbox" id="toggle-marker-text" class="toggle-switch" />
             <label for="toggle-marker-text" id="toggle-marker-text-label">HOVER TEXT</label>
           </div>
-          <!-- Marker Visibility Toggles (including Lines) -->
           <div id="marker-visibility-container">
             <h3>Marker Visibility</h3>
             <div class="toggle-item">
@@ -568,7 +550,6 @@
               <input type="checkbox" id="toggle-ram" class="toggle-switch" checked />
               <label for="toggle-ram">Ram</label>
             </div>
-            <!-- New toggle for Lines -->
             <div class="toggle-item">
               <input type="checkbox" id="toggle-lines" class="toggle-switch" checked />
               <label for="toggle-lines">Lines</label>
@@ -658,7 +639,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-    import { getFirestore, collection, addDoc, orderBy, query, onSnapshot, deleteDoc, doc, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, orderBy, query, onSnapshot, deleteDoc, doc, serverTimestamp, getDocs, getDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 
     const firebaseConfig = {
@@ -766,7 +747,6 @@
 
     // Admin Panel Controls
     function setupAdminPanelControls() {
-      // Minimize/Maximize toggle
       const minimizeBtn = document.getElementById("minimize-panel");
       const auditContainer = document.getElementById("audit-log-container");
       let isMinimized = false;
@@ -782,7 +762,6 @@
         }
       });
 
-      // Copy audit log functionality
       document.getElementById("copy-log").addEventListener("click", () => {
         let logText = "";
         auditContainer.querySelectorAll("div").forEach(entry => {
@@ -791,7 +770,6 @@
         navigator.clipboard.writeText(logText);
       });
 
-      // Clear (delete) all audit logs
       document.getElementById("clear-logs").addEventListener("click", async () => {
         if (confirm("Delete all audit logs?")) {
           try {
@@ -805,7 +783,6 @@
         }
       });
 
-      // Delete all markers button in footer
       document.getElementById("delete-all-markers").addEventListener("click", async () => {
         if (confirm("Delete all markers?")) {
           try {
@@ -868,18 +845,17 @@
           document.getElementById("login-screen").style.display = "none";
           document.getElementById("app").style.display = "block";
           initializeMap();
-          // Force token refresh then check for admin claim
-          user.getIdToken(true)
-            .then(() => user.getIdTokenResult())
-            .then((idTokenResult) => {
-              console.log("Token claims:", idTokenResult.claims);
-              if (idTokenResult.claims.admin) {
+          // Query Firestore to check if user is an admin
+          getDoc(doc(db, "admins", user.email))
+            .then((docSnap) => {
+              if (docSnap.exists()) {
                 document.getElementById("admin-panel").style.display = "block";
                 listenForAuditLogs();
               } else {
-                console.log("Admin claim not present. Token claims:", idTokenResult.claims);
+                console.log("User is not an admin according to Firestore");
               }
-            });
+            })
+            .catch((err) => console.error("Error checking admin status:", err));
         } else {
           document.getElementById("login-screen").style.display = "flex";
           document.getElementById("app").style.display = "none";
@@ -887,7 +863,6 @@
       });
     }
 
-    // Set default map to Style Map.
     function initializeMap() {
       switchMap("https://regnumsolis.com/planner/images/mvmvmdfs.svg");
     }
