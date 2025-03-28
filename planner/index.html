@@ -157,6 +157,8 @@
     #audit-log-container div { margin-bottom: 5px; }
     .log-user { color: #dfc588; font-weight: bold; }
     .log-action { color: #8ac6d1; }
+    /* Grouping counter styled like the user */
+    .log-group { color: #dfc588; }
     #admin-panel footer {
       display: flex; justify-content: space-around; padding: 10px; border-top: 1px solid rgba(223,197,136,0.5);
       background: rgba(30,30,30,0.95);
@@ -379,7 +381,7 @@
   <!-- Footer (single line with inline link) -->
   <footer id="footer-info">
     <p>
-      Build version: v1.09.5 |
+      Build version: v1.09.6 |
       Encrypted database connection: <span id="db-connection-status">🟢</span> |
       Status: <span id="user-status">user</span> |
       <a href="https://regnumsolis.com">Return to Home</a>
@@ -989,12 +991,42 @@
       const auditContainer = document.getElementById("audit-log-container");
       const auditQuery = query(collection(db, "auditLogs"), orderBy("timestamp", "asc"));
       onSnapshot(auditQuery, (snapshot) => {
+        // Gather logs from snapshot in order
+        const logs = [];
+        snapshot.forEach(docSnap => {
+          logs.push(docSnap.data());
+        });
+        // Group consecutive entries with the same action
+        // For marker events (add/delete), also check if the markerType matches.
+        const grouped = [];
+        logs.forEach(log => {
+          if (grouped.length === 0) {
+            grouped.push({ log: log, count: 1 });
+          } else {
+            const lastGroup = grouped[grouped.length - 1];
+            const sameAction = lastGroup.log.action === log.action;
+            let sameMarkerType = true;
+            if (log.action === "add" || log.action === "delete") {
+              sameMarkerType = (lastGroup.log.details.markerType === log.details.markerType);
+            }
+            if (sameAction && sameMarkerType) {
+              lastGroup.count++;
+            } else {
+              grouped.push({ log: log, count: 1 });
+            }
+          }
+        });
         auditContainer.innerHTML = "";
-        snapshot.forEach((docSnap) => {
-          const log = docSnap.data();
+        grouped.forEach(group => {
+          const log = group.log;
           const dateStr = new Date(log.timestamp ? log.timestamp.seconds * 1000 : Date.now()).toLocaleString();
+          let detailsText = "";
+          if (log.details && log.details.markerType) {
+            detailsText = ` (${log.details.markerType})`;
+          }
+          const groupCount = group.count > 1 ? ` <span class="log-group">(x${group.count})</span>` : "";
           const entry = document.createElement("div");
-          entry.innerHTML = `[${dateStr}] <span class="log-user">${log.user}</span> <span class="log-action">${log.action}</span>`;
+          entry.innerHTML = `[${dateStr}] <span class="log-user">${log.user}</span> <span class="log-action">${log.action}${detailsText}</span>${groupCount}`;
           auditContainer.appendChild(entry);
         });
       });
