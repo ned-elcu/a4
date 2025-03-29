@@ -1351,13 +1351,10 @@
             bezierGroup.remove();
           } catch (error) {
             console.error("Error deleting bezier curve:", error);
+            isDeleteInProgress = false; // Reset flag on error
           }
         }
         
-        // Reset after a short delay to allow any bubbled events to complete
-        setTimeout(() => {
-          isDeleteInProgress = false;
-        }, 100);
       });
       activeTool = null;
       bezierControlPoints = [];
@@ -1402,13 +1399,10 @@
             polygonElem.remove();
           } catch (error) {
             console.error("Error deleting polygon:", error);
+            isDeleteInProgress = false; // Reset flag on error
           }
         }
         
-        // Reset after a short delay
-        setTimeout(() => {
-          isDeleteInProgress = false;
-        }, 100);
       });
       activeTool = null;
       polygonVertices = [];
@@ -1816,28 +1810,41 @@
     }
   </script>
   <script>
-    function customConfirm(message) {
-      return new Promise((resolve) => {
-        const overlay = document.getElementById("custom-prompt-overlay");
-        const promptMessage = document.getElementById("custom-prompt-message");
-        const promptInput = document.getElementById("custom-prompt-input");
-        const okButton = document.getElementById("custom-prompt-ok");
-        const cancelButton = document.getElementById("custom-prompt-cancel");
-        promptMessage.textContent = message;
-        promptInput.style.display = "none";
-        overlay.style.display = "flex";
-        function cleanup() {
-          overlay.style.display = "none";
-          promptInput.style.display = "block";
-          okButton.removeEventListener("click", onOk);
-          cancelButton.removeEventListener("click", onCancel);
+        function customConfirm(message) {
+          return new Promise((resolve) => {
+            const overlay = document.getElementById("custom-prompt-overlay");
+            const promptMessage = document.getElementById("custom-prompt-message");
+            const promptInput = document.getElementById("custom-prompt-input");
+            const okButton = document.getElementById("custom-prompt-ok");
+            const cancelButton = document.getElementById("custom-prompt-cancel");
+
+            promptMessage.textContent = message;
+            promptInput.style.display = "none";
+            overlay.style.display = "flex";
+
+            function cleanup() {
+              overlay.style.display = "none";
+              promptInput.style.display = "block";
+              okButton.removeEventListener("click", onOk);
+              cancelButton.removeEventListener("click", onCancel);
+              // Reset the isDeleteInProgress flag when the dialog is closed
+              isDeleteInProgress = false;
+            }
+
+            function onOk() { 
+              cleanup();
+              resolve(true); 
+            }
+
+            function onCancel() { 
+              cleanup();
+              resolve(false); 
+            }
+
+            okButton.addEventListener("click", onOk);
+            cancelButton.addEventListener("click", onCancel);
+          });
         }
-        function onOk() { resolve(true); cleanup(); }
-        function onCancel() { resolve(false); cleanup(); }
-        okButton.addEventListener("click", onOk);
-        cancelButton.addEventListener("click", onCancel);
-      });
-    }
   </script>
   <script>
     // WebGL background shader setup restored
