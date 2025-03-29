@@ -136,6 +136,7 @@
       width: 180px; background: rgba(30,30,30,0.9); padding: 10px; border: 1px solid rgba(223,197,136,0.5);
       border-radius: 5px; box-shadow: 0 0 10px rgba(223,197,136,0.5); position: relative; transition: transform 0.3s ease;
     }
+    /* Fixed menu transformation - this is critical for the menu toggle */
     .menu-container.hidden { transform: translateX(109%); }
     .menu-header { display: flex; align-items: center; justify-content: center; font-size: 1.2em; margin-bottom: 5px; position: relative; }
     .menu-toggle {
@@ -310,6 +311,10 @@
       .menu-container {
         width: 160px;
       }
+      /* Make sure the hidden class still works */
+      .menu-container.hidden {
+        transform: translateX(109%) !important;
+      }
       #admin-panel {
         width: 280px;
       }
@@ -330,6 +335,10 @@
       }
       #right-menus {
         top: 70px;
+      }
+      /* Make sure the hidden class still works */
+      .menu-container.hidden {
+        transform: translateX(109%) !important;
       }
       #toolbox {
         top: 70px;
@@ -372,6 +381,10 @@
       }
       .menu-container {
         width: 140px;
+      }
+      /* Make sure the hidden class still works */
+      .menu-container.hidden {
+        transform: translateX(109%) !important;
       }
       .menu-toggle {
         left: -30px;
@@ -421,6 +434,10 @@
       .menu-container {
         width: 130px;
       }
+      /* Make sure the hidden class still works */
+      .menu-container.hidden {
+        transform: translateX(109%) !important;
+      }
       #footer-info p {
         display: flex;
         flex-direction: column;
@@ -444,7 +461,7 @@
     
     /* Touch device enhancements */
     @media (pointer: coarse) {
-      .tool, .menu-toggle, .toggle-switch, button {
+      .tool, button {
         min-height: 44px; /* Minimum touch target size */
       }
       .tool::after {
@@ -677,7 +694,7 @@
   <!-- Footer -->
   <footer id="footer-info">
     <p>
-      Build version: v1.10.6rc |
+      Build version: v1.10.7rc |
       Encrypted database connection: <span id="db-connection-status">🟢</span> |
       Status: <span id="user-status">user</span> |
       <a href="https://regnumsolis.com">Return to Home</a>
