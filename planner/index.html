@@ -54,7 +54,7 @@
     }
     @keyframes swing { 0% { transform: rotate(-10deg); } 50% { transform: rotate(10deg); } 100% { transform: rotate(-10deg); } }
     .drag-clone { animation: swing 1s ease-in-out infinite; opacity: 0.9; }
-    /* Paint Bucket Container */
+    /* Paint Bucket Container - Updated with animation and hover effect */
     #paint-bucket-container {
       position: fixed;
       top: 140px;
@@ -63,24 +63,41 @@
       height: 50px;
       z-index: 25;
       cursor: pointer;
+      animation: fadeIn 1s ease-out;
+      transition: transform 0.3s;
+      border: 1px solid rgba(223,197,136,0.5);
+      border-radius: 5px;
+      background: rgba(30,30,30,0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-    #paint-bucket-container:hover::after {
+    #paint-bucket-container:hover {
+      transform: scale(1.1);
+    }
+    #paint-bucket-container::after {
       content: "change color";
       position: absolute;
-      top: -25px;
-      left: 0;
-      background: rgba(30,30,30,0.9);
-      padding: 3px 6px;
-      border-radius: 3px;
-      font-family: Arial, sans-serif;
-      font-size: 0.9em;
-      color: #dfc588;
+      top: 50%;
+      left: 105%;
+      transform: translateY(-50%);
       white-space: nowrap;
+      background: transparent;
+      color: white;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1em;
+      opacity: 0;
+      pointer-events: none;
+      animation: whiteNeonGlow 1.5s infinite alternate ease-in-out;
+      transition: opacity 0.3s ease;
+    }
+    #paint-bucket-container:hover::after {
+      opacity: 1;
     }
     /* Paint bucket SVG styling */
     #paint-bucket-svg {
-      width: 100%;
-      height: 100%;
+      width: 80%;
+      height: 80%;
     }
     /* Color Picker Modal */
     #color-picker-modal {
@@ -111,6 +128,11 @@
       border: 1px solid #1e1e1e;
       cursor: pointer;
       border-radius: 4px;
+    }
+    .color-cell:hover {
+      transform: scale(1.2);
+      border: 1px solid white;
+      z-index: 10;
     }
     /* Modal close button */
     #color-picker-close {
@@ -613,19 +635,29 @@
     });
 
     function setupColorPicker() {
-      // Populate the color grid with 64 default colors
+      // Updated color palette based on the hexagonal grid in the image
       const colorGrid = document.getElementById("color-grid");
-      const defaultColors = [
-        "#FF6633","#FFB399","#FF33FF","#FFFF99","#00B3E6","#E6B333","#3366E6","#999966",
-        "#99FF99","#B34D4D","#80B300","#809900","#E6B3B3","#6680B3","#66991A","#FF99E6",
-        "#CCFF1A","#FF1A66","#E6331A","#33FFCC","#66994D","#B366CC","#4D8000","#B33300",
-        "#CC80CC","#66664D","#991AFF","#E666FF","#4DB3FF","#1AB399","#E666B3","#33991A",
-        "#CC9999","#B3B31A","#00E680","#4D8066","#809980","#E6FF80","#1AFF33","#999933",
-        "#FF3380","#CCCC00","#66E64D","#4D80CC","#9900B3","#E64D66","#4DB380","#FF4D4D",
-        "#99E6E6","#6666FF","#FF6666","#FF9933","#FFCC33","#CCCC33","#99CC33","#66CC33",
-        "#33CC33","#33CC66","#33CC99","#33CCCC","#3399CC","#3366CC","#3333CC","#6633CC"
+      const hexColors = [
+        // Greens (top)
+        "#004000", "#006000", "#008000", "#00A000", "#00C000", "#00FF00", "#80FF80",
+        // Blues (top-right)
+        "#000040", "#000080", "#0000C0", "#0000FF", "#4040FF", "#8080FF", "#C0C0FF",
+        // Purples (right)
+        "#400040", "#600060", "#800080", "#A000A0", "#C000C0", "#FF00FF", "#FF80FF",
+        // Reds (bottom-right)
+        "#400000", "#600000", "#800000", "#A00000", "#C00000", "#FF0000", "#FF8080",
+        // Oranges and yellows (bottom)
+        "#402000", "#603000", "#804000", "#A05000", "#C06000", "#FF8000", "#FFFF00",
+        // Browns (bottom-left)
+        "#202020", "#404020", "#606030", "#808040", "#A0A050", "#C0C060", "#E0E080",
+        // Grays (center and left)
+        "#000000", "#202020", "#404040", "#606060", "#808080", "#A0A0A0", "#FFFFFF",
+        // Teal/Cyan (top-left)
+        "#004040", "#006060", "#008080", "#00A0A0", "#00C0C0", "#00FFFF", "#80FFFF"
       ];
-      defaultColors.forEach(color => {
+
+      // Create color cells
+      hexColors.forEach(color => {
         const cell = document.createElement("div");
         cell.className = "color-cell";
         cell.style.backgroundColor = color;
@@ -1460,7 +1492,7 @@
       line.setAttribute("x1", data.x1);
       line.setAttribute("y1", data.y1);
       line.setAttribute("x2", data.x2);
-      line.setAttribute("y2", data.y2);
+     line.setAttribute("y2", data.y2);
       line.setAttribute("stroke", data.color);
       line.setAttribute("stroke-width", "3.2");
       const arrow = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
