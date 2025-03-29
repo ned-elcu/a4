@@ -66,6 +66,9 @@
       border-radius: 8px;
       padding: 20px;
       z-index: 3000;
+      max-width: 90vw;
+      max-height: 90vh;
+      overflow-y: auto;
     }
     #color-picker-modal h3 {
       text-align: center;
@@ -279,18 +282,49 @@
       cursor: pointer;
     }
     
-    /* Responsive adjustments */
-    @media screen and (max-height: 800px) {
+    /* Enhanced Responsive adjustments */
+    /* Large Desktop (Default) */
+    /* Medium Desktop */
+    @media screen and (max-width: 1366px) {
       #toolbox {
-        top: 70px;
+        top: 80px;
+      }
+      #right-menus {
+        top: 80px;
+      }
+    }
+    
+    /* Small Desktop/Tablet Landscape */
+    @media screen and (max-width: 1024px) {
+      #header-logo h1 {
+        font-size: 0.9em;
       }
       .tool {
         width: 45px;
         height: 45px;
       }
+      #toolbox {
+        gap: 8px;
+        padding: 8px;
+      }
+      .menu-container {
+        width: 160px;
+      }
+      #admin-panel {
+        width: 280px;
+      }
     }
     
+    /* Tablet Portrait */
     @media screen and (max-width: 768px) {
+      #header-logo h1 {
+        font-size: 0.8em;
+        padding: 0 10px;
+      }
+      .tool {
+        width: 40px;
+        height: 40px;
+      }
       .menu-toggle {
         left: -35px;
       }
@@ -299,6 +333,133 @@
       }
       #toolbox {
         top: 70px;
+        padding: 6px;
+        gap: 6px;
+      }
+      #admin-panel {
+        width: 250px;
+        bottom: 60px;
+        right: 15px;
+      }
+      #footer-info {
+        font-size: 0.9em;
+      }
+      
+      /* Change tooltip position for smaller screens */
+      .tool::after {
+        top: -25px;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+    }
+    
+    /* Large Mobile */
+    @media screen and (max-width: 576px) {
+      #header-logo h1 {
+        font-size: 0.7em;
+      }
+      .tool {
+        width: 35px;
+        height: 35px;
+      }
+      #toolbox {
+        left: 10px;
+        padding: 5px;
+        gap: 5px;
+      }
+      #right-menus {
+        right: 10px;
+      }
+      .menu-container {
+        width: 140px;
+      }
+      .menu-toggle {
+        left: -30px;
+        font-size: 0.9em;
+      }
+      .menu-content button {
+        height: 35px;
+        font-size: 0.9em;
+      }
+      #color-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+      #admin-panel {
+        width: 90%;
+        right: 5%;
+        left: 5%;
+      }
+      #admin-panel header h3 {
+        font-size: 1.4em;
+      }
+      #footer-info {
+        font-size: 0.8em;
+        width: 100%;
+        left: 0;
+        padding: 5px;
+      }
+      /* Login screen adjustments */
+      #login-screen input {
+        width: 80%;
+        max-width: 250px;
+      }
+    }
+    
+    /* Small Mobile */
+    @media screen and (max-width: 375px) {
+      #header-logo h1 {
+        font-size: 0.6em;
+      }
+      .tool {
+        width: 30px;
+        height: 30px;
+      }
+      #toolbox {
+        gap: 4px;
+        padding: 4px;
+      }
+      .menu-container {
+        width: 130px;
+      }
+      #footer-info p {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3px;
+      }
+    }
+    
+    /* Portrait/Landscape specific adjustments */
+    @media screen and (max-height: 600px) {
+      #toolbox {
+        top: 60px;
+      }
+      #right-menus {
+        top: 60px;
+      }
+      #header-logo {
+        padding: 5px 0;
+      }
+    }
+    
+    /* Touch device enhancements */
+    @media (pointer: coarse) {
+      .tool, .menu-toggle, .toggle-switch, button {
+        min-height: 44px; /* Minimum touch target size */
+      }
+      .tool::after {
+        display: none; /* Hide tooltips on touch devices */
+      }
+      /* Add a touch indicator button for tooltips */
+      .tool-info {
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        width: 12px;
+        height: 12px;
+        background: rgba(223,197,136,0.8);
+        border-radius: 50%;
+        z-index: 5;
       }
     }
   </style>
@@ -516,7 +677,7 @@
   <!-- Footer -->
   <footer id="footer-info">
     <p>
-      Build version: v1.10.5rc |
+      Build version: v1.10.6rc |
       Encrypted database connection: <span id="db-connection-status">🟢</span> |
       Status: <span id="user-status">user</span> |
       <a href="https://regnumsolis.com">Return to Home</a>
@@ -527,7 +688,7 @@
 
   <!-- Custom Prompt Modal -->
   <div id="custom-prompt-overlay" style="display:none; position: fixed; top: 0; left: 0; width:100%; height:100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); align-items: center; justify-content: center; z-index: 2000;">
-    <div id="custom-prompt" style="background: #1e1e1e; border: 1px solid rgba(223,197,136,0.8); padding: 20px; border-radius: 8px; color: white; min-width: 300px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
+    <div id="custom-prompt" style="background: #1e1e1e; border: 1px solid rgba(223,197,136,0.8); padding: 20px; border-radius: 8px; color: white; min-width: 300px; max-width: 90%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
       <p id="custom-prompt-message" style="margin-bottom: 15px; width:100%;"></p>
       <input id="custom-prompt-input" type="text" style="width: 80%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 15px; text-align: center;" />
       <div style="display: flex; justify-content: center; gap: 10px; width: 100%;">
@@ -625,11 +786,32 @@
         }
       });
 
+      // Add touch detection for better mobile support
+      if ('ontouchstart' in window) {
+        document.body.classList.add('touch-device');
+        // Add info buttons to tools for touch devices
+        document.querySelectorAll('.tool').forEach(tool => {
+          const infoBtn = document.createElement('div');
+          infoBtn.className = 'tool-info';
+          tool.appendChild(infoBtn);
+        });
+      }
+
       // Ensure menus stay hidden on window resize
       window.addEventListener('resize', function() {
         document.querySelectorAll(".menu-container.hidden").forEach(menu => {
           menu.style.transform = "translateX(109%)";
         });
+        
+        // Update canvas size for WebGL background
+        const canvas = document.getElementById('waveCanvas');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        // Reset pan/zoom on significant resize
+        if (panZoomInstance && isMapReady) {
+          panZoomInstance.resetZoom();
+        }
       });
     });
 
@@ -871,8 +1053,16 @@
       markerLayer.id = "marker-layer";
       panLayer.appendChild(markerLayer);
 
+      // Configure pan-zoom with responsive options
       panZoomInstance = svgPanZoom(svgRoot, {
-        zoomEnabled: true, panEnabled: true, controlIconsEnabled: false, minZoom: 0.5, maxZoom: 5,
+        zoomEnabled: true, 
+        panEnabled: true, 
+        controlIconsEnabled: false, 
+        minZoom: 0.5, 
+        maxZoom: 5,
+        zoomScaleSensitivity: 0.4, // Make zooming more gradual
+        dblClickZoomEnabled: true, // Enable double-click to zoom
+        preventMouseEventsDefault: true,
         beforeMouseDown: function(e) {
           if (activeTool === "bezier" || activeTool === "polygon") return false;
           if (e.target.getAttribute("data-marker") === "true" ||
@@ -936,8 +1126,10 @@
             if (!tool.dragClone) return;
             const offsetX = 10;
             const offsetY = 10;
-            tool.dragClone.style.left = e.clientX + offsetX + "px";
-            tool.dragClone.style.top = e.clientY + offsetY + "px";
+            if (e.clientX > 0) { // Only update if coordinates are valid
+              tool.dragClone.style.left = e.clientX + offsetX + "px";
+              tool.dragClone.style.top = e.clientY + offsetY + "px";
+            }
           });
           tool.addEventListener("dragend", (e) => {
             if (tool.dragClone) {
@@ -1661,7 +1853,7 @@
         h += wave(st, 0.0, 30.1, 0.0020, 0.81);
         h += wave(st, 0.7, 40.3, 0.0017, 0.63);
         h += wave(st, 1.4, 55.7, 0.0010, 1.04);
-        h += wave(st, 2.1, 65.2, 0.0012, 0.91);
+h += wave(st, 2.1, 65.2, 0.0012, 0.91);
         h += wave(st, 2.8, 50.5, 0.0015, 1.12);
         h += wave(st, 3.3, 60.9, 0.0013, 0.87);
         h += wave(st, 4.0, 45.6, 0.0014, 1.05);
@@ -1756,10 +1948,11 @@
     }
     requestAnimationFrame(render);
     
-    // Handle canvas resize
+    // Add event listener to handle window resize properly
     window.addEventListener('resize', function() {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
+      gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
     });
   </script>
 </body>
