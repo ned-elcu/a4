@@ -8,547 +8,180 @@
   <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" />
   <style>
-    /* Reset and base styles */
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body {
-      width: 100%; height: 100%;
-      background: transparent;
-      color: white;
-      font-family: 'Bebas Neue', sans-serif;
-      overflow: hidden;
-      position: relative;
-    }
-    /* Global marker text hover */
-    .text-hover-only .marker text,
-    .text-hover-only .marker rect {
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-    .text-hover-only .marker:hover text,
-    .text-hover-only .marker:hover rect { opacity: 1; }
-    /* Background container */
-    #background-container {
-      position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
-    }
+    html, body { width: 100%; height: 100%; background: transparent; color: white; font-family: 'Bebas Neue', sans-serif; overflow: hidden; position: relative; }
+    
+    /* Global styles and animations */
+    .text-hover-only .marker text, .text-hover-only .marker rect { opacity: 0; transition: opacity 0.3s ease; }
+    .text-hover-only .marker:hover text, .text-hover-only .marker:hover rect { opacity: 1; }
+    #background-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
     #waveCanvas { display: block; width: 100%; height: 100%; }
-    /* Loading overlay */
-    #loading-overlay {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.5); z-index: 100;
-      display: none; align-items: center; justify-content: center; flex-direction: column; font-size: 2em;
-    }
+    #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; display: none; align-items: center; justify-content: center; flex-direction: column; font-size: 2em; }
     #loading-overlay img { width: 80px; height: 80px; margin-bottom: 20px; }
+    
     /* Animations */
     @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes neonGlow {
-      0% { text-shadow: 0 0 5px rgba(223,197,136,0.6), 0 0 10px rgba(223,197,136,0.6), 0 0 15px rgba(223,197,136,0.6); }
-      100% { text-shadow: 0 0 20px rgba(223,197,136,1), 0 0 30px rgba(223,197,136,1), 0 0 40px rgba(223,197,136,1); }
-    }
-    @keyframes whiteNeonGlow {
-      0% { text-shadow: 0 0 2px rgba(255,255,255,0.24), 0 0 4px rgba(255,255,255,0.24), 0 0 6px rgba(255,255,255,0.24); }
-      100% { text-shadow: 0 0 8px rgba(255,255,255,0.4), 0 0 12px rgba(255,255,255,0.4), 0 0 16px rgba(255,255,255,0.4); }
-    }
-    @keyframes reducedNeonGlow {
-      0% { text-shadow: 0 0 2px rgba(223,197,136,0.24), 0 0 4px rgba(223,197,136,0.24), 0 0 6px rgba(223,197,136,0.24); }
-      100% { text-shadow: 0 0 8px rgba(223,197,136,0.4), 0 0 12px rgba(223,197,136,0.4), 0 0 16px rgba(223,197,136,0.4); }
-    }
+    @keyframes neonGlow { 0% { text-shadow: 0 0 5px rgba(223,197,136,0.6), 0 0 10px rgba(223,197,136,0.6), 0 0 15px rgba(223,197,136,0.6); } 100% { text-shadow: 0 0 20px rgba(223,197,136,1), 0 0 30px rgba(223,197,136,1), 0 0 40px rgba(223,197,136,1); } }
+    @keyframes whiteNeonGlow { 0% { text-shadow: 0 0 2px rgba(255,255,255,0.24), 0 0 4px rgba(255,255,255,0.24), 0 0 6px rgba(255,255,255,0.24); } 100% { text-shadow: 0 0 8px rgba(255,255,255,0.4), 0 0 12px rgba(255,255,255,0.4), 0 0 16px rgba(255,255,255,0.4); } }
+    @keyframes reducedNeonGlow { 0% { text-shadow: 0 0 2px rgba(223,197,136,0.24), 0 0 4px rgba(223,197,136,0.24), 0 0 6px rgba(223,197,136,0.24); } 100% { text-shadow: 0 0 8px rgba(223,197,136,0.4), 0 0 12px rgba(223,197,136,0.4), 0 0 16px rgba(223,197,136,0.4); } }
     @keyframes swing { 0% { transform: rotate(-10deg); } 50% { transform: rotate(10deg); } 100% { transform: rotate(-10deg); } }
     .drag-clone { animation: swing 1s ease-in-out infinite; opacity: 0.9; }
-    /* Color Picker Modal */
-    #color-picker-modal {
-      display: none;
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(30,30,30,0.95);
-      border: 1px solid rgba(223,197,136,0.8);
-      border-radius: 8px;
-      padding: 20px;
-      z-index: 3000;
-      max-width: 90vw;
-      max-height: 90vh;
-      overflow-y: auto;
-    }
-    #color-picker-modal h3 {
-      text-align: center;
-      margin-bottom: 10px;
-      font-family: Arial, sans-serif;
-    }
-    #color-grid {
-      display: grid;
-      grid-template-columns: repeat(8, 1fr);
-      gap: 5px;
-    }
-    .color-cell {
-      width: 30px;
-      height: 30px;
-      border: 1px solid #1e1e1e;
-      cursor: pointer;
-      border-radius: 4px;
-    }
-    .color-cell:hover {
-      transform: scale(1.2);
-      border: 1px solid white;
-      z-index: 10;
-    }
-    /* Modal close button */
-    #color-picker-close {
-      margin-top: 10px;
-      display: block;
-      width: 100%;
-      padding: 8px;
-      background: rgba(223,197,136,0.8);
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-family: Arial, sans-serif;
-    }
+    
+    /* Modals */
+    #color-picker-modal, #custom-prompt-overlay { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(30,30,30,0.95); border: 1px solid rgba(223,197,136,0.8); border-radius: 8px; padding: 20px; z-index: 3000; }
+    #color-picker-modal { max-width: 90vw; max-height: 90vh; overflow-y: auto; }
+    #color-picker-modal h3 { text-align: center; margin-bottom: 10px; font-family: Arial, sans-serif; }
+    #color-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 5px; }
+    .color-cell { width: 30px; height: 30px; border: 1px solid #1e1e1e; cursor: pointer; border-radius: 4px; }
+    .color-cell:hover { transform: scale(1.2); border: 1px solid white; z-index: 10; }
+    #color-picker-close { margin-top: 10px; display: block; width: 100%; padding: 8px; background: rgba(223,197,136,0.8); border: none; border-radius: 4px; cursor: pointer; font-family: Arial, sans-serif; }
+    
     /* Login screen */
-    #login-screen {
-      display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh;
-      background: rgba(30,30,30,0.9); animation: fadeIn 1s ease-out; text-align: center; position: relative; z-index: 1;
-    }
+    #login-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: rgba(30,30,30,0.9); animation: fadeIn 1s ease-out; text-align: center; position: relative; z-index: 1; }
     #login-screen h2 { font-size: 3em; margin-bottom: 20px; animation: neonGlow 1.5s infinite alternate ease-in-out; }
-    #login-screen input {
-      margin: 5px; padding: 10px; font-size: 1.2em; width: 250px; border: none; border-radius: 4px; text-align: center;
-    }
-    #login-screen button {
-      margin-top: 10px; padding: 10px 20px; font-size: 1.2em; border: none; border-radius: 4px;
-      background: rgba(223,197,136,0.8); color: white; cursor: pointer;
-      transition: transform 0.3s, box-shadow 0.3s; box-shadow: 0 4px 15px rgba(223,197,136,0.5);
-    }
+    #login-screen input { margin: 5px; padding: 10px; font-size: 1.2em; width: 250px; border: none; border-radius: 4px; text-align: center; }
+    #login-screen button { margin-top: 10px; padding: 10px 20px; font-size: 1.2em; border: none; border-radius: 4px; background: rgba(223,197,136,0.8); color: white; cursor: pointer; transition: transform 0.3s, box-shadow 0.3s; box-shadow: 0 4px 15px rgba(223,197,136,0.5); }
     #login-screen button:hover { transform: scale(1.05); box-shadow: 0 4px 15px rgba(223,197,136,0.9); }
     #login-error { margin-top: 10px; color: #e74c3c; font-weight: bold; }
-    /* Main app container */
+    
+    /* Main app */
     #app { display: none; height: 100vh; position: relative; animation: fadeIn 1s ease-out; z-index: 1; }
-    /* Header */
     #header-logo { text-align: center; padding: 10px 0; background: transparent; }
-    #header-logo h1 {
-      font-size: 1.05em;
-      margin: 0;
-      color: white;
-      animation: whiteNeonGlow 1.5s infinite alternate ease-in-out;
-    }
-    /* Right menus */
+    #header-logo h1 { font-size: 1.05em; margin: 0; color: white; animation: whiteNeonGlow 1.5s infinite alternate ease-in-out; }
+    
+    /* Menus */
     #right-menus { position: fixed; top: 100px; right: 20px; display: flex; flex-direction: column; gap: 20px; z-index: 20; }
-    .menu-container {
-      width: 180px; background: rgba(30,30,30,0.9); padding: 10px; border: 1px solid rgba(223,197,136,0.5);
-      border-radius: 5px; box-shadow: 0 0 10px rgba(223,197,136,0.5); position: relative; transition: transform 0.3s ease;
-    }
-    /* Fixed menu transformation - this is critical for the menu toggle */
+    .menu-container { width: 180px; background: rgba(30,30,30,0.9); padding: 10px; border: 1px solid rgba(223,197,136,0.5); border-radius: 5px; box-shadow: 0 0 10px rgba(223,197,136,0.5); position: relative; transition: transform 0.3s ease; }
     .menu-container.hidden { transform: translateX(109%); }
     .menu-header { display: flex; align-items: center; justify-content: center; font-size: 1.2em; margin-bottom: 5px; position: relative; }
-    .menu-toggle {
-      position: absolute; left: -45px; top: -40%; background: none; border: none; font-size: 1.05em;
-      color: rgb(223,197,136); cursor: pointer; padding: 0; line-height: 1; width: 22px !important; height: 23px !important; z-index: 100; pointer-events: auto;
-    }
+    .menu-toggle { position: absolute; left: -45px; top: -40%; background: none; border: none; font-size: 1.05em; color: rgb(223,197,136); cursor: pointer; padding: 0; line-height: 1; width: 22px !important; height: 23px !important; z-index: 100; pointer-events: auto; }
     .menu-content { display: flex; flex-direction: column; gap: 5px; }
-    .menu-content button {
-      width: 100%; height: 40px; border: none; border-radius: 4px; background: rgba(223,197,136,0.8);
-      color: white; cursor: pointer; transition: transform 0.3s, box-shadow 0.3s; box-shadow: 0 4px 15px rgba(223,197,136,0.5);
-    }
+    .menu-content button { width: 100%; height: 40px; border: none; border-radius: 4px; background: rgba(223,197,136,0.8); color: white; cursor: pointer; transition: transform 0.3s, box-shadow 0.3s; box-shadow: 0 4px 15px rgba(223,197,136,0.5); }
     .menu-content button:hover { transform: scale(1.05); box-shadow: 0 4px 15px rgba(223,197,136,0.9); }
+    
+    /* Toggle controls */
     #text-toggle-right h2 { font-size: 1em; margin-bottom: 5px; }
-    .toggle-switch {
-      appearance: none; -webkit-appearance: none; width: 40px; height: 20px; background: #ccc; border-radius: 20px;
-      position: relative; outline: none; cursor: pointer; transition: background 0.3s;
-    }
+    .toggle-switch { appearance: none; -webkit-appearance: none; width: 40px; height: 20px; background: #ccc; border-radius: 20px; position: relative; outline: none; cursor: pointer; transition: background 0.3s; }
     .toggle-switch:checked { background: #dfc588; }
-    .toggle-switch::before {
-      content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background: white; border-radius: 50%;
-      transition: transform 0.3s;
-    }
+    .toggle-switch::before { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background: white; border-radius: 50%; transition: transform 0.3s; }
     .toggle-switch:checked::before { transform: translateX(20px); }
     #toggle-container { display: flex; align-items: center; justify-content: center; }
     #toggle-marker-text-label { margin-left: 10px; line-height: 20px; }
-    /* Override switch label fonts to use normal sans-serif */
-    #text-toggle-right .menu-content label {
-      font-family: Arial, sans-serif;
-    }
-    /* Update the marker visibility toggles to use "keep" instead of "citadel" */
+    #text-toggle-right .menu-content label { font-family: Arial, sans-serif; }
+    
+    /* Marker visibility */
     #marker-visibility-container { margin-top: 10px; text-align: left; width: 100%; }
     #marker-visibility-container h3 { font-size: 0.9em; margin-bottom: 5px; text-align: center; }
     .toggle-item { display: flex; justify-content: space-between; align-items: center; margin: 3px 0; }
     .toggle-item label { font-size: 0.85em; flex-grow: 1; margin-left: 5px; }
-    /* Toolbox - updated to remove scrolling and ensure hover text displays properly */
-    #toolbox {
-      position: fixed; 
-      top: 100px; 
-      left: 20px; 
-      background: rgba(30,30,30,0.9); 
-      padding: 10px;
-      border: 1px solid rgba(223,197,136,0.5); 
-      border-radius: 5px; 
-      box-shadow: 0 0 10px rgba(223,197,136,0.5); 
-      z-index: 20;
-      display: flex; 
-      flex-direction: column; 
-      gap: 10px;
-    }
-    /* Individual tool tooltip styling - increased z-index and adjusted positioning */
-    .tool {
-      position: relative;
-      width: 50px; 
-      height: 50px; 
-      border: 1px solid rgba(223,197,136,0.5); 
-      background: rgba(30,30,30,0.9);
-      display: flex; 
-      align-items: center; 
-      justify-content: center; 
-      cursor: pointer; 
-      border-radius: 5px; 
-      transition: transform 0.3s, border-color 0.3s;
-    }
+    
+    /* Toolbox */
+    #toolbox { position: fixed; top: 100px; left: 20px; background: rgba(30,30,30,0.9); padding: 10px; border: 1px solid rgba(223,197,136,0.5); border-radius: 5px; box-shadow: 0 0 10px rgba(223,197,136,0.5); z-index: 20; display: flex; flex-direction: column; gap: 10px; }
+    .tool { position: relative; width: 50px; height: 50px; border: 1px solid rgba(223,197,136,0.5); background: rgba(30,30,30,0.9); display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 5px; transition: transform 0.3s, border-color 0.3s; }
     .tool:hover { transform: scale(1.1); }
     .tool img { max-width: 100%; max-height: 100%; }
-    .tool::after {
-      content: attr(data-tooltip);
-      position: absolute;
-      top: 50%;
-      left: 105%;
-      transform: translateY(-50%);
-      white-space: nowrap;
-      background: transparent;
-      color: white;
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 1em;
-      opacity: 0;
-      pointer-events: none;
-      animation: whiteNeonGlow 1.5s infinite alternate ease-in-out;
-      transition: opacity 0.3s ease;
-      z-index: 30; /* Ensure tooltip is above other elements */
-    }
-    .tool:hover::after {
-      opacity: 1;
-    }
-    /* Map container */
+    .tool::after { content: attr(data-tooltip); position: absolute; top: 50%; left: 105%; transform: translateY(-50%); white-space: nowrap; background: transparent; color: white; font-family: 'Bebas Neue', sans-serif; font-size: 1em; opacity: 0; pointer-events: none; animation: whiteNeonGlow 1.5s infinite alternate ease-in-out; transition: opacity 0.3s ease; z-index: 30; }
+    .tool:hover::after { opacity: 1; }
+    
+    /* Map */
     #map-container { width: 100vw; height: calc(100vh - 60px); overflow: hidden; }
     #map-svg-container { width: 100%; height: 100%; }
     .marker:hover { opacity: 0.8; cursor: pointer; }
-    /* Error overlay */
-    #error-overlay {
-      position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(30,30,30,0.95);
-      color: #ecf0f1; display: none; align-items: center; justify-content: center; z-index: 50; font-size: 1.5em; text-align: center; padding: 20px;
-    }
-    /* New Admin Panel */
-    #admin-panel {
-      position: fixed; bottom: 20px; right: 20px; width: 320px; background: rgba(30,30,30,0.9);
-      border: 1px solid rgba(223,197,136,0.5); border-radius: 5px; box-shadow: 0 0 10px rgba(223,197,136,0.5);
-      z-index: 30; display: none; animation: fadeIn 1s ease-out;
-    }
-    #admin-panel header {
-      display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid rgba(223,197,136,0.5);
-      background: rgba(30,30,30,0.95);
-    }
+    
+    /* Overlays */
+    #error-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(30,30,30,0.95); color: #ecf0f1; display: none; align-items: center; justify-content: center; z-index: 50; font-size: 1.5em; text-align: center; padding: 20px; }
+    #custom-prompt-overlay { width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); align-items: center; justify-content: center; z-index: 2000; }
+    #custom-prompt { background: #1e1e1e; border: 1px solid rgba(223,197,136,0.8); padding: 20px; border-radius: 8px; color: white; min-width: 300px; max-width: 90%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+    #custom-prompt-message { margin-bottom: 15px; width: 100%; }
+    #custom-prompt-input { width: 80%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 15px; text-align: center; }
+    #custom-prompt button { padding: 8px 15px; background: rgba(223,197,136,0.8); border: none; border-radius: 4px; cursor: pointer; }
+    
+    /* Admin panel */
+    #admin-panel { position: fixed; bottom: 20px; right: 20px; width: 320px; background: rgba(30,30,30,0.9); border: 1px solid rgba(223,197,136,0.5); border-radius: 5px; box-shadow: 0 0 10px rgba(223,197,136,0.5); z-index: 30; display: none; animation: fadeIn 1s ease-out; }
+    #admin-panel header { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid rgba(223,197,136,0.5); background: rgba(30,30,30,0.95); }
     #admin-panel header h3 { margin: 0; font-size: 1.8em; }
-    #admin-panel header .admin-controls button {
-      background: none; border: none; font-size: 1.2em; color: rgb(223,197,136); cursor: pointer; margin-left: 5px;
-    }
+    #admin-panel header .admin-controls button { background: none; border: none; font-size: 1.2em; color: rgb(223,197,136); cursor: pointer; margin-left: 5px; }
     #audit-log-container { max-height: 200px; overflow-y: auto; padding: 10px; font-size: 1.2em; }
     #audit-log-container div { margin-bottom: 5px; }
     .log-user { color: #dfc588; font-weight: bold; }
     .log-action { color: #8ac6d1; }
     .log-group { color: #dfc588; }
-    #admin-panel footer {
-      display: flex; justify-content: space-around; padding: 10px; border-top: 1px solid rgba(223,197,136,0.5);
-      background: rgba(30,30,30,0.95);
-    }
-    #admin-panel footer button {
-      padding: 8px 12px; font-size: 1em; border: none; border-radius: 4px; background: rgba(223,197,136,0.8);
-      color: white; cursor: pointer; transition: transform 0.3s, box-shadow 0.3s;
-    }
+    #admin-panel footer { display: flex; justify-content: space-around; padding: 10px; border-top: 1px solid rgba(223,197,136,0.5); background: rgba(30,30,30,0.95); }
+    #admin-panel footer button { padding: 8px 12px; font-size: 1em; border: none; border-radius: 4px; background: rgba(223,197,136,0.8); color: white; cursor: pointer; transition: transform 0.3s, box-shadow 0.3s; }
     #admin-panel footer button:hover { transform: scale(1.05); box-shadow: 0 4px 15px rgba(223,197,136,0.9); }
-    /* Footer styles */
-    #footer-info {
-      position: fixed;
-      bottom: 0;
-      width: calc(100% - 40px);
-      left: 20px;
-      background: transparent;
-      text-align: center;
-      padding: 10px 0;
-      font-size: 1em;
-      animation: whiteNeonGlow 1.5s infinite alternate ease-in-out;
-      z-index: 10;
-    }
-    #footer-info p {
-      margin: 0;
-      display: inline;
-    }
-    #footer-info a {
-      color: white;
-      text-decoration: underline;
-      margin-left: 5px;
-      cursor: pointer;
-    }
     
-    /* Enhanced Responsive adjustments */
-    /* Large Desktop (Default) */
-    /* Medium Desktop */
-    @media screen and (max-width: 1366px) {
-      #toolbox {
-        top: 80px;
-      }
-      #right-menus {
-        top: 80px;
-      }
-    }
+    /* Footer */
+    #footer-info { position: fixed; bottom: 0; width: calc(100% - 40px); left: 20px; background: transparent; text-align: center; padding: 10px 0; font-size: 1em; animation: whiteNeonGlow 1.5s infinite alternate ease-in-out; z-index: 10; }
+    #footer-info p { margin: 0; display: inline; }
+    #footer-info a { color: white; text-decoration: underline; margin-left: 5px; cursor: pointer; }
     
-    /* Small Desktop/Tablet Landscape */
+    /* Responsive */
+    @media screen and (max-width: 1366px) { #toolbox, #right-menus { top: 80px; } }
     @media screen and (max-width: 1024px) {
-      #header-logo h1 {
-        font-size: 0.9em;
-      }
-      .tool {
-        width: 45px;
-        height: 45px;
-      }
-      #toolbox {
-        gap: 8px;
-        padding: 8px;
-      }
-      .menu-container {
-        width: 160px;
-      }
-      /* Make sure the hidden class still works */
-      .menu-container.hidden {
-        transform: translateX(109%) !important;
-      }
-      #admin-panel {
-        width: 280px;
-      }
+      #header-logo h1 { font-size: 0.9em; }
+      .tool { width: 45px; height: 45px; }
+      #toolbox { gap: 8px; padding: 8px; }
+      .menu-container { width: 160px; }
+      #admin-panel { width: 280px; }
     }
-    
-    /* Tablet Portrait */
     @media screen and (max-width: 768px) {
-      #header-logo h1 {
-        font-size: 0.8em;
-        padding: 0 10px;
-      }
-      .tool {
-        width: 40px;
-        height: 40px;
-      }
-      .menu-toggle {
-        left: -35px;
-      }
-      #right-menus {
-        top: 70px;
-      }
-      /* Make sure the hidden class still works */
-      .menu-container.hidden {
-        transform: translateX(109%) !important;
-      }
-      #toolbox {
-        top: 70px;
-        padding: 6px;
-        gap: 6px;
-      }
-      #admin-panel {
-        width: 250px;
-        bottom: 60px;
-        right: 15px;
-      }
-      #footer-info {
-        font-size: 0.9em;
-      }
-      
-      /* Change tooltip position for smaller screens */
-      .tool::after {
-        top: -25px;
-        left: 50%;
-        transform: translateX(-50%);
-      }
+      #header-logo h1 { font-size: 0.8em; padding: 0 10px; }
+      .tool { width: 40px; height: 40px; }
+      .menu-toggle { left: -35px; }
+      #right-menus { top: 70px; }
+      #toolbox { top: 70px; padding: 6px; gap: 6px; }
+      #admin-panel { width: 250px; bottom: 60px; right: 15px; }
+      #footer-info { font-size: 0.9em; }
+      .tool::after { top: -25px; left: 50%; transform: translateX(-50%); }
     }
-    
-    /* Large Mobile */
     @media screen and (max-width: 576px) {
-      #header-logo h1 {
-        font-size: 0.7em;
-      }
-      .tool {
-        width: 35px;
-        height: 35px;
-      }
-      #toolbox {
-        left: 10px;
-        padding: 5px;
-        gap: 5px;
-      }
-      #right-menus {
-        right: 10px;
-      }
-      .menu-container {
-        width: 140px;
-      }
-      /* Make sure the hidden class still works */
-      .menu-container.hidden {
-        transform: translateX(109%) !important;
-      }
-      .menu-toggle {
-        left: -30px;
-        font-size: 0.9em;
-      }
-      .menu-content button {
-        height: 35px;
-        font-size: 0.9em;
-      }
-      #color-grid {
-        grid-template-columns: repeat(4, 1fr);
-      }
-      #admin-panel {
-        width: 90%;
-        right: 5%;
-        left: 5%;
-      }
-      #admin-panel header h3 {
-        font-size: 1.4em;
-      }
-      #footer-info {
-        font-size: 0.8em;
-        width: 100%;
-        left: 0;
-        padding: 5px;
-      }
-      /* Login screen adjustments */
-      #login-screen input {
-        width: 80%;
-        max-width: 250px;
-      }
+      #header-logo h1 { font-size: 0.7em; }
+      .tool { width: 35px; height: 35px; }
+      #toolbox { left: 10px; padding: 5px; gap: 5px; }
+      #right-menus { right: 10px; }
+      .menu-container { width: 140px; }
+      .menu-toggle { left: -30px; font-size: 0.9em; }
+      .menu-content button { height: 35px; font-size: 0.9em; }
+      #color-grid { grid-template-columns: repeat(4, 1fr); }
+      #admin-panel { width: 90%; right: 5%; left: 5%; }
+      #admin-panel header h3 { font-size: 1.4em; }
+      #footer-info { font-size: 0.8em; width: 100%; left: 0; padding: 5px; }
+      #login-screen input { width: 80%; max-width: 250px; }
     }
-    
-    /* Small Mobile */
     @media screen and (max-width: 375px) {
-      #header-logo h1 {
-        font-size: 0.6em;
-      }
-      .tool {
-        width: 30px;
-        height: 30px;
-      }
-      #toolbox {
-        gap: 4px;
-        padding: 4px;
-      }
-      .menu-container {
-        width: 130px;
-      }
-      /* Make sure the hidden class still works */
-      .menu-container.hidden {
-        transform: translateX(109%) !important;
-      }
-      #footer-info p {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 3px;
-      }
+      #header-logo h1 { font-size: 0.6em; }
+      .tool { width: 30px; height: 30px; }
+      #toolbox { gap: 4px; padding: 4px; }
+      .menu-container { width: 130px; }
+      #footer-info p { display: flex; flex-direction: column; align-items: center; gap: 3px; }
     }
-    
-    /* Portrait/Landscape specific adjustments */
-    @media screen and (max-height: 600px) {
-      #toolbox {
-        top: 60px;
-      }
-      #right-menus {
-        top: 60px;
-      }
-      #header-logo {
-        padding: 5px 0;
-      }
-    }
-    
-    /* Touch device enhancements */
+    @media screen and (max-height: 600px) { #toolbox, #right-menus { top: 60px; } #header-logo { padding: 5px 0; } }
     @media (pointer: coarse) {
-      .tool, button {
-        min-height: 44px; /* Minimum touch target size */
-      }
-      .tool::after {
-        display: none; /* Hide tooltips on touch devices */
-      }
-      /* Add a touch indicator button for tooltips */
-      .tool-info {
-        position: absolute;
-        top: 2px;
-        right: 2px;
-        width: 12px;
-        height: 12px;
-        background: rgba(223,197,136,0.8);
-        border-radius: 50%;
-        z-index: 5;
-      }
+      .tool, button { min-height: 44px; }
+      .tool::after { display: none; }
+      .tool-info { position: absolute; top: 2px; right: 2px; width: 12px; height: 12px; background: rgba(223,197,136,0.8); border-radius: 50%; z-index: 5; }
     }
   </style>
 </head>
 <body>
-  <!-- Animated waves background using WebGL -->
-  <div id="background-container">
-    <canvas id="waveCanvas"></canvas>
-  </div>
+  <div id="background-container"><canvas id="waveCanvas"></canvas></div>
+  <div id="loading-overlay"><img src="https://regnumsolis.com/planner/images/loading.gif" alt="Loading" /><div id="loading-text">0%</div></div>
+  <div id="color-picker-modal"><h3>Select a Color</h3><div id="color-grid"></div><button id="color-picker-close">Close</button></div>
+  <div id="login-screen"><h2>Login</h2><input id="email" type="email" placeholder="Email" /><input id="password" type="password" placeholder="Password" /><button id="login-button">Login</button><div id="login-error"></div></div>
 
-  <!-- Loading overlay -->
-  <div id="loading-overlay">
-    <img src="https://regnumsolis.com/planner/images/loading.gif" alt="Loading" />
-    <div id="loading-text">0%</div>
-  </div>
-
-  <!-- Color Picker Modal -->
-  <div id="color-picker-modal">
-    <h3>Select a Color</h3>
-    <div id="color-grid"></div>
-    <button id="color-picker-close">Close</button>
-  </div>
-
-  <!-- Login Screen -->
-  <div id="login-screen">
-    <h2>Login</h2>
-    <input id="email" type="email" placeholder="Email" />
-    <input id="password" type="password" placeholder="Password" />
-    <button id="login-button">Login</button>
-    <div id="login-error"></div>
-  </div>
-
-  <!-- Main App -->
   <div id="app">
-    <!-- Header -->
-    <div id="header-logo">
-      <h1>Regnum Solis Research and Development for the Remnant Senate</h1>
-    </div>
-
-    <!-- Right-side menus container -->
+    <div id="header-logo"><h1>Regnum Solis Research and Development for the Remnant Senate</h1></div>
     <div id="right-menus">
-      <!-- Map Change Menu -->
       <div id="map-change-container" class="menu-container hidden">
-        <div class="menu-header">
-          <span>Change Maps</span>
-          <button class="menu-toggle">&#9654;</button>
-        </div>
-        <div class="menu-content">
-          <button id="tactical-map">Tactical Map</button>
-          <button id="style-map">Style Map</button>
-        </div>
+        <div class="menu-header"><span>Change Maps</span><button class="menu-toggle">&#9654;</button></div>
+        <div class="menu-content"><button id="tactical-map">Tactical Map</button><button id="style-map">Style Map</button></div>
       </div>
-
-      <!-- Zoom Controls -->
       <div id="zoom-controls" class="menu-container hidden">
-        <div class="menu-header">
-          <span>Zoom</span>
-          <button class="menu-toggle">&#9654;</button>
-        </div>
-        <div class="menu-content">
-          <button id="zoom-in">Zoom In</button>
-          <button id="zoom-out">Zoom Out</button>
-          <button id="reset-zoom">Reset</button>
-        </div>
+        <div class="menu-header"><span>Zoom</span><button class="menu-toggle">&#9654;</button></div>
+        <div class="menu-content"><button id="zoom-in">Zoom In</button><button id="zoom-out">Zoom Out</button><button id="reset-zoom">Reset</button></div>
       </div>
-
-      <!-- Settings -->
       <div id="text-toggle-right" class="menu-container hidden">
-        <div class="menu-header">
-          <span>Settings</span>
-          <button class="menu-toggle">&#9654;</button>
-        </div>
+        <div class="menu-header"><span>Settings</span><button class="menu-toggle">&#9654;</button></div>
         <div class="menu-content">
           <div id="toggle-container">
             <input type="checkbox" id="toggle-marker-text" class="toggle-switch" />
@@ -556,128 +189,53 @@
           </div>
           <div id="marker-visibility-container">
             <h3>Marker Visibility</h3>
-            <div class="toggle-item">
-              <input type="checkbox" id="toggle-homestead" class="toggle-switch" checked />
-              <label for="toggle-homestead">Homestead</label>
-            </div>
-            <div class="toggle-item">
-              <input type="checkbox" id="toggle-keep" class="toggle-switch" checked />
-              <label for="toggle-keep">Keep</label>
-            </div>
-            <div class="toggle-item">
-              <input type="checkbox" id="toggle-torch" class="toggle-switch" checked />
-              <label for="toggle-torch">Torch</label>
-            </div>
-            <div class="toggle-item">
-              <input type="checkbox" id="toggle-cave" class="toggle-switch" checked />
-              <label for="toggle-cave">Cave</label>
-            </div>
-            <div class="toggle-item">
-              <input type="checkbox" id="toggle-sword" class="toggle-switch" checked />
-              <label for="toggle-sword">Sword</label>
-            </div>
-            <div class="toggle-item">
-              <input type="checkbox" id="toggle-spear" class="toggle-switch" checked />
-              <label for="toggle-spear">Spear</label>
-            </div>
-            <div class="toggle-item">
-              <input type="checkbox" id="toggle-bow" class="toggle-switch" checked />
-              <label for="toggle-bow">Bow</label>
-            </div>
-            <div class="toggle-item">
-              <input type="checkbox" id="toggle-beacon" class="toggle-switch" checked />
-              <label for="toggle-beacon">Beacon</label>
-            </div>
-            <div class="toggle-item">
-              <input type="checkbox" id="toggle-camp" class="toggle-switch" checked />
-              <label for="toggle-camp">Camp</label>
-            </div>
-            <div class="toggle-item">
-              <input type="checkbox" id="toggle-catapult" class="toggle-switch" checked />
-              <label for="toggle-catapult">Catapult</label>
-            </div>
-            <div class="toggle-item">
-              <input type="checkbox" id="toggle-ram" class="toggle-switch" checked />
-              <label for="toggle-ram">Ram</label>
-            </div>
-            <div class="toggle-item">
-              <input type="checkbox" id="toggle-lines" class="toggle-switch" checked />
-              <label for="toggle-lines">Lines</label>
-            </div>
+            <div class="toggle-item"><input type="checkbox" id="toggle-homestead" class="toggle-switch" checked /><label for="toggle-homestead">Homestead</label></div>
+            <div class="toggle-item"><input type="checkbox" id="toggle-keep" class="toggle-switch" checked /><label for="toggle-keep">Keep</label></div>
+            <div class="toggle-item"><input type="checkbox" id="toggle-torch" class="toggle-switch" checked /><label for="toggle-torch">Torch</label></div>
+            <div class="toggle-item"><input type="checkbox" id="toggle-cave" class="toggle-switch" checked /><label for="toggle-cave">Cave</label></div>
+            <div class="toggle-item"><input type="checkbox" id="toggle-sword" class="toggle-switch" checked /><label for="toggle-sword">Sword</label></div>
+            <div class="toggle-item"><input type="checkbox" id="toggle-spear" class="toggle-switch" checked /><label for="toggle-spear">Spear</label></div>
+            <div class="toggle-item"><input type="checkbox" id="toggle-bow" class="toggle-switch" checked /><label for="toggle-bow">Bow</label></div>
+            <div class="toggle-item"><input type="checkbox" id="toggle-beacon" class="toggle-switch" checked /><label for="toggle-beacon">Beacon</label></div>
+            <div class="toggle-item"><input type="checkbox" id="toggle-camp" class="toggle-switch" checked /><label for="toggle-camp">Camp</label></div>
+            <div class="toggle-item"><input type="checkbox" id="toggle-catapult" class="toggle-switch" checked /><label for="toggle-catapult">Catapult</label></div>
+            <div class="toggle-item"><input type="checkbox" id="toggle-ram" class="toggle-switch" checked /><label for="toggle-ram">Ram</label></div>
+            <div class="toggle-item"><input type="checkbox" id="toggle-lines" class="toggle-switch" checked /><label for="toggle-lines">Lines</label></div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Toolbox -->
     <div id="toolbox">
-      <!-- Color Bucket Tool (replaces line tool) -->
       <div class="tool" data-type="color" data-tooltip="Change Color">
         <svg id="paint-bucket-svg" viewBox="0 0 64 64">
-          <!-- Bucket outline -->
           <path d="M12 20 L52 20 L44 50 L20 50 Z" stroke="white" stroke-width="2" fill="none" />
-          <!-- Paint inside the bucket -->
           <rect id="paint-fill" x="16" y="24" width="32" height="12" fill="#dfc588" />
         </svg>
       </div>
-      
-      <!-- New Bezier Tool -->
       <div class="tool" data-type="bezier" data-tooltip="Draw Bezier Curve">
-        <svg width="50" height="50" viewBox="0 0 50 50">
-          <path d="M10 40 Q25 10 40 40" stroke="white" stroke-width="3" fill="none" />
-        </svg>
+        <svg width="50" height="50" viewBox="0 0 50 50"><path d="M10 40 Q25 10 40 40" stroke="white" stroke-width="3" fill="none" /></svg>
       </div>
-      <!-- New Polygon Tool -->
       <div class="tool" data-type="polygon" data-tooltip="Draw Polygon">
-        <svg width="50" height="50" viewBox="0 0 50 50">
-          <polygon points="25,10 10,40 40,40" stroke="white" stroke-width="3" fill="none" />
-        </svg>
+        <svg width="50" height="50" viewBox="0 0 50 50"><polygon points="25,10 10,40 40,40" stroke="white" stroke-width="3" fill="none" /></svg>
       </div>
-      <!-- Other existing tools -->
-      <div class="tool" draggable="true" data-type="torch" data-tooltip="Place Torch">
-        <img src="https://regnumsolis.com/planner/images/torch.svg" alt="Torch" />
-      </div>
-      <div class="tool" draggable="true" data-type="keep" data-tooltip="Place Keep">
-        <img src="https://regnumsolis.com/planner/images/citadel.svg" alt="Keep" />
-      </div>
-      <div class="tool" draggable="true" data-type="homestead" data-tooltip="Place Homestead">
-        <img src="https://regnumsolis.com/planner/images/marker.svg" alt="Homestead" />
-      </div>
-      <div class="tool" draggable="true" data-type="camp" data-tooltip="Place Camp">
-        <img src="https://regnumsolis.com/planner/images/camp.svg" alt="Camp" />
-      </div>
-      <div class="tool" draggable="true" data-type="beacon" data-tooltip="Place Beacon">
-        <img src="https://regnumsolis.com/planner/images/beacon.svg" alt="Beacon" />
-      </div>
-      <div class="tool" draggable="true" data-type="cave" data-tooltip="Place Cave">
-        <img src="https://regnumsolis.com/planner/images/cave.svg" alt="Cave" />
-      </div>
-      <div class="tool" draggable="true" data-type="sword" data-tooltip="Place Sword">
-        <img src="https://regnumsolis.com/planner/images/sword.svg" alt="Sword" />
-      </div>
-      <div class="tool" draggable="true" data-type="spear" data-tooltip="Place Spear">
-        <img src="https://regnumsolis.com/planner/images/spear.svg" alt="Spear" />
-      </div>
-      <div class="tool" draggable="true" data-type="bow" data-tooltip="Place Bow">
-        <img src="https://regnumsolis.com/planner/images/bow.svg" alt="Bow" />
-      </div>
-      <div class="tool" draggable="true" data-type="catapult" data-tooltip="Place Catapult">
-        <img src="https://regnumsolis.com/planner/images/catapult.svg" alt="Catapult" />
-      </div>
-      <div class="tool" draggable="true" data-type="ram" data-tooltip="Place Ram">
-        <img src="https://regnumsolis.com/planner/images/ram.svg" alt="Ram" />
-      </div>
+      <div class="tool" draggable="true" data-type="torch" data-tooltip="Place Torch"><img src="https://regnumsolis.com/planner/images/torch.svg" alt="Torch" /></div>
+      <div class="tool" draggable="true" data-type="keep" data-tooltip="Place Keep"><img src="https://regnumsolis.com/planner/images/citadel.svg" alt="Keep" /></div>
+      <div class="tool" draggable="true" data-type="homestead" data-tooltip="Place Homestead"><img src="https://regnumsolis.com/planner/images/marker.svg" alt="Homestead" /></div>
+      <div class="tool" draggable="true" data-type="camp" data-tooltip="Place Camp"><img src="https://regnumsolis.com/planner/images/camp.svg" alt="Camp" /></div>
+      <div class="tool" draggable="true" data-type="beacon" data-tooltip="Place Beacon"><img src="https://regnumsolis.com/planner/images/beacon.svg" alt="Beacon" /></div>
+      <div class="tool" draggable="true" data-type="cave" data-tooltip="Place Cave"><img src="https://regnumsolis.com/planner/images/cave.svg" alt="Cave" /></div>
+      <div class="tool" draggable="true" data-type="sword" data-tooltip="Place Sword"><img src="https://regnumsolis.com/planner/images/sword.svg" alt="Sword" /></div>
+      <div class="tool" draggable="true" data-type="spear" data-tooltip="Place Spear"><img src="https://regnumsolis.com/planner/images/spear.svg" alt="Spear" /></div>
+      <div class="tool" draggable="true" data-type="bow" data-tooltip="Place Bow"><img src="https://regnumsolis.com/planner/images/bow.svg" alt="Bow" /></div>
+      <div class="tool" draggable="true" data-type="catapult" data-tooltip="Place Catapult"><img src="https://regnumsolis.com/planner/images/catapult.svg" alt="Catapult" /></div>
+      <div class="tool" draggable="true" data-type="ram" data-tooltip="Place Ram"><img src="https://regnumsolis.com/planner/images/ram.svg" alt="Ram" /></div>
     </div>
 
-    <!-- Map Container -->
-    <div id="map-container">
-      <div id="map-svg-container"></div>
-    </div>
+    <div id="map-container"><div id="map-svg-container"></div></div>
 
-    <!-- New Admin Panel (only for admin users) -->
     <div id="admin-panel">
-      <header>
-        <h3>Admin Panel</h3>
+      <header><h3>Admin Panel</h3>
         <div class="admin-controls">
           <button id="minimize-panel" title="Minimize/Maximize">➖</button>
           <button id="copy-log" title="Copy Audit Log">📋</button>
@@ -685,32 +243,23 @@
         </div>
       </header>
       <div id="audit-log-container"></div>
-      <footer>
-        <button id="delete-all-markers">Delete All Markers</button>
-      </footer>
+      <footer><button id="delete-all-markers">Delete All Markers</button></footer>
     </div>
   </div>
 
-  <!-- Footer -->
   <footer id="footer-info">
-    <p>
-      Build version: v1.10.7rc |
-      Encrypted database connection: <span id="db-connection-status">🟢</span> |
-      Status: <span id="user-status">user</span> |
-      <a href="https://regnumsolis.com">Return to Home</a>
-    </p>
+    <p>Build version: v1.10.8rc | Encrypted database connection: <span id="db-connection-status">🟢</span> | Status: <span id="user-status">user</span> | <a href="https://regnumsolis.com">Return to Home</a></p>
   </footer>
 
   <div id="error-overlay">Database connection failed. The app cannot be used at this time.</div>
 
-  <!-- Custom Prompt Modal -->
-  <div id="custom-prompt-overlay" style="display:none; position: fixed; top: 0; left: 0; width:100%; height:100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); align-items: center; justify-content: center; z-index: 2000;">
-    <div id="custom-prompt" style="background: #1e1e1e; border: 1px solid rgba(223,197,136,0.8); padding: 20px; border-radius: 8px; color: white; min-width: 300px; max-width: 90%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
-      <p id="custom-prompt-message" style="margin-bottom: 15px; width:100%;"></p>
-      <input id="custom-prompt-input" type="text" style="width: 80%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 15px; text-align: center;" />
+  <div id="custom-prompt-overlay">
+    <div id="custom-prompt">
+      <p id="custom-prompt-message"></p>
+      <input id="custom-prompt-input" type="text" />
       <div style="display: flex; justify-content: center; gap: 10px; width: 100%;">
-        <button id="custom-prompt-ok" style="padding: 8px 15px; background: rgba(223,197,136,0.8); border: none; border-radius: 4px; cursor: pointer;">OK</button>
-        <button id="custom-prompt-cancel" style="padding: 8px 15px; background: rgba(223,197,136,0.8); border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
+        <button id="custom-prompt-ok">OK</button>
+        <button id="custom-prompt-cancel">Cancel</button>
       </div>
     </div>
   </div>
@@ -720,9 +269,21 @@
     import { getFirestore, collection, addDoc, orderBy, query, onSnapshot, deleteDoc, doc, serverTimestamp, getDocs, getDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 
-    // Global selected color for tools. Default is set to "#dfc588"
-    let selectedColor = "#dfc588";
+    // Globals
+    let selectedColor = "#dfc588", panZoomInstance, svgRoot, panLayer, lineLayer, markerLayer;
+    let isMapReady = false, activeTool = null, isDeleteInProgress = false;
+    let bezierControlPoints = [], polygonVertices = [], currentBezierPath = null, currentPolygonElement = null;
+    let loadingInterval, currentProgress = 0;
+    const loadingOverlay = document.getElementById("loading-overlay");
+    const loadingText = document.getElementById("loading-text");
 
+    // Visibility state
+    const visibilityState = {
+      homestead: true, keep: true, torch: true, cave: true, sword: true, spear: true, 
+      bow: true, beacon: true, camp: true, catapult: true, ram: true, lines: true
+    };
+
+    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyAIws_FKV_CTaiHdnwc8WigDqRkyUCOjtE",
       authDomain: "regnum-d3ddf.firebaseapp.com",
@@ -732,222 +293,19 @@
       appId: "1:565532905074:web:a4cc38363376e49540fceb",
       measurementId: "G-4RG5NP4FZ3"
     };
-
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const auth = getAuth(app);
 
-    let panZoomInstance, svgRoot, panLayer, lineLayer, markerLayer;
-    let isMapReady = false;
-    let activeTool = null;
-    
-    // Globals for Bezier and Polygon tools
-    let bezierControlPoints = [];
-    let polygonVertices = [];
-    let currentBezierPath = null;
-    let currentPolygonElement = null;
-    
-    // Variable to prevent duplicate delete confirmations
-    let isDeleteInProgress = false;
-
-    // Global visibility state
-    const visibilityState = {
-      homestead: true, keep: true, torch: true, cave: true,
-      sword: true, spear: true, bow: true, beacon: true,
-      camp: true, catapult: true, ram: true, lines: true
-    };
-
+    // Helper functions
     function updateMarkerVisibility() {
       markerLayer.querySelectorAll("[data-marker='true']").forEach(markerEl => {
-        const type = markerEl.getAttribute("data-type");
-        markerEl.style.display = visibilityState[type] ? "" : "none";
+        markerEl.style.display = visibilityState[markerEl.getAttribute("data-type")] ? "" : "none";
       });
     }
+    
     function updateLineVisibility() {
       lineLayer.style.display = visibilityState.lines ? "" : "none";
-    }
-
-    let loadingInterval;
-    let currentProgress = 0;
-    const loadingOverlay = document.getElementById("loading-overlay");
-    const loadingText = document.getElementById("loading-text");
-
-    document.addEventListener("DOMContentLoaded", () => {
-      setupLogin();
-      setupToolbox();
-      setupMapSwitchControls();
-      setupMenuToggles();
-      setupAdminPanelControls();
-      setupColorPicker();
-
-      const toggleMarkerTextCheckbox = document.getElementById("toggle-marker-text");
-      const toggleLabel = document.getElementById("toggle-marker-text-label");
-      toggleMarkerTextCheckbox.addEventListener("change", function() {
-        if (this.checked) {
-          document.body.classList.add("text-hover-only");
-          toggleLabel.textContent = "Text on Hover";
-        } else {
-          document.body.classList.remove("text-hover-only");
-          toggleLabel.textContent = "All Text Active";
-        }
-      });
-
-      Object.keys(visibilityState).forEach(key => {
-        const checkbox = document.getElementById(`toggle-${key}`);
-        if (checkbox) {
-          checkbox.addEventListener("change", function() {
-            visibilityState[key] = this.checked;
-            if (key === "lines") updateLineVisibility();
-            else updateMarkerVisibility();
-          });
-        }
-      });
-
-      // Add touch detection for better mobile support
-      if ('ontouchstart' in window) {
-        document.body.classList.add('touch-device');
-        // Add info buttons to tools for touch devices
-        document.querySelectorAll('.tool').forEach(tool => {
-          const infoBtn = document.createElement('div');
-          infoBtn.className = 'tool-info';
-          tool.appendChild(infoBtn);
-        });
-      }
-
-      // Ensure menus stay hidden on window resize
-      window.addEventListener('resize', function() {
-        document.querySelectorAll(".menu-container.hidden").forEach(menu => {
-          menu.style.transform = "translateX(109%)";
-        });
-        
-        // Update canvas size for WebGL background
-        const canvas = document.getElementById('waveCanvas');
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        
-        // Reset pan/zoom on significant resize
-        if (panZoomInstance && isMapReady) {
-          panZoomInstance.resetZoom();
-        }
-      });
-    });
-
-    function setupColorPicker() {
-      // Updated color palette based on the hexagonal grid in the image
-      const colorGrid = document.getElementById("color-grid");
-      const hexColors = [
-        // Greens (top)
-        "#004000", "#006000", "#008000", "#00A000", "#00C000", "#00FF00", "#80FF80",
-        // Blues (top-right)
-        "#000040", "#000080", "#0000C0", "#0000FF", "#4040FF", "#8080FF", "#C0C0FF",
-        // Purples (right)
-        "#400040", "#600060", "#800080", "#A000A0", "#C000C0", "#FF00FF", "#FF80FF",
-        // Reds (bottom-right)
-        "#400000", "#600000", "#800000", "#A00000", "#C00000", "#FF0000", "#FF8080",
-        // Oranges and yellows (bottom)
-        "#402000", "#603000", "#804000", "#A05000", "#C06000", "#FF8000", "#FFFF00",
-        // Browns (bottom-left)
-        "#202020", "#404020", "#606030", "#808040", "#A0A050", "#C0C060", "#E0E080",
-        // Grays (center and left)
-        "#000000", "#202020", "#404040", "#606060", "#808080", "#A0A0A0", "#FFFFFF",
-        // Teal/Cyan (top-left)
-        "#004040", "#006060", "#008080", "#00A0A0", "#00C0C0", "#00FFFF", "#80FFFF"
-      ];
-
-      // Create color cells
-      hexColors.forEach(color => {
-        const cell = document.createElement("div");
-        cell.className = "color-cell";
-        cell.style.backgroundColor = color;
-        cell.addEventListener("click", () => {
-          selectedColor = color;
-          document.getElementById("paint-fill").setAttribute("fill", selectedColor);
-          closeColorPicker();
-        });
-        colorGrid.appendChild(cell);
-      });
-    }
-
-    function openColorPicker() {
-      document.getElementById("color-picker-modal").style.display = "block";
-    }
-
-    function closeColorPicker() {
-      document.getElementById("color-picker-modal").style.display = "none";
-    }
-
-    function setupMenuToggles() {
-      document.querySelectorAll(".menu-toggle").forEach(btn => {
-        btn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          const menu = btn.closest(".menu-container");
-          menu.classList.toggle("hidden");
-          btn.innerHTML = menu.classList.contains("hidden") ? "&#9654;" : "&#9664;";
-        });
-      });
-    }
-
-    function setupAdminPanelControls() {
-      const minimizeBtn = document.getElementById("minimize-panel");
-      const auditContainer = document.getElementById("audit-log-container");
-      let isMinimized = false;
-      minimizeBtn.addEventListener("click", () => {
-        if (!isMinimized) {
-          auditContainer.style.display = "none";
-          minimizeBtn.textContent = "➕";
-          isMinimized = true;
-        } else {
-          auditContainer.style.display = "block";
-          minimizeBtn.textContent = "➖";
-          isMinimized = false;
-        }
-      });
-
-      document.getElementById("copy-log").addEventListener("click", () => {
-        let logText = "";
-        auditContainer.querySelectorAll("div").forEach(entry => {
-          logText += entry.innerText + "\n";
-        });
-        navigator.clipboard.writeText(logText);
-      });
-
-      document.getElementById("clear-logs").addEventListener("click", async () => {
-        if (confirm("Delete all audit logs?")) {
-          try {
-            const auditSnapshot = await getDocs(collection(db, "auditLogs"));
-            auditSnapshot.forEach(async (docSnap) => {
-              await deleteDoc(doc(db, "auditLogs", docSnap.id));
-            });
-          } catch (error) {
-            console.error("Error deleting audit logs:", error);
-          }
-        }
-      });
-
-      document.getElementById("delete-all-markers").addEventListener("click", async () => {
-        if (confirm("Delete all markers?")) {
-          try {
-            const markersSnapshot = await getDocs(collection(db, "markers"));
-            markersSnapshot.forEach(async (docSnap) => {
-              await deleteDoc(doc(db, "markers", docSnap.id));
-            });
-            const linesSnapshot = await getDocs(collection(db, "lines"));
-            linesSnapshot.forEach(async (docSnap) => {
-              await deleteDoc(doc(db, "lines", docSnap.id));
-            });
-            const bezierSnapshot = await getDocs(collection(db, "bezierCurves"));
-            bezierSnapshot.forEach(async (docSnap) => {
-              await deleteDoc(doc(db, "bezierCurves", docSnap.id));
-            });
-            const polygonsSnapshot = await getDocs(collection(db, "polygons"));
-            polygonsSnapshot.forEach(async (docSnap) => {
-              await deleteDoc(doc(db, "polygons", docSnap.id));
-            });
-          } catch (error) {
-            console.error("Error deleting markers:", error);
-          }
-        }
-      });
     }
 
     function showLoading() {
@@ -968,6 +326,92 @@
       loadingText.textContent = "100%";
       setTimeout(() => { loadingOverlay.style.display = "none"; }, 300);
       document.getElementById("db-connection-status").textContent = "🟢";
+    }
+
+    function setupColorPicker() {
+      const colorGrid = document.getElementById("color-grid");
+      const hexColors = [
+        "#004000", "#006000", "#008000", "#00A000", "#00C000", "#00FF00", "#80FF80",
+        "#000040", "#000080", "#0000C0", "#0000FF", "#4040FF", "#8080FF", "#C0C0FF",
+        "#400040", "#600060", "#800080", "#A000A0", "#C000C0", "#FF00FF", "#FF80FF",
+        "#400000", "#600000", "#800000", "#A00000", "#C00000", "#FF0000", "#FF8080",
+        "#402000", "#603000", "#804000", "#A05000", "#C06000", "#FF8000", "#FFFF00",
+        "#202020", "#404020", "#606030", "#808040", "#A0A050", "#C0C060", "#E0E080",
+        "#000000", "#202020", "#404040", "#606060", "#808080", "#A0A0A0", "#FFFFFF",
+        "#004040", "#006060", "#008080", "#00A0A0", "#00C0C0", "#00FFFF", "#80FFFF"
+      ];
+      hexColors.forEach(color => {
+        const cell = document.createElement("div");
+        cell.className = "color-cell";
+        cell.style.backgroundColor = color;
+        cell.addEventListener("click", () => {
+          selectedColor = color;
+          document.getElementById("paint-fill").setAttribute("fill", selectedColor);
+          document.getElementById("color-picker-modal").style.display = "none";
+        });
+        colorGrid.appendChild(cell);
+      });
+      document.getElementById("color-picker-close").addEventListener("click", () => {
+        document.getElementById("color-picker-modal").style.display = "none";
+      });
+    }
+
+    function setupMenuToggles() {
+      document.querySelectorAll(".menu-toggle").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const menu = btn.closest(".menu-container");
+          menu.classList.toggle("hidden");
+          btn.innerHTML = menu.classList.contains("hidden") ? "&#9654;" : "&#9664;";
+        });
+      });
+    }
+
+    function setupAdminPanelControls() {
+      const minimizeBtn = document.getElementById("minimize-panel");
+      const auditContainer = document.getElementById("audit-log-container");
+      let isMinimized = false;
+      
+      minimizeBtn.addEventListener("click", () => {
+        auditContainer.style.display = isMinimized ? "block" : "none";
+        minimizeBtn.textContent = isMinimized ? "➖" : "➕";
+        isMinimized = !isMinimized;
+      });
+
+      document.getElementById("copy-log").addEventListener("click", () => {
+        let logText = "";
+        auditContainer.querySelectorAll("div").forEach(entry => { logText += entry.innerText + "\n"; });
+        navigator.clipboard.writeText(logText);
+      });
+
+      document.getElementById("clear-logs").addEventListener("click", async () => {
+        if (confirm("Delete all audit logs?")) {
+          try {
+            const auditSnapshot = await getDocs(collection(db, "auditLogs"));
+            auditSnapshot.forEach(async (docSnap) => {
+              await deleteDoc(doc(db, "auditLogs", docSnap.id));
+            });
+          } catch (error) { console.error("Error deleting audit logs:", error); }
+        }
+      });
+
+      document.getElementById("delete-all-markers").addEventListener("click", async () => {
+        if (confirm("Delete all markers?")) {
+          try {
+            const markersSnapshot = await getDocs(collection(db, "markers"));
+            markersSnapshot.forEach(async (docSnap) => { await deleteDoc(doc(db, "markers", docSnap.id)); });
+            
+            const linesSnapshot = await getDocs(collection(db, "lines"));
+            linesSnapshot.forEach(async (docSnap) => { await deleteDoc(doc(db, "lines", docSnap.id)); });
+            
+            const bezierSnapshot = await getDocs(collection(db, "bezierCurves"));
+            bezierSnapshot.forEach(async (docSnap) => { await deleteDoc(doc(db, "bezierCurves", docSnap.id)); });
+            
+            const polygonsSnapshot = await getDocs(collection(db, "polygons"));
+            polygonsSnapshot.forEach(async (docSnap) => { await deleteDoc(doc(db, "polygons", docSnap.id)); });
+          } catch (error) { console.error("Error deleting markers:", error); }
+        }
+      });
     }
 
     function setupLogin() {
@@ -1036,19 +480,10 @@
         })
         .catch(error => {
           console.error("Error loading SVG:", error);
-          displayErrorOverlay("Error loading map data.");
+          document.getElementById("error-overlay").style.display = "flex";
           hideLoading();
           document.getElementById("db-connection-status").textContent = "🔴";
         });
-    }
-
-    function setupMapSwitchControls() {
-      document.getElementById("tactical-map").addEventListener("click", () => {
-        switchMap("https://regnumsolis.com/planner/images/mvmvmdfstactical.svg");
-      });
-      document.getElementById("style-map").addEventListener("click", () => {
-        switchMap("https://regnumsolis.com/planner/images/mvmvmdfs.svg");
-      });
     }
 
     function setupPanZoomLayers() {
@@ -1070,29 +505,21 @@
       markerLayer.id = "marker-layer";
       panLayer.appendChild(markerLayer);
 
-      // Configure pan-zoom with responsive options
       panZoomInstance = svgPanZoom(svgRoot, {
         zoomEnabled: true, 
         panEnabled: true, 
         controlIconsEnabled: false, 
         minZoom: 0.5, 
         maxZoom: 5,
-        zoomScaleSensitivity: 0.4, // Make zooming more gradual
-        dblClickZoomEnabled: true, // Enable double-click to zoom
+        zoomScaleSensitivity: 0.4,
+        dblClickZoomEnabled: true,
         preventMouseEventsDefault: true,
         beforeMouseDown: function(e) {
           if (activeTool === "bezier" || activeTool === "polygon") return false;
-          if (e.target.getAttribute("data-marker") === "true" ||
-              (e.target.parentNode && e.target.parentNode.getAttribute("data-marker") === "true")) { return false; }
+          if (e.target.getAttribute("data-marker") === "true" || (e.target.parentNode && e.target.parentNode.getAttribute("data-marker") === "true")) { return false; }
           return true;
         }
       });
-    }
-
-    function setupZoomControls() {
-      document.getElementById("zoom-in").addEventListener("click", () => panZoomInstance.zoomIn());
-      document.getElementById("zoom-out").addEventListener("click", () => panZoomInstance.zoomOut());
-      document.getElementById("reset-zoom").addEventListener("click", () => panZoomInstance.resetZoom());
     }
 
     function setupToolbox() {
@@ -1100,10 +527,9 @@
         const type = tool.dataset.type;
         if (type === "color") {
           tool.addEventListener("click", () => {
-            // Reset active tool if we're selecting the color tool
             activeTool = null;
             document.querySelectorAll("#toolbox .tool").forEach(t => t.style.borderColor = "rgba(223,197,136,0.5)");
-            openColorPicker();
+            document.getElementById("color-picker-modal").style.display = "block";
           });
         } else if (type === "bezier") {
           tool.addEventListener("click", () => {
@@ -1139,31 +565,21 @@
             document.body.appendChild(dragClone);
             tool.dragClone = dragClone;
           });
+          
           tool.addEventListener("drag", (e) => {
             if (!tool.dragClone) return;
-            const offsetX = 10;
-            const offsetY = 10;
-            if (e.clientX > 0) { // Only update if coordinates are valid
-              tool.dragClone.style.left = e.clientX + offsetX + "px";
-              tool.dragClone.style.top = e.clientY + offsetY + "px";
+            if (e.clientX > 0) {
+              tool.dragClone.style.left = (e.clientX + 10) + "px";
+              tool.dragClone.style.top = (e.clientY + 10) + "px";
             }
           });
+          
           tool.addEventListener("dragend", (e) => {
-            if (tool.dragClone) {
-              tool.dragClone.remove();
-              tool.dragClone = null;
-            }
+            if (tool.dragClone) { tool.dragClone.remove(); tool.dragClone = null; }
           });
         }
       });
     }
-    document.addEventListener("dragover", (e) => {
-      const activeClone = document.querySelector(".drag-clone");
-      if (activeClone) {
-        activeClone.style.left = (e.clientX + 10) + "px";
-        activeClone.style.top = (e.clientY + 10) + "px";
-      }
-    });
 
     function setupDragAndDrop() {
       svgRoot.addEventListener("dragover", (e) => {
@@ -1180,34 +596,7 @@
       });
     }
 
-    // Combined drawing tool event listener for bezier and polygon
-    function setupDrawingTools() {
-      svgRoot.removeEventListener("click", drawingToolHandler);
-      svgRoot.addEventListener("click", drawingToolHandler);
-      svgRoot.addEventListener("contextmenu", (e) => {
-        if (activeTool === "bezier") {
-          e.preventDefault();
-          commitBezier();
-        } else if (activeTool === "polygon") {
-          e.preventDefault();
-          commitPolygon();
-        }
-      });
-    }
-
-    async function drawingToolHandler(e) {
-      const pt = getSVGPoint(e);
-      if (activeTool === "bezier") {
-        bezierControlPoints.push({ x: pt.x, y: pt.y });
-        updateBezierPreview();
-      }
-      else if (activeTool === "polygon") {
-        polygonVertices.push({ x: pt.x, y: pt.y });
-        updatePolygonPreview();
-      }
-    }
-
-    // Bezier helper: de Casteljau algorithm
+    // Bezier curve helpers
     function calculateBezier(points, t) {
       let temp = points.map(p => ({...p}));
       for (let i = temp.length - 1; i > 0; i--) {
@@ -1221,7 +610,6 @@
       return temp[0];
     }
     
-    // Helper: approximate arc-length midpoint along the bezier curve
     function getBezierArcMidpoint(controlPoints, samples = 100) {
       let pts = [];
       for (let i = 0; i <= samples; i++) {
@@ -1246,6 +634,32 @@
       let p0 = pts[index-1];
       let p1 = pts[index];
       return { x: p0.x + factor*(p1.x - p0.x), y: p0.y + factor*(p1.y - p0.y) };
+    }
+
+    function setupDrawingTools() {
+      svgRoot.removeEventListener("click", drawingToolHandler);
+      svgRoot.addEventListener("click", drawingToolHandler);
+      svgRoot.addEventListener("contextmenu", (e) => {
+        if (activeTool === "bezier") {
+          e.preventDefault();
+          commitBezier();
+        } else if (activeTool === "polygon") {
+          e.preventDefault();
+          commitPolygon();
+        }
+      });
+    }
+
+    function drawingToolHandler(e) {
+      const pt = getSVGPoint(e);
+      if (activeTool === "bezier") {
+        bezierControlPoints.push({ x: pt.x, y: pt.y });
+        updateBezierPreview();
+      }
+      else if (activeTool === "polygon") {
+        polygonVertices.push({ x: pt.x, y: pt.y });
+        updatePolygonPreview();
+      }
     }
 
     function updateBezierPreview() {
@@ -1282,14 +696,11 @@
     async function commitBezier() {
       if (bezierControlPoints.length < 2) return;
       if (currentBezierPath) { currentBezierPath.remove(); currentBezierPath = null; }
-      // Use the globally selectedColor
-      const bezierColor = selectedColor;
       
-      // Create a group to hold the bezier path and its arrows
+      // Create bezier elements
       const bezierGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
-
-      // Create the bezier path element
       const pathElem = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      
       let d = "";
       const samples = 100;
       for (let i = 0; i <= samples; i++) {
@@ -1298,36 +709,36 @@
         d += (i === 0 ? `M ${pt.x} ${pt.y}` : ` L ${pt.x} ${pt.y}`);
       }
       pathElem.setAttribute("d", d);
-      pathElem.setAttribute("stroke", bezierColor);
+      pathElem.setAttribute("stroke", selectedColor);
       pathElem.setAttribute("stroke-width", "3");
       pathElem.setAttribute("fill", "none");
       bezierGroup.appendChild(pathElem);
 
-      // Arrow at the end (using t=0.98 to t=1.0)
+      // End arrow
       let pt1 = calculateBezier(bezierControlPoints, 0.98);
       let pt2 = calculateBezier(bezierControlPoints, 1.0);
       let angleEnd = Math.atan2(pt2.y - pt1.y, pt2.x - pt1.x) * (180/Math.PI);
       const arrowEnd = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
       arrowEnd.setAttribute("points", "0,-8 16,0 0,8");
-      arrowEnd.setAttribute("fill", bezierColor);
+      arrowEnd.setAttribute("fill", selectedColor);
       arrowEnd.setAttribute("transform", `translate(${pt2.x},${pt2.y}) rotate(${angleEnd})`);
       bezierGroup.appendChild(arrowEnd);
 
-      // Calculate arc-length midpoint and arrow in the middle
+      // Mid arrow
       let midPt = getBezierArcMidpoint(bezierControlPoints, 100);
       let angleMid = Math.atan2(pt2.y - midPt.y, pt2.x - midPt.x) * (180/Math.PI);
       const arrowMid = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
       arrowMid.setAttribute("points", "0,-8 16,0 0,8");
-      arrowMid.setAttribute("fill", bezierColor);
+      arrowMid.setAttribute("fill", selectedColor);
       arrowMid.setAttribute("transform", `translate(${midPt.x},${midPt.y}) rotate(${angleMid})`);
       bezierGroup.appendChild(arrowMid);
-
       lineLayer.appendChild(bezierGroup);
 
+      // Save to Firestore
       try {
         const docRef = await addDoc(collection(db, "bezierCurves"), {
           controlPoints: bezierControlPoints,
-          color: bezierColor,
+          color: selectedColor,
           timestamp: serverTimestamp(),
           owner: auth.currentUser.uid
         });
@@ -1336,11 +747,10 @@
       } catch (error) {
         console.error("Error adding bezier curve:", error);
       }
-      // Attach deletion event to the entire bezier group
+      
+      // Add delete handler
       bezierGroup.addEventListener("click", async (e) => {
         e.stopPropagation();
-        
-        // Prevent double deletion prompts
         if (isDeleteInProgress) return;
         isDeleteInProgress = true;
         
@@ -1353,12 +763,10 @@
             console.error("Error deleting bezier curve:", error);
           }
         }
-        
-        // Reset after a short delay to allow any bubbled events to complete
-        setTimeout(() => {
-          isDeleteInProgress = false;
-        }, 100);
+        setTimeout(() => { isDeleteInProgress = false; }, 100);
       });
+      
+      // Reset state
       activeTool = null;
       bezierControlPoints = [];
       markerLayer.style.pointerEvents = "auto";
@@ -1368,6 +776,7 @@
     async function commitPolygon() {
       if (polygonVertices.length < 3) return;
       if (currentPolygonElement) { currentPolygonElement.remove(); currentPolygonElement = null; }
+      
       const polygonElem = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
       const pointsStr = polygonVertices.map(p => `${p.x},${p.y}`).join(" ");
       polygonElem.setAttribute("points", pointsStr);
@@ -1376,6 +785,7 @@
       polygonElem.setAttribute("fill", selectedColor);
       polygonElem.setAttribute("fill-opacity", "0.3");
       lineLayer.appendChild(polygonElem);
+      
       try {
         const docRef = await addDoc(collection(db, "polygons"), {
           vertices: polygonVertices,
@@ -1388,10 +798,9 @@
       } catch (error) {
         console.error("Error adding polygon:", error);
       }
+      
       polygonElem.addEventListener("click", async (e) => {
         e.stopPropagation();
-        
-        // Prevent double deletion prompts
         if (isDeleteInProgress) return;
         isDeleteInProgress = true;
         
@@ -1404,12 +813,9 @@
             console.error("Error deleting polygon:", error);
           }
         }
-        
-        // Reset after a short delay
-        setTimeout(() => {
-          isDeleteInProgress = false;
-        }, 100);
+        setTimeout(() => { isDeleteInProgress = false; }, 100);
       });
+      
       activeTool = null;
       polygonVertices = [];
       markerLayer.style.pointerEvents = "auto";
@@ -1419,11 +825,13 @@
     async function addMarkerToFirestore(type, x, y) {
       const user = auth.currentUser;
       if (!user) { console.error("User not authenticated"); return; }
+      
       let markerData = { type, x, y, timestamp: serverTimestamp(), owner: user.uid };
       if (["homestead", "keep", "torch", "cave", "sword", "spear", "bow", "beacon", "camp", "catapult", "ram"].includes(type)) {
         markerData.text = await customPrompt("Enter marker text:", "") || "";
         markerData.color = selectedColor;
       }
+      
       try {
         const docRef = await addDoc(collection(db, "markers"), markerData);
         recordAuditLog("add", { markerId: docRef.id, markerType: type });
@@ -1436,9 +844,7 @@
       const bezierQuery = query(collection(db, "bezierCurves"), orderBy("timestamp"));
       onSnapshot(bezierQuery, (snapshot) => {
         lineLayer.querySelectorAll("g[data-bezier='true']").forEach(elem => elem.remove());
-        snapshot.forEach(docSnap => {
-          createBezierElement(docSnap.id, docSnap.data());
-        });
+        snapshot.forEach(docSnap => { createBezierElement(docSnap.id, docSnap.data()); });
       });
     }
 
@@ -1480,8 +886,6 @@
 
       bezierGroup.addEventListener("click", async (e) => {
         e.stopPropagation();
-        
-        // Prevent double deletion prompts
         if (isDeleteInProgress) return;
         isDeleteInProgress = true;
         
@@ -1494,12 +898,9 @@
             console.error("Error deleting bezier curve:", error);
           }
         }
-        
-        // Reset after a short delay
-        setTimeout(() => {
-          isDeleteInProgress = false;
-        }, 100);
+        setTimeout(() => { isDeleteInProgress = false; }, 100);
       });
+      
       lineLayer.appendChild(bezierGroup);
     }
 
@@ -1507,9 +908,7 @@
       const polyQuery = query(collection(db, "polygons"), orderBy("timestamp"));
       onSnapshot(polyQuery, (snapshot) => {
         lineLayer.querySelectorAll("polygon[data-polygon='true']").forEach(elem => elem.remove());
-        snapshot.forEach(docSnap => {
-          createPolygonElement(docSnap.id, docSnap.data());
-        });
+        snapshot.forEach(docSnap => { createPolygonElement(docSnap.id, docSnap.data()); });
       });
     }
 
@@ -1523,10 +922,9 @@
       polygonElem.setAttribute("fill-opacity", "0.3");
       polygonElem.dataset.id = id;
       polygonElem.setAttribute("data-polygon", "true");
+      
       polygonElem.addEventListener("click", async (e) => {
         e.stopPropagation();
-        
-        // Prevent double deletion prompts
         if (isDeleteInProgress) return;
         isDeleteInProgress = true;
         
@@ -1539,12 +937,9 @@
             console.error("Error deleting polygon:", error);
           }
         }
-        
-        // Reset after a short delay
-        setTimeout(() => {
-          isDeleteInProgress = false;
-        }, 100);
+        setTimeout(() => { isDeleteInProgress = false; }, 100);
       });
+      
       lineLayer.appendChild(polygonElem);
     }
 
@@ -1558,10 +953,15 @@
         updateMarkerVisibility();
       }, (error) => {
         console.error("Firestore connection error:", error);
-        displayErrorOverlay("Firestore connection failed.");
+        document.getElementById("error-overlay").style.display = "flex";
       });
+      
       setTimeout(() => {
-        if (!snapshotReceived) { console.error("No Firestore snapshot received within timeout."); displayErrorOverlay("Firestore connection failed."); unsubscribe(); }
+        if (!snapshotReceived) { 
+          console.error("No Firestore snapshot received within timeout."); 
+          document.getElementById("error-overlay").style.display = "flex";
+          unsubscribe(); 
+        }
       }, 5000);
     }
 
@@ -1578,53 +978,33 @@
       let markerEl = document.createElementNS("http://www.w3.org/2000/svg", "g");
       markerEl.setAttribute("data-marker", "true");
       markerEl.dataset.type = data.type;
+      
+      // Configure marker properties
       let imgSrc, imgWidth, imgHeight, imgXOffset, imgYOffset, fontSize;
-      if (data.type === "homestead") {
-        imgSrc = "https://regnumsolis.com/planner/images/marker.svg";
-        imgWidth = 30 * 1.7; imgHeight = 30 * 1.7;
-        imgXOffset = -(imgWidth / 2); imgYOffset = -20 * 1.7; fontSize = 16 * 1.7;
-      } else if (data.type === "keep") {
-        imgSrc = "https://regnumsolis.com/planner/images/citadel.svg";
-        imgWidth = 30 * 1.7 * 1.2; imgHeight = 30 * 1.7 * 1.2;
-        imgXOffset = -15 * 1.7 * 1.2; imgYOffset = -15 * 1.7 * 1.2; fontSize = 14 * 1.7 * 1.2;
-      } else if (data.type === "torch") {
-        imgSrc = "https://regnumsolis.com/planner/images/torch.svg";
-        imgWidth = 30 * 1.7; imgHeight = 30 * 1.7;
-        imgXOffset = -15 * 1.7; imgYOffset = -15 * 1.7; fontSize = 14 * 1.7;
-      } else if (data.type === "cave") {
-        imgSrc = "https://regnumsolis.com/planner/images/cave.svg";
-        imgWidth = 30 * 1.7; imgHeight = 30 * 1.7;
-        imgXOffset = -15 * 1.7; imgYOffset = -15 * 1.7; fontSize = 14 * 1.7;
-      } else if (data.type === "sword") {
-        imgSrc = "https://regnumsolis.com/planner/images/sword.svg";
-        imgWidth = 30 * 1.7; imgHeight = 30 * 1.7;
-        imgXOffset = -15 * 1.7; imgYOffset = -15 * 1.7; fontSize = 14 * 1.7;
-      } else if (data.type === "spear") {
-        imgSrc = "https://regnumsolis.com/planner/images/spear.svg";
-        imgWidth = 30 * 1.7; imgHeight = 30 * 1.7;
-        imgXOffset = -15 * 1.7; imgYOffset = -15 * 1.7; fontSize = 14 * 1.7;
-      } else if (data.type === "bow") {
-        imgSrc = "https://regnumsolis.com/planner/images/bow.svg";
-        imgWidth = 30 * 1.7; imgHeight = 30 * 1.7;
-        imgXOffset = -15 * 1.7; imgYOffset = -15 * 1.7; fontSize = 14 * 1.7;
-      } else if (data.type === "beacon") {
-        imgSrc = "https://regnumsolis.com/planner/images/beacon.svg";
-        imgWidth = 30 * 1.7 * 1.2; imgHeight = 30 * 1.7 * 1.2;
-        imgXOffset = -15 * 1.7 * 1.2; imgYOffset = -15 * 1.7 * 1.2; fontSize = 14 * 1.7 * 1.2;
-      } else if (data.type === "camp") {
-        imgSrc = "https://regnumsolis.com/planner/images/camp.svg";
-        imgWidth = 30 * 1.7 * 1.2; imgHeight = 30 * 1.7 * 1.2;
-        imgXOffset = -15 * 1.7 * 1.2; imgYOffset = -15 * 1.7 * 1.2; fontSize = 14 * 1.7 * 1.2;
-      } else if (data.type === "catapult") {
-        imgSrc = "https://regnumsolis.com/planner/images/catapult.svg";
-        imgWidth = 30 * 1.7 * 1.2; imgHeight = 30 * 1.7 * 1.2;
-        imgXOffset = -15 * 1.7 * 1.2; imgYOffset = -15 * 1.7 * 1.2; fontSize = 14 * 1.7 * 1.2;
-      } else if (data.type === "ram") {
-        imgSrc = "https://regnumsolis.com/planner/images/ram.svg";
-        imgWidth = 30 * 1.7 * 1.2; imgHeight = 30 * 1.7 * 1.2;
-        imgXOffset = -15 * 1.7 * 1.2; imgYOffset = -15 * 1.7 * 1.2; fontSize = 14 * 1.7 * 1.2;
-      }
-      let textXOffset = imgXOffset + imgWidth;
+      const markerConfig = {
+        homestead: { src: "marker.svg", scale: 1.7, yOffset: -20 },
+        keep: { src: "citadel.svg", scale: 1.7 * 1.2, sizeBase: 30, fontSize: 14 },
+        torch: { src: "torch.svg", scale: 1.7, sizeBase: 30, fontSize: 14 },
+        cave: { src: "cave.svg", scale: 1.7, sizeBase: 30, fontSize: 14 },
+        sword: { src: "sword.svg", scale: 1.7, sizeBase: 30, fontSize: 14 },
+        spear: { src: "spear.svg", scale: 1.7, sizeBase: 30, fontSize: 14 },
+        bow: { src: "bow.svg", scale: 1.7, sizeBase: 30, fontSize: 14 },
+        beacon: { src: "beacon.svg", scale: 1.7 * 1.2, sizeBase: 30, fontSize: 14 },
+        camp: { src: "camp.svg", scale: 1.7 * 1.2, sizeBase: 30, fontSize: 14 },
+        catapult: { src: "catapult.svg", scale: 1.7 * 1.2, sizeBase: 30, fontSize: 14 },
+        ram: { src: "ram.svg", scale: 1.7 * 1.2, sizeBase: 30, fontSize: 14 }
+      };
+      
+      const config = markerConfig[data.type];
+      imgSrc = `https://regnumsolis.com/planner/images/${config.src}`;
+      const sizeBase = config.sizeBase || 30;
+      const scale = config.scale || 1.7;
+      imgWidth = imgHeight = sizeBase * scale;
+      imgXOffset = config.xOffset !== undefined ? config.xOffset : -imgWidth/2;
+      imgYOffset = config.yOffset !== undefined ? config.yOffset * scale : -imgHeight/2;
+      fontSize = (config.fontSize || 16) * scale;
+      
+      // Create image element
       const imgEl = document.createElementNS("http://www.w3.org/2000/svg", "image");
       imgEl.setAttributeNS("http://www.w3.org/1999/xlink", "href", imgSrc);
       imgEl.setAttribute("width", imgWidth);
@@ -1632,16 +1012,20 @@
       imgEl.setAttribute("x", data.x + imgXOffset);
       imgEl.setAttribute("y", data.y + imgYOffset);
       markerEl.appendChild(imgEl);
+      
+      // Create text element
       const textEl = document.createElementNS("http://www.w3.org/2000/svg", "text");
       textEl.textContent = data.text;
       textEl.setAttribute("fill", data.color);
       textEl.setAttribute("font-size", fontSize);
-      textEl.setAttribute("x", data.x + textXOffset);
+      textEl.setAttribute("x", data.x + imgXOffset + imgWidth);
       textEl.setAttribute("y", data.y);
       textEl.setAttribute("text-anchor", "start");
       textEl.setAttribute("dominant-baseline", "middle");
       textEl.style.fontFamily = "'Bebas Neue', sans-serif";
       markerEl.appendChild(textEl);
+      
+      // Add background rectangle for text (calculated after render)
       requestAnimationFrame(() => {
         const bbox = textEl.getBBox();
         const textLength = textEl.getComputedTextLength();
@@ -1654,13 +1038,13 @@
         rectEl.setAttribute("opacity", "0.63");
         markerEl.insertBefore(rectEl, textEl);
       });
+      
+      // Add marker classes and deletion handler
       markerEl.classList.add("marker");
       markerEl.dataset.id = id;
       markerEl.addEventListener("click", async (e) => {
         e.stopPropagation();
         if (activeTool === "bezier" || activeTool === "polygon") return;
-        
-        // Prevent double deletion prompts
         if (isDeleteInProgress) return;
         isDeleteInProgress = true;
         
@@ -1673,12 +1057,9 @@
             console.error("Error deleting marker:", error);
           }
         }
-        
-        // Reset after a short delay
-        setTimeout(() => {
-          isDeleteInProgress = false;
-        }, 100);
+        setTimeout(() => { isDeleteInProgress = false; }, 100);
       });
+      
       markerLayer.appendChild(markerEl);
     }
 
@@ -1686,6 +1067,7 @@
       const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
       group.classList.add("line-group");
       group.dataset.id = id;
+      
       const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
       line.setAttribute("x1", data.x1);
       line.setAttribute("y1", data.y1);
@@ -1693,16 +1075,17 @@
       line.setAttribute("y2", data.y2);
       line.setAttribute("stroke", data.color);
       line.setAttribute("stroke-width", "3.2");
+      
       const arrow = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
       arrow.setAttribute("points", "0,-8 16,0 0,8");
       arrow.setAttribute("fill", data.color);
       arrow.setAttribute("transform", `translate(${data.midX},${data.midY}) rotate(${data.angle})`);
+      
       group.appendChild(line);
       group.appendChild(arrow);
+      
       group.addEventListener("click", async (e) => {
         e.stopPropagation();
-        
-        // Prevent double deletion prompts
         if (isDeleteInProgress) return;
         isDeleteInProgress = true;
         
@@ -1715,12 +1098,9 @@
             console.error("Error deleting line:", error);
           }
         }
-        
-        // Reset after a short delay
-        setTimeout(() => {
-          isDeleteInProgress = false;
-        }, 100);
+        setTimeout(() => { isDeleteInProgress = false; }, 100);
       });
+      
       lineLayer.appendChild(group);
     }
 
@@ -1728,8 +1108,7 @@
       const user = auth.currentUser;
       if (!user) return;
       const logData = { action, details, user: user.email, timestamp: serverTimestamp() };
-      addDoc(collection(db, "auditLogs"), logData)
-        .catch(error => console.error("Error writing audit log:", error));
+      addDoc(collection(db, "auditLogs"), logData).catch(error => console.error("Error writing audit log:", error));
     }
 
     function listenForAuditLogs() {
@@ -1737,9 +1116,8 @@
       const auditQuery = query(collection(db, "auditLogs"), orderBy("timestamp", "asc"));
       onSnapshot(auditQuery, (snapshot) => {
         const logs = [];
-        snapshot.forEach(docSnap => {
-          logs.push(docSnap.data());
-        });
+        snapshot.forEach(docSnap => { logs.push(docSnap.data()); });
+        
         const grouped = [];
         logs.forEach(log => {
           if (grouped.length === 0) {
@@ -1758,14 +1136,12 @@
             }
           }
         });
+        
         auditContainer.innerHTML = "";
         grouped.forEach(group => {
           const log = group.log;
           const dateStr = new Date(log.timestamp ? log.timestamp.seconds * 1000 : Date.now()).toLocaleString();
-          let detailsText = "";
-          if (log.details && log.details.markerType) {
-            detailsText = ` (${log.details.markerType})`;
-          }
+          let detailsText = log.details && log.details.markerType ? ` (${log.details.markerType})` : "";
           const groupCount = group.count > 1 ? ` <span class="log-group">(x${group.count})</span>` : "";
           const entry = document.createElement("div");
           entry.innerHTML = `[${dateStr}] <span class="log-user">${log.user}</span> <span class="log-action">${log.action}${detailsText}</span>${groupCount}`;
@@ -1774,20 +1150,92 @@
       });
     }
 
+    // Helper functions
     function getSVGPoint(e) {
       const pt = svgRoot.createSVGPoint();
       pt.x = e.clientX; pt.y = e.clientY;
       return pt.matrixTransform(panLayer.getScreenCTM().inverse());
     }
 
-    function displayErrorOverlay(message) {
-      const overlay = document.getElementById("error-overlay");
-      overlay.textContent = message;
-      overlay.style.display = "flex";
-      console.warn("Error overlay activated:", message);
+    function setupZoomControls() {
+      document.getElementById("zoom-in").addEventListener("click", () => panZoomInstance.zoomIn());
+      document.getElementById("zoom-out").addEventListener("click", () => panZoomInstance.zoomOut());
+      document.getElementById("reset-zoom").addEventListener("click", () => panZoomInstance.resetZoom());
     }
+
+    function setupMapSwitchControls() {
+      document.getElementById("tactical-map").addEventListener("click", () => {
+        switchMap("https://regnumsolis.com/planner/images/mvmvmdfstactical.svg");
+      });
+      document.getElementById("style-map").addEventListener("click", () => {
+        switchMap("https://regnumsolis.com/planner/images/mvmvmdfs.svg");
+      });
+    }
+
+    // Setup event handlers
+    document.addEventListener("DOMContentLoaded", () => {
+      setupLogin();
+      setupToolbox();
+      setupMapSwitchControls();
+      setupMenuToggles();
+      setupAdminPanelControls();
+      setupColorPicker();
+
+      const toggleMarkerTextCheckbox = document.getElementById("toggle-marker-text");
+      toggleMarkerTextCheckbox.addEventListener("change", function() {
+        document.body.classList.toggle("text-hover-only", this.checked);
+        document.getElementById("toggle-marker-text-label").textContent = this.checked ? "Text on Hover" : "All Text Active";
+      });
+
+      Object.keys(visibilityState).forEach(key => {
+        const checkbox = document.getElementById(`toggle-${key}`);
+        if (checkbox) {
+          checkbox.addEventListener("change", function() {
+            visibilityState[key] = this.checked;
+            if (key === "lines") updateLineVisibility();
+            else updateMarkerVisibility();
+          });
+        }
+      });
+
+      // Touch detection for mobile
+      if ('ontouchstart' in window) {
+        document.body.classList.add('touch-device');
+        document.querySelectorAll('.tool').forEach(tool => {
+          const infoBtn = document.createElement('div');
+          infoBtn.className = 'tool-info';
+          tool.appendChild(infoBtn);
+        });
+      }
+
+      // Window resize handlers
+      window.addEventListener('resize', function() {
+        document.querySelectorAll(".menu-container.hidden").forEach(menu => {
+          menu.style.transform = "translateX(109%)";
+        });
+        
+        const canvas = document.getElementById('waveCanvas');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        if (panZoomInstance && isMapReady) {
+          panZoomInstance.resetZoom();
+        }
+      });
+      
+      // Drag handling for marker movement
+      document.addEventListener("dragover", (e) => {
+        const activeClone = document.querySelector(".drag-clone");
+        if (activeClone) {
+          activeClone.style.left = (e.clientX + 10) + "px";
+          activeClone.style.top = (e.clientY + 10) + "px";
+        }
+      });
+    });
   </script>
+
   <script>
+    // Custom dialogs
     function customPrompt(message, defaultValue) {
       return new Promise((resolve) => {
         const overlay = document.getElementById("custom-prompt-overlay");
@@ -1795,27 +1243,30 @@
         const promptInput = document.getElementById("custom-prompt-input");
         const okButton = document.getElementById("custom-prompt-ok");
         const cancelButton = document.getElementById("custom-prompt-cancel");
+        
         promptMessage.textContent = message;
         promptInput.value = defaultValue || "";
         promptInput.style.display = "block";
         overlay.style.display = "flex";
         promptInput.focus();
+        
         function cleanup() {
           overlay.style.display = "none";
           okButton.removeEventListener("click", onOk);
           cancelButton.removeEventListener("click", onCancel);
           promptInput.removeEventListener("keydown", onKeyDown);
         }
+        
         function onOk() { resolve(promptInput.value); cleanup(); }
         function onCancel() { resolve(null); cleanup(); }
-        function onKeyDown(e) { if (e.key === "Enter") { onOk(); } }
+        function onKeyDown(e) { if (e.key === "Enter") onOk(); }
+        
         okButton.addEventListener("click", onOk);
         cancelButton.addEventListener("click", onCancel);
         promptInput.addEventListener("keydown", onKeyDown);
       });
     }
-  </script>
-  <script>
+
     function customConfirm(message) {
       return new Promise((resolve) => {
         const overlay = document.getElementById("custom-prompt-overlay");
@@ -1823,154 +1274,156 @@
         const promptInput = document.getElementById("custom-prompt-input");
         const okButton = document.getElementById("custom-prompt-ok");
         const cancelButton = document.getElementById("custom-prompt-cancel");
+        
         promptMessage.textContent = message;
         promptInput.style.display = "none";
         overlay.style.display = "flex";
+        
         function cleanup() {
           overlay.style.display = "none";
           promptInput.style.display = "block";
           okButton.removeEventListener("click", onOk);
           cancelButton.removeEventListener("click", onCancel);
         }
+        
         function onOk() { resolve(true); cleanup(); }
         function onCancel() { resolve(false); cleanup(); }
+        
         okButton.addEventListener("click", onOk);
         cancelButton.addEventListener("click", onCancel);
       });
     }
-  </script>
-  <script>
-    // WebGL background shader setup restored
-    const canvas = document.getElementById('waveCanvas');
-    canvas.width = window.innerWidth; 
-    canvas.height = window.innerHeight;
-    const gl = canvas.getContext("webgl");
-    if (!gl) { alert("WebGL is not supported in your browser."); }
 
-    const vertexShaderSource = `
-      attribute vec2 a_position;
-      varying vec2 v_uv;
-      void main() {
-        v_uv = a_position * 0.5 + 0.5;
-        gl_Position = vec4(a_position, 0.0, 1.0);
-      }
-    `;
-    const fragmentShaderSource = `
-      precision mediump float;
-      uniform float u_time;
-      uniform vec2 u_resolution;
-      varying vec2 v_uv;
-      float wave(vec2 st, float angle, float frequency, float amplitude, float speed) {
-        vec2 dir = vec2(cos(angle), sin(angle));
-        float phaseOffset = angle * 7.0;
-        return sin(dot(st, dir) * frequency + u_time * speed + phaseOffset) * amplitude;
-      }
-      float waveHeight(vec2 st) {
-        float h = 0.0;
-        h += wave(st, 0.0, 30.1, 0.0020, 0.81);
-        h += wave(st, 0.7, 40.3, 0.0017, 0.63);
-        h += wave(st, 1.4, 55.7, 0.0010, 1.04);
-h += wave(st, 2.1, 65.2, 0.0012, 0.91);
-        h += wave(st, 2.8, 50.5, 0.0015, 1.12);
-        h += wave(st, 3.3, 60.9, 0.0013, 0.87);
-        h += wave(st, 4.0, 45.6, 0.0014, 1.05);
-        h += wave(st, 4.7, 70.8, 0.0011, 0.99);
-        return h;
-      }
-      vec3 computeNormal(vec2 st, float h) {
-        float eps = 0.001;
-        float hx = waveHeight(st + vec2(eps, 0.0));
-        float hy = waveHeight(st + vec2(0.0, eps));
-        float dFdx = (hx - h) / eps;
-        float dFdy = (hy - h) / eps;
-        return normalize(vec3(-dFdx, -dFdy, 1.0));
-      }
-      void main(){
-        vec2 st = gl_FragCoord.xy / u_resolution.xy;
-        st.y *= u_resolution.y / u_resolution.x;
-        float h = waveHeight(st);
-        vec3 normal = computeNormal(st, h);
-        vec3 deepWater = vec3(0.0, 0.15, 0.35);
-        vec3 shallowWater = vec3(0.0, 0.45, 0.75);
-        vec3 baseColor = mix(deepWater, shallowWater, st.y + h * 0.5);
-        vec3 sunDir = normalize(vec3(0.3, 0.8, 1.0));
-        float diffuse = max(dot(normal, sunDir), 0.0);
-        vec3 viewDir = normalize(vec3(0.0, 0.0, 1.0));
-        vec3 halfDir = normalize(sunDir + viewDir);
-        float spec = pow(max(dot(normal, halfDir), 0.0), 50.0);
-        float fresnel = pow(1.0 - max(dot(viewDir, normal), 0.0), 3.0) * 0.6;
-        vec3 color = baseColor * (0.4 + 0.6 * diffuse) + vec3(1.0, 0.95, 0.8) * spec;
-        color = mix(color, vec3(1.0), fresnel);
-        color *= 0.1;
-        gl_FragColor = vec4(color, 1.0);
-      }
-    `;
-
-    function createShader(gl, type, source) {
-      const shader = gl.createShader(type);
-      gl.shaderSource(shader, source);
-      gl.compileShader(shader);
-      if(!gl.getShaderParameter(shader, gl.COMPILE_STATUS)){
-        console.error("Shader compile error: ", gl.getShaderInfoLog(shader));
-        gl.deleteShader(shader);
-        return null;
-      }
-      return shader;
-    }
-
-    function createProgram(gl, vertexShader, fragmentShader) {
-      const program = gl.createProgram();
-      gl.attachShader(program, vertexShader);
-      gl.attachShader(program, fragmentShader);
-      gl.linkProgram(program);
-      if(!gl.getProgramParameter(program, gl.LINK_STATUS)){
-        console.error("Program link error: ", gl.getProgramInfoLog(program));
-        gl.deleteProgram(program);
-        return null;
-      }
-      return program;
-    }
-
-    const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
-    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
-    const program = createProgram(gl, vertexShader, fragmentShader);
-    gl.useProgram(program);
-
-    const positionAttributeLocation = gl.getAttribLocation(program, "a_position");
-    const positionBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-    const positions = [
-      -1, -1,
-      1, -1,
-      -1, 1,
-      -1, 1,
-      1, -1,
-      1, 1,
-    ];
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
-    gl.enableVertexAttribArray(positionAttributeLocation);
-    gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
-
-    const resolutionUniformLocation = gl.getUniformLocation(program, "u_resolution");
-    const timeUniformLocation = gl.getUniformLocation(program, "u_time");
-
-    function render(time) {
-      time *= 0.001;
-      gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-      gl.clear(gl.COLOR_BUFFER_BIT);
-      gl.uniform2f(resolutionUniformLocation, gl.canvas.width, gl.canvas.height);
-      gl.uniform1f(timeUniformLocation, time);
-      gl.drawArrays(gl.TRIANGLES, 0, 6);
-      requestAnimationFrame(render);
-    }
-    requestAnimationFrame(render);
-    
-    // Add event listener to handle window resize properly
-    window.addEventListener('resize', function() {
-      canvas.width = window.innerWidth;
+    // WebGL background
+    (function() {
+      const canvas = document.getElementById('waveCanvas');
+      canvas.width = window.innerWidth; 
       canvas.height = window.innerHeight;
-      gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-    });
+      const gl = canvas.getContext("webgl");
+      if (!gl) { alert("WebGL is not supported in your browser."); }
+
+      const vertexShaderSource = `
+        attribute vec2 a_position;
+        varying vec2 v_uv;
+        void main() {
+          v_uv = a_position * 0.5 + 0.5;
+          gl_Position = vec4(a_position, 0.0, 1.0);
+        }
+      `;
+      
+      const fragmentShaderSource = `
+        precision mediump float;
+        uniform float u_time;
+        uniform vec2 u_resolution;
+        varying vec2 v_uv;
+        float wave(vec2 st, float angle, float frequency, float amplitude, float speed) {
+          vec2 dir = vec2(cos(angle), sin(angle));
+          float phaseOffset = angle * 7.0;
+          return sin(dot(st, dir) * frequency + u_time * speed + phaseOffset) * amplitude;
+        }
+        float waveHeight(vec2 st) {
+          float h = 0.0;
+          h += wave(st, 0.0, 30.1, 0.0020, 0.81);
+          h += wave(st, 0.7, 40.3, 0.0017, 0.63);
+          h += wave(st, 1.4, 55.7, 0.0010, 1.04);
+          h += wave(st, 2.1, 65.2, 0.0012, 0.91);
+          h += wave(st, 2.8, 50.5, 0.0015, 1.12);
+          h += wave(st, 3.3, 60.9, 0.0013, 0.87);
+          h += wave(st, 4.0, 45.6, 0.0014, 1.05);
+          h += wave(st, 4.7, 70.8, 0.0011, 0.99);
+          return h;
+        }
+        vec3 computeNormal(vec2 st, float h) {
+          float eps = 0.001;
+          float hx = waveHeight(st + vec2(eps, 0.0));
+          float hy = waveHeight(st + vec2(0.0, eps));
+          float dFdx = (hx - h) / eps;
+          float dFdy = (hy - h) / eps;
+          return normalize(vec3(-dFdx, -dFdy, 1.0));
+        }
+        void main(){
+          vec2 st = gl_FragCoord.xy / u_resolution.xy;
+          st.y *= u_resolution.y / u_resolution.x;
+          float h = waveHeight(st);
+          vec3 normal = computeNormal(st, h);
+          vec3 deepWater = vec3(0.0, 0.15, 0.35);
+          vec3 shallowWater = vec3(0.0, 0.45, 0.75);
+          vec3 baseColor = mix(deepWater, shallowWater, st.y + h * 0.5);
+          vec3 sunDir = normalize(vec3(0.3, 0.8, 1.0));
+          float diffuse = max(dot(normal, sunDir), 0.0);
+          vec3 viewDir = normalize(vec3(0.0, 0.0, 1.0));
+          vec3 halfDir = normalize(sunDir + viewDir);
+          float spec = pow(max(dot(normal, halfDir), 0.0), 50.0);
+          float fresnel = pow(1.0 - max(dot(viewDir, normal), 0.0), 3.0) * 0.6;
+          vec3 color = baseColor * (0.4 + 0.6 * diffuse) + vec3(1.0, 0.95, 0.8) * spec;
+          color = mix(color, vec3(1.0), fresnel);
+          color *= 0.1;
+          gl_FragColor = vec4(color, 1.0);
+        }
+      `;
+
+      // Create WebGL program
+      const createShader = (gl, type, source) => {
+        const shader = gl.createShader(type);
+        gl.shaderSource(shader, source);
+        gl.compileShader(shader);
+        if(!gl.getShaderParameter(shader, gl.COMPILE_STATUS)){
+          console.error("Shader compile error: ", gl.getShaderInfoLog(shader));
+          gl.deleteShader(shader);
+          return null;
+        }
+        return shader;
+      };
+
+      const createProgram = (gl, vs, fs) => {
+        const program = gl.createProgram();
+        gl.attachShader(program, vs);
+        gl.attachShader(program, fs);
+        gl.linkProgram(program);
+        if(!gl.getProgramParameter(program, gl.LINK_STATUS)){
+          console.error("Program link error: ", gl.getProgramInfoLog(program));
+          gl.deleteProgram(program);
+          return null;
+        }
+        return program;
+      };
+
+      const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
+      const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+      const program = createProgram(gl, vertexShader, fragmentShader);
+      gl.useProgram(program);
+
+      // Set up buffers
+      const positionAttributeLocation = gl.getAttribLocation(program, "a_position");
+      const positionBuffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, -1,1, 1,-1, 1,1]), gl.STATIC_DRAW);
+      gl.enableVertexAttribArray(positionAttributeLocation);
+      gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
+
+      // Get uniform locations
+      const resolutionUniformLocation = gl.getUniformLocation(program, "u_resolution");
+      const timeUniformLocation = gl.getUniformLocation(program, "u_time");
+
+      // Render loop
+      function render(time) {
+        time *= 0.001;
+        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.uniform2f(resolutionUniformLocation, gl.canvas.width, gl.canvas.height);
+        gl.uniform1f(timeUniformLocation, time);
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+        requestAnimationFrame(render);
+      }
+      requestAnimationFrame(render);
+      
+      // Resize handler
+      window.addEventListener('resize', function() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+      });
+    })();
   </script>
 </body>
 </html>
