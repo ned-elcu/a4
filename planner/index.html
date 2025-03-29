@@ -694,7 +694,7 @@
   <!-- Footer -->
   <footer id="footer-info">
     <p>
-      Build version: v1.10.7rc |
+      Build version: v1.10.8rc |
       Encrypted database connection: <span id="db-connection-status">🟢</span> |
       Status: <span id="user-status">user</span> |
       <a href="https://regnumsolis.com">Return to Home</a>
@@ -1429,9 +1429,26 @@
     function listenForBezierCurves() {
       const bezierQuery = query(collection(db, "bezierCurves"), orderBy("timestamp"));
       onSnapshot(bezierQuery, (snapshot) => {
-        lineLayer.querySelectorAll("g[data-bezier='true']").forEach(elem => elem.remove());
+        // Clear all bezier elements without an ID
+        lineLayer.querySelectorAll("g:not([data-id])").forEach(elem => elem.remove());
+
+        // Clear all bezier elements with an ID that's not in the current snapshot
+        const currentIds = new Set();
+        snapshot.forEach(docSnap => { currentIds.add(docSnap.id); });
+
+        lineLayer.querySelectorAll("g[data-bezier='true'][data-id]").forEach(elem => {
+          if (!currentIds.has(elem.dataset.id)) {
+            elem.remove();
+          }
+        });
+
+        // Create or update bezier elements from snapshot
         snapshot.forEach(docSnap => {
-          createBezierElement(docSnap.id, docSnap.data());
+          const id = docSnap.id;
+          const existingElem = lineLayer.querySelector(`g[data-id="${id}"]`);
+          if (!existingElem) {
+            createBezierElement(id, docSnap.data());
+          }
         });
       });
     }
@@ -1500,9 +1517,26 @@
     function listenForPolygons() {
       const polyQuery = query(collection(db, "polygons"), orderBy("timestamp"));
       onSnapshot(polyQuery, (snapshot) => {
-        lineLayer.querySelectorAll("polygon[data-polygon='true']").forEach(elem => elem.remove());
+        // Clear all polygon elements without an ID
+        lineLayer.querySelectorAll("polygon:not([data-id])").forEach(elem => elem.remove());
+
+        // Clear all polygon elements with an ID that's not in the current snapshot
+        const currentIds = new Set();
+        snapshot.forEach(docSnap => { currentIds.add(docSnap.id); });
+
+        lineLayer.querySelectorAll("polygon[data-polygon='true'][data-id]").forEach(elem => {
+          if (!currentIds.has(elem.dataset.id)) {
+            elem.remove();
+          }
+        });
+
+        // Create or update polygon elements from snapshot
         snapshot.forEach(docSnap => {
-          createPolygonElement(docSnap.id, docSnap.data());
+          const id = docSnap.id;
+          const existingElem = lineLayer.querySelector(`polygon[data-id="${id}"]`);
+          if (!existingElem) {
+            createPolygonElement(id, docSnap.data());
+          }
         });
       });
     }
