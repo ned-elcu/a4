@@ -222,14 +222,14 @@
     .tool:hover::after {
       opacity: 1;
     }
-    /* History controls */
+    /* History controls - UPDATED POSITION */
     #history-controls {
       position: fixed;
-      top: 220px;
+      top: 470px; /* Changed from 220px to position below toolbox */
       left: 20px;
       display: flex;
       gap: 10px;
-      z-index: 25;
+      z-index: 19; /* Set below toolbox z-index */
     }
     #history-controls button {
       width: 40px;
@@ -476,6 +476,10 @@
       #right-menus {
         top: 80px;
       }
+      /* Update history controls position to keep them below toolbox */
+      #history-controls {
+        top: 530px;
+      }
     }
     
     /* Small Desktop/Tablet Landscape */
@@ -500,6 +504,10 @@
       }
       #admin-panel {
         width: 280px;
+      }
+      /* Update history controls position */
+      #history-controls {
+        top: 510px;
       }
     }
     
@@ -542,6 +550,11 @@
         top: -25px;
         left: 50%;
         transform: translateX(-50%);
+      }
+      
+      /* Update history controls position */
+      #history-controls {
+        top: 490px;
       }
     }
     
@@ -599,6 +612,11 @@
         width: 80%;
         max-width: 250px;
       }
+      
+      /* Update history controls position */
+      #history-controls {
+        top: 440px;
+      }
     }
     
     /* Small Mobile */
@@ -627,6 +645,11 @@
         align-items: center;
         gap: 3px;
       }
+      
+      /* Update history controls position */
+      #history-controls {
+        top: 420px;
+      }
     }
     
     /* Portrait/Landscape specific adjustments */
@@ -639,6 +662,11 @@
       }
       #header-logo {
         padding: 5px 0;
+      }
+      
+      /* Update history controls position */
+      #history-controls {
+        top: 470px;
       }
     }
     
@@ -688,7 +716,7 @@
       margin: 0;
       font-size: 1.2em;
     }
-    #chat-header .chat-controls {
+#chat-header .chat-controls {
       display: flex;
       gap: 10px;
     }
@@ -795,7 +823,7 @@
     </div>
 
     <!-- Undo/Redo History Controls -->
-    <div id="history-controls">
+ <div id="history-controls" style="position: fixed; bottom: 350px; top: auto; left: 20px;">
       <button id="undo-button" title="Undo (Ctrl+Z)">↩</button>
       <button id="redo-button" title="Redo (Ctrl+Y)">↪</button>
     </div>
@@ -1062,7 +1090,7 @@
           <td>Ctrl+F</td>
         </tr>
         <tr>
-          <td>Help</td>
+          <td>Help / Tutorial</td>
           <td>F1</td>
         </tr>
       </table>
@@ -1075,7 +1103,7 @@
   <!-- Footer -->
   <footer id="footer-info">
     <p>
-      Build version: v2.0.0 |
+      Build version: v1.3.1rc |
       Encrypted database connection: <span id="db-connection-status">🟢</span> |
       Status: <span id="user-status">user</span> |
       <a href="https://regnumsolis.com">Return to Home</a> |
@@ -1354,34 +1382,30 @@
     }
     
     async function applyHistoryState(state) {
-      // Implementation to restore the map to a previous state
-      // This would involve clearing all existing elements and recreating them
-      // from the stored state data
-      
       try {
-        // Clear current map elements
+        // Clear current map elements - FIXED: Use proper clearing function
         clearAllElements();
         
         // Recreate elements from state
-        if (state.markers) {
+        if (state.markers && Array.isArray(state.markers)) {
           state.markers.forEach(marker => {
             createMarkerElement(marker.id, marker);
           });
         }
         
-        if (state.lines) {
+        if (state.lines && Array.isArray(state.lines)) {
           state.lines.forEach(line => {
             createLineElement(line.id, line);
           });
         }
         
-        if (state.bezierCurves) {
+        if (state.bezierCurves && Array.isArray(state.bezierCurves)) {
           state.bezierCurves.forEach(curve => {
             createBezierElement(curve.id, curve);
           });
         }
         
-        if (state.polygons) {
+        if (state.polygons && Array.isArray(state.polygons)) {
           state.polygons.forEach(polygon => {
             createPolygonElement(polygon.id, polygon);
           });
@@ -1399,16 +1423,19 @@
     }
     
     function clearAllElements() {
-      // Clear all elements from the map
-      while (markerLayer.firstChild) {
+      // FIXED: Properly clear all elements from the map layers
+      // Clear marker layer
+      while (markerLayer && markerLayer.firstChild) {
         markerLayer.removeChild(markerLayer.firstChild);
       }
       
-      while (lineLayer.firstChild) {
+      // Clear line layer
+      while (lineLayer && lineLayer.firstChild) {
         lineLayer.removeChild(lineLayer.firstChild);
       }
       
-      while (textLayer.firstChild) {
+      // Clear text layer
+      while (textLayer && textLayer.firstChild) {
         textLayer.removeChild(textLayer.firstChild);
       }
     }
@@ -1429,1676 +1456,1686 @@
           ...currentState,
           timestamp: serverTimestamp()
         });
-        
-        // If we're in the middle of the stack, remove everything after current index
-        if (historyIndex < historyStack.length - 1) {
-          // Remove from database
-          const toRemove = historyStack.slice(historyIndex + 1);
-          const deletePromises = toRemove.map(state => 
-            deleteDoc(doc(db, "history", state.id))
-          );
-          await Promise.all(deletePromises);
-          
-          // Update local stack
-          historyStack = historyStack.slice(0, historyIndex + 1);
-        }
-        
-        // Add to history stack
-        historyStack.push({
-          id: docRef.id,
-          ...currentState
-        });
-        
-        // Update index
-        historyIndex = historyStack.length - 1;
-        
-        // Update database with current history index
-        await setDoc(doc(db, "historyMetadata", "current"), {
-          currentIndex: historyIndex,
-          timestamp: serverTimestamp()
-        });
-        
-        updateUndoRedoButtons();
-        recordAuditLog("create_history", { stateId: docRef.id });
-      } catch (error) {
-        console.error("Error creating history entry:", error);
-      }
-    }
-    
-    function captureState() {
-      // Capture current map state
-      const state = {
-        markers: [],
-        lines: [],
-        bezierCurves: [],
-        polygons: []
-      };
-      
-      // Capture markers
-      markerLayer.querySelectorAll("[data-marker='true']").forEach(marker => {
-        const id = marker.dataset.id;
-        const type = marker.dataset.type;
-        const text = marker.querySelector("text")?.textContent || "";
-        const color = marker.querySelector("text")?.getAttribute("fill") || "#dfc588";
-        const imgEl = marker.querySelector("image");
-        const x = parseFloat(imgEl.getAttribute("x")) + parseFloat(imgEl.getAttribute("width")) / 2;
-        const y = parseFloat(imgEl.getAttribute("y")) + parseFloat(imgEl.getAttribute("height")) / 2;
-        
-        state.markers.push({
-          id, type, text, color, x, y
-        });
-      });
-      
-      // Capture lines
-      lineLayer.querySelectorAll(".line-group").forEach(group => {
-        const id = group.dataset.id;
-        const line = group.querySelector("line");
-        const x1 = parseFloat(line.getAttribute("x1"));
-        const y1 = parseFloat(line.getAttribute("y1"));
-        const x2 = parseFloat(line.getAttribute("x2"));
-        const y2 = parseFloat(line.getAttribute("y2"));
-        const color = line.getAttribute("stroke");
-        
-        const arrow = group.querySelector("polygon");
-        const transform = arrow.getAttribute("transform");
-        const midXMatch = transform.match(/translate\(([-\d.]+),([-\d.]+)\)/);
-        const angleMatch = transform.match(/rotate\(([-\d.]+)\)/);
-        
-        const midX = midXMatch ? parseFloat(midXMatch[1]) : (x1 + x2) / 2;
-        const midY = midXMatch ? parseFloat(midXMatch[2]) : (y1 + y2) / 2;
-        const angle = angleMatch ? parseFloat(angleMatch[1]) : 0;
-        
-        state.lines.push({
-          id, x1, y1, x2, y2, midX, midY, angle, color
-        });
-      });
-      
-      // Capture bezier curves
-      lineLayer.querySelectorAll("g[data-bezier='true']").forEach(bezier => {
-        const id = bezier.dataset.id;
-        const path = bezier.querySelector("path");
-        const color = path.getAttribute("stroke");
-        
-        // Extract control points - in a real implementation, you would need
-        // to store these when creating/loading beziers
-        const controlPoints = [];
-        
-        state.bezierCurves.push({
-          id, color, controlPoints
-        });
-      });
-      
-      // Capture polygons
-      lineLayer.querySelectorAll("polygon[data-polygon='true']").forEach(polygon => {
-        const id = polygon.dataset.id;
-        const pointsStr = polygon.getAttribute("points");
-        const color = polygon.getAttribute("stroke");
-        
-        const vertices = pointsStr.trim().split(" ").map(pair => {
-          const [x, y] = pair.split(",").map(parseFloat);
-          return { x, y };
-        });
-        
-        state.polygons.push({
-          id, vertices, color
-        });
-      });
-      
-      return state;
-    }
-    
-    function updateUndoRedoButtons() {
-      document.getElementById("undo-button").disabled = historyIndex <= 0;
-      document.getElementById("redo-button").disabled = historyIndex >= historyStack.length - 1;
-    }
-    
-    // Set up Search Function
-    function setupSearchFunction() {
-      const searchInput = document.getElementById("search-input");
-      const searchButton = document.getElementById("search-button");
-      const searchResults = document.getElementById("search-results");
-      
-      searchButton.addEventListener("click", performSearch);
-      searchInput.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          performSearch();
-        }
-      });
-    }
-    
-    function performSearch() {
-      const searchInput = document.getElementById("search-input");
-      const searchResults = document.getElementById("search-results");
-      const query = searchInput.value.trim().toLowerCase();
-      
-      if (!query) return;
-      
-      searchResults.innerHTML = "";
-      let resultsFound = false;
-      
-      // Search markers
-      markerLayer.querySelectorAll("[data-marker='true']").forEach(marker => {
-        const text = marker.querySelector("text")?.textContent?.toLowerCase() || "";
-        const type = marker.dataset.type?.toLowerCase() || "";
-        
-        if (text.includes(query) || type.includes(query)) {
-          addSearchResult(marker, text || type, searchResults);
-          resultsFound = true;
-        }
-      });
-      
-      // Search text labels
-      textLayer.querySelectorAll(".text-label").forEach(textLabel => {
-        const text = textLabel.querySelector("text")?.textContent?.toLowerCase() || "";
-        
-        if (text.includes(query)) {
-          addSearchResult(textLabel, text, searchResults);
-          resultsFound = true;
-        }
-      });
-      
-      if (resultsFound) {
-        searchResults.style.display = "block";
-      } else {
-        searchResults.innerHTML = "<div class='search-result'>No results found</div>";
-        searchResults.style.display = "block";
-      }
-    }
-    
-    function addSearchResult(element, text, resultsContainer) {
-      const resultItem = document.createElement("div");
-      resultItem.className = "search-result";
-      resultItem.textContent = text;
-      resultItem.addEventListener("click", () => {
-        // Center view on the element
-        const bbox = element.getBBox();
-        const centerX = bbox.x + bbox.width / 2;
-        const centerY = bbox.y + bbox.height / 2;
-        panZoomInstance.pan({ x: -centerX + window.innerWidth / 2, y: -centerY + window.innerHeight / 2 });
-        
-        // Hide search results
-        resultsContainer.style.display = "none";
-      });
-      
-      resultsContainer.appendChild(resultItem);
-    }
-    
-    // Set up Keyboard Shortcuts
-    function setupKeyboardShortcuts() {
-      document.getElementById("show-shortcuts").addEventListener("click", () => {
-        document.getElementById("shortcuts-modal").style.display = "flex";
-      });
-      
-      document.getElementById("show-shortcuts-footer").addEventListener("click", () => {
-        document.getElementById("shortcuts-modal").style.display = "flex";
-      });
-      
-      document.getElementById("close-shortcuts").addEventListener("click", () => {
-        document.getElementById("shortcuts-modal").style.display = "none";
-      });
-      
-      // Global keyboard shortcuts
-      document.addEventListener("keydown", (e) => {
-        // F1 for help
-        if (e.key === "F1") {
-          e.preventDefault();
-          document.getElementById("shortcuts-modal").style.display = "flex";
-        }
-      });
-    }
-    
-    // Set up Tutorial
-    function setupTutorial() {
-      document.getElementById("start-tutorial").addEventListener("click", startTutorial);
-      
-      // Set up tutorial step navigation
-      document.querySelectorAll(".tutorial-step [data-action]").forEach(button => {
-        button.addEventListener("click", (e) => {
-          const action = e.target.dataset.action;
-          const currentStep = e.target.closest(".tutorial-step");
-          const currentStepNumber = parseInt(currentStep.dataset.step);
-          
-          if (action === "next") {
-            currentStep.style.display = "none";
-            document.querySelector(`.tutorial-step[data-step="${currentStepNumber + 1}"]`).style.display = "block";
-          } else if (action === "prev") {
-            currentStep.style.display = "none";
-            document.querySelector(`.tutorial-step[data-step="${currentStepNumber - 1}"]`).style.display = "block";
-          } else if (action === "skip" || action === "done") {
-            endTutorial();
-          }
-        });
-      });
-    }
-    
-    function startTutorial() {
-      document.getElementById("tutorial-overlay").style.display = "block";
-      document.querySelector(".tutorial-step[data-step='1']").style.display = "block";
-    }
-    
-    function endTutorial() {
-      document.getElementById("tutorial-overlay").style.display = "none";
-      document.querySelectorAll(".tutorial-step").forEach(step => {
-        step.style.display = "none";
-      });
-    }
-    
-    // Set up Chat System with Database Integration
-    function setupChatSystem() {
-      // Show chat when button is clicked
-      document.getElementById("toggle-chat").addEventListener("click", () => {
-        document.getElementById("chat-panel").style.display = "block";
-      });
-      
-      document.getElementById("chat-toggle").addEventListener("click", toggleChat);
-      document.getElementById("chat-close").addEventListener("click", closeChat);
-      
-      const chatInput = document.getElementById("chat-input").querySelector("input");
-      const sendButton = document.getElementById("chat-input").querySelector("button");
-      
-      sendButton.addEventListener("click", sendChatMessage);
-      chatInput.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          sendChatMessage();
-        }
-      });
-      
-      // Add event listener for clear chat button
-      document.getElementById("clear-chat").addEventListener("click", clearChatHistory);
-      
-      // Listen for new messages
-      const chatQuery = query(collection(db, "chatMessages"), orderBy("timestamp"));
-      onSnapshot(chatQuery, (snapshot) => {
-        snapshot.docChanges().forEach(change => {
-          if (change.type === "added") {
-            const msg = change.doc.data();
-            addChatMessage(msg.user, msg.text, msg.userId === auth.currentUser?.uid);
-          }
-        });
-      });
-    }
-    
-    function toggleChat() {
-      const chatMessages = document.getElementById("chat-messages");
-      const chatToggle = document.getElementById("chat-toggle");
-      
-      if (chatMessages.style.display === "none") {
-        chatMessages.style.display = "flex";
-        document.getElementById("chat-input").style.display = "flex";
-        chatToggle.textContent = "−";
-      } else {
-        chatMessages.style.display = "none";
-        document.getElementById("chat-input").style.display = "none";
-        chatToggle.textContent = "+";
-      }
-    }
-    
-    function closeChat() {
-      document.getElementById("chat-panel").style.display = "none";
-    }
-    
-    function sendChatMessage() {
-      const chatInput = document.getElementById("chat-input").querySelector("input");
-      const text = chatInput.value.trim();
-      
-      if (!text || !auth.currentUser) return;
-      
-      // Add to Firestore
-      addDoc(collection(db, "chatMessages"), {
-        text: text,
-        user: auth.currentUser.email,
-        userId: auth.currentUser.uid,
-        timestamp: serverTimestamp()
-      }).then(() => {
-        // Success - message will be added via the onSnapshot listener
-      }).catch(error => {
-        console.error("Error sending message:", error);
-        alert("Failed to send message. Please try again.");
-      });
-      
-      // Clear input
-      chatInput.value = "";
-    }
-    
-    function addChatMessage(user, text, isSent) {
-      const chatMessages = document.getElementById("chat-messages");
-      
-      const messageDiv = document.createElement("div");
-      messageDiv.className = `chat-message ${isSent ? "sent" : "received"}`;
-      
-      const userDiv = document.createElement("div");
-      userDiv.className = "chat-user";
-      userDiv.textContent = user;
-      
-      const textDiv = document.createElement("div");
-      textDiv.textContent = text;
-      
-      messageDiv.appendChild(userDiv);
-      messageDiv.appendChild(textDiv);
-      
-      chatMessages.appendChild(messageDiv);
-      
-      // Scroll to bottom
-      chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
-    
-    async function clearChatHistory() {
-      if (!confirm("Delete all chat messages? This cannot be undone.")) return;
-      
-      try {
-        const chatQuery = query(collection(db, "chatMessages"));
-        const snapshot = await getDocs(chatQuery);
-        
-        const deletePromises = [];
-        snapshot.forEach(doc => {
-          deletePromises.push(deleteDoc(doc.ref));
-        });
-        
+// If we're in the middle of the stack, remove everything after current index
+      if (historyIndex < historyStack.length - 1) {
+        // Remove from database
+        const toRemove = historyStack.slice(historyIndex + 1);
+        const deletePromises = toRemove.map(state => 
+          deleteDoc(doc(db, "history", state.id))
+        );
         await Promise.all(deletePromises);
         
-        // Clear chat display
-        const chatMessages = document.getElementById("chat-messages");
-        chatMessages.innerHTML = "";
-        
-        // Add system message
-        addChatMessage("System", "Chat history has been cleared.", false);
-        
-        recordAuditLog("clear_chat", {});
-      } catch (error) {
-        console.error("Error clearing chat history:", error);
-        alert("Failed to clear chat history. Please try again.");
+        // Update local stack
+        historyStack = historyStack.slice(0, historyIndex + 1);
       }
-    }
-
-    function setupColorPicker() {
-      // Updated color palette based on the hexagonal grid in the image
-      const colorGrid = document.getElementById("color-grid");
-      const hexColors = [
-        // Greens (top)
-        "#004000", "#006000", "#008000", "#00A000", "#00C000", "#00FF00", "#80FF80",
-        // Blues (top-right)
-        "#000040", "#000080", "#0000C0", "#0000FF", "#4040FF", "#8080FF", "#C0C0FF",
-        // Purples (right)
-        "#400040", "#600060", "#800080", "#A000A0", "#C000C0", "#FF00FF", "#FF80FF",
-        // Reds (bottom-right)
-        "#400000", "#600000", "#800000", "#A00000", "#C00000", "#FF0000", "#FF8080",
-        // Oranges and yellows (bottom)
-        "#402000", "#603000", "#804000", "#A05000", "#C06000", "#FF8000", "#FFFF00",
-        // Browns (bottom-left)
-        "#202020", "#404020", "#606030", "#808040", "#A0A050", "#C0C060", "#E0E080",
-        // Grays (center and left)
-        "#000000", "#202020", "#404040", "#606060", "#808080", "#A0A0A0", "#FFFFFF",
-        // Teal/Cyan (top-left)
-        "#004040", "#006060", "#008080", "#00A0A0", "#00C0C0", "#00FFFF", "#80FFFF"
-      ];
-
-      // Create color cells
-      hexColors.forEach(color => {
-        const cell = document.createElement("div");
-        cell.className = "color-cell";
-        cell.style.backgroundColor = color;
-        cell.addEventListener("click", () => {
-          selectedColor = color;
-          document.getElementById("paint-fill").setAttribute("fill", selectedColor);
-          closeColorPicker();
-        });
-        colorGrid.appendChild(cell);
+      
+      // Add to history stack
+      historyStack.push({
+        id: docRef.id,
+        ...currentState
       });
       
-      // Close button event
-      document.getElementById("color-picker-close").addEventListener("click", closeColorPicker);
-    }
-
-    function openColorPicker() {
-      document.getElementById("color-picker-modal").style.display = "block";
-    }
-
-    function closeColorPicker() {
-      document.getElementById("color-picker-modal").style.display = "none";
-    }
-
-    function setupMenuToggles() {
-      document.querySelectorAll(".menu-toggle").forEach(btn => {
-        btn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          const menu = btn.closest(".menu-container");
-          menu.classList.toggle("hidden");
-          btn.innerHTML = menu.classList.contains("hidden") ? "&#9654;" : "&#9664;";
-        });
+      // Update index
+      historyIndex = historyStack.length - 1;
+      
+      // Update database with current history index
+      await setDoc(doc(db, "historyMetadata", "current"), {
+        currentIndex: historyIndex,
+        timestamp: serverTimestamp()
       });
+      
+      updateUndoRedoButtons();
+      recordAuditLog("create_history", { stateId: docRef.id });
+    } catch (error) {
+      console.error("Error creating history entry:", error);
     }
-
-    function setupAdminPanelControls() {
-      const minimizeBtn = document.getElementById("minimize-panel");
-      const auditContainer = document.getElementById("audit-log-container");
-      let isMinimized = false;
-      minimizeBtn.addEventListener("click", () => {
-        if (!isMinimized) {
-          auditContainer.style.display = "none";
-          minimizeBtn.textContent = "➕";
-          isMinimized = true;
-        } else {
-          auditContainer.style.display = "block";
-          minimizeBtn.textContent = "➖";
-          isMinimized = false;
+  }
+  
+  function captureState() {
+    // Capture current map state
+    const state = {
+      markers: [],
+      lines: [],
+      bezierCurves: [],
+      polygons: []
+    };
+    
+    // Capture markers
+    markerLayer.querySelectorAll("[data-marker='true']").forEach(marker => {
+      const id = marker.dataset.id;
+      const type = marker.dataset.type;
+      const text = marker.querySelector("text")?.textContent || "";
+      const color = marker.querySelector("text")?.getAttribute("fill") || "#dfc588";
+      const imgEl = marker.querySelector("image");
+      const x = parseFloat(imgEl.getAttribute("x")) + parseFloat(imgEl.getAttribute("width")) / 2;
+      const y = parseFloat(imgEl.getAttribute("y")) + parseFloat(imgEl.getAttribute("height")) / 2;
+      
+      state.markers.push({
+        id, type, text, color, x, y
+      });
+    });
+    
+    // Capture lines
+    lineLayer.querySelectorAll(".line-group").forEach(group => {
+      const id = group.dataset.id;
+      const line = group.querySelector("line");
+      const x1 = parseFloat(line.getAttribute("x1"));
+      const y1 = parseFloat(line.getAttribute("y1"));
+      const x2 = parseFloat(line.getAttribute("x2"));
+      const y2 = parseFloat(line.getAttribute("y2"));
+      const color = line.getAttribute("stroke");
+      
+      const arrow = group.querySelector("polygon");
+      const transform = arrow.getAttribute("transform");
+      const midXMatch = transform.match(/translate\(([-\d.]+),([-\d.]+)\)/);
+      const angleMatch = transform.match(/rotate\(([-\d.]+)\)/);
+      
+      const midX = midXMatch ? parseFloat(midXMatch[1]) : (x1 + x2) / 2;
+      const midY = midXMatch ? parseFloat(midXMatch[2]) : (y1 + y2) / 2;
+      const angle = angleMatch ? parseFloat(angleMatch[1]) : 0;
+      
+      state.lines.push({
+        id, x1, y1, x2, y2, midX, midY, angle, color
+      });
+    });
+    
+    // Capture bezier curves
+    lineLayer.querySelectorAll("g[data-bezier='true']").forEach(bezier => {
+      const id = bezier.dataset.id;
+      const path = bezier.querySelector("path");
+      const color = path.getAttribute("stroke");
+      
+      // Extract control points - in a real implementation, you would need
+      // to store these when creating/loading beziers
+      const controlPoints = [];
+      
+      state.bezierCurves.push({
+        id, color, controlPoints
+      });
+    });
+    
+    // Capture polygons
+    lineLayer.querySelectorAll("polygon[data-polygon='true']").forEach(polygon => {
+      const id = polygon.dataset.id;
+      const pointsStr = polygon.getAttribute("points");
+      const color = polygon.getAttribute("stroke");
+      
+      const vertices = pointsStr.trim().split(" ").map(pair => {
+        const [x, y] = pair.split(",").map(parseFloat);
+        return { x, y };
+      });
+      
+      state.polygons.push({
+        id, vertices, color
+      });
+    });
+    
+    return state;
+  }
+  
+  function updateUndoRedoButtons() {
+    const undoButton = document.getElementById("undo-button");
+    const redoButton = document.getElementById("redo-button");
+    
+    if (undoButton) {
+      undoButton.disabled = historyIndex <= 0;
+    }
+    
+    if (redoButton) {
+      redoButton.disabled = historyIndex >= historyStack.length - 1;
+    }
+  }
+  
+  // Set up Search Function
+  function setupSearchFunction() {
+    const searchInput = document.getElementById("search-input");
+    const searchButton = document.getElementById("search-button");
+    const searchResults = document.getElementById("search-results");
+    
+    searchButton.addEventListener("click", performSearch);
+    searchInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        performSearch();
+      }
+    });
+  }
+  
+  function performSearch() {
+    const searchInput = document.getElementById("search-input");
+    const searchResults = document.getElementById("search-results");
+    const query = searchInput.value.trim().toLowerCase();
+    
+    if (!query) return;
+    
+    searchResults.innerHTML = "";
+    let resultsFound = false;
+    
+    // Search markers
+    markerLayer.querySelectorAll("[data-marker='true']").forEach(marker => {
+      const text = marker.querySelector("text")?.textContent?.toLowerCase() || "";
+      const type = marker.dataset.type?.toLowerCase() || "";
+      
+      if (text.includes(query) || type.includes(query)) {
+        addSearchResult(marker, text || type, searchResults);
+        resultsFound = true;
+      }
+    });
+    
+    // Search text labels
+    textLayer.querySelectorAll(".text-label").forEach(textLabel => {
+      const text = textLabel.querySelector("text")?.textContent?.toLowerCase() || "";
+      
+      if (text.includes(query)) {
+        addSearchResult(textLabel, text, searchResults);
+        resultsFound = true;
+      }
+    });
+    
+    if (resultsFound) {
+      searchResults.style.display = "block";
+    } else {
+      searchResults.innerHTML = "<div class='search-result'>No results found</div>";
+      searchResults.style.display = "block";
+    }
+  }
+  
+  function addSearchResult(element, text, resultsContainer) {
+    const resultItem = document.createElement("div");
+    resultItem.className = "search-result";
+    resultItem.textContent = text;
+    resultItem.addEventListener("click", () => {
+      // Center view on the element
+      const bbox = element.getBBox();
+      const centerX = bbox.x + bbox.width / 2;
+      const centerY = bbox.y + bbox.height / 2;
+      panZoomInstance.pan({ x: -centerX + window.innerWidth / 2, y: -centerY + window.innerHeight / 2 });
+      
+      // Hide search results
+      resultsContainer.style.display = "none";
+    });
+    
+    resultsContainer.appendChild(resultItem);
+  }
+  
+  // Set up Keyboard Shortcuts
+  function setupKeyboardShortcuts() {
+    document.getElementById("show-shortcuts").addEventListener("click", () => {
+      document.getElementById("shortcuts-modal").style.display = "flex";
+    });
+    
+    document.getElementById("show-shortcuts-footer").addEventListener("click", () => {
+      document.getElementById("shortcuts-modal").style.display = "flex";
+    });
+    
+    document.getElementById("close-shortcuts").addEventListener("click", () => {
+      document.getElementById("shortcuts-modal").style.display = "none";
+    });
+    
+    // Global keyboard shortcuts
+    document.addEventListener("keydown", (e) => {
+      // F1 for help - UPDATED to also start tutorial
+      if (e.key === "F1") {
+        e.preventDefault();
+        // First close shortcuts modal if it's open
+        document.getElementById("shortcuts-modal").style.display = "none";
+        // Start the tutorial
+        startTutorial();
+      }
+    });
+  }
+  
+  // Set up Tutorial
+  function setupTutorial() {
+    document.getElementById("start-tutorial").addEventListener("click", startTutorial);
+    
+    // Set up tutorial step navigation
+    document.querySelectorAll(".tutorial-step [data-action]").forEach(button => {
+      button.addEventListener("click", (e) => {
+        const action = e.target.dataset.action;
+        const currentStep = e.target.closest(".tutorial-step");
+        const currentStepNumber = parseInt(currentStep.dataset.step);
+        
+        if (action === "next") {
+          currentStep.style.display = "none";
+          document.querySelector(`.tutorial-step[data-step="${currentStepNumber + 1}"]`).style.display = "block";
+        } else if (action === "prev") {
+          currentStep.style.display = "none";
+          document.querySelector(`.tutorial-step[data-step="${currentStepNumber - 1}"]`).style.display = "block";
+        } else if (action === "skip" || action === "done") {
+          endTutorial();
         }
       });
-
-      document.getElementById("copy-log").addEventListener("click", () => {
-        let logText = "";
-        auditContainer.querySelectorAll("div").forEach(entry => {
-          logText += entry.innerText + "\n";
-        });
-        navigator.clipboard.writeText(logText);
-      });
-
-      document.getElementById("clear-logs").addEventListener("click", async () => {
-        if (confirm("Delete all audit logs?")) {
-          try {
-            const auditSnapshot = await getDocs(collection(db, "auditLogs"));
-            auditSnapshot.forEach(async (docSnap) => {
-              await deleteDoc(doc(db, "auditLogs", docSnap.id));
-            });
-          } catch (error) {
-            console.error("Error deleting audit logs:", error);
-          }
+    });
+  }
+  
+  function startTutorial() {
+    document.getElementById("tutorial-overlay").style.display = "block";
+    document.querySelector(".tutorial-step[data-step='1']").style.display = "block";
+  }
+  
+  function endTutorial() {
+    document.getElementById("tutorial-overlay").style.display = "none";
+    document.querySelectorAll(".tutorial-step").forEach(step => {
+      step.style.display = "none";
+    });
+  }
+  
+  // Set up Chat System with Database Integration
+  function setupChatSystem() {
+    // Show chat when button is clicked
+    document.getElementById("toggle-chat").addEventListener("click", () => {
+      document.getElementById("chat-panel").style.display = "block";
+    });
+    
+    document.getElementById("chat-toggle").addEventListener("click", toggleChat);
+    document.getElementById("chat-close").addEventListener("click", closeChat);
+    
+    const chatInput = document.getElementById("chat-input").querySelector("input");
+    const sendButton = document.getElementById("chat-input").querySelector("button");
+    
+    sendButton.addEventListener("click", sendChatMessage);
+    chatInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        sendChatMessage();
+      }
+    });
+    
+    // Add event listener for clear chat button
+    document.getElementById("clear-chat").addEventListener("click", clearChatHistory);
+    
+    // Listen for new messages
+    const chatQuery = query(collection(db, "chatMessages"), orderBy("timestamp"));
+    onSnapshot(chatQuery, (snapshot) => {
+      snapshot.docChanges().forEach(change => {
+        if (change.type === "added") {
+          const msg = change.doc.data();
+          addChatMessage(msg.user, msg.text, msg.userId === auth.currentUser?.uid);
         }
       });
-
-      document.getElementById("delete-all-markers").addEventListener("click", async () => {
-        if (confirm("Delete all markers? This cannot be undone.")) {
-          try {
-            const markersSnapshot = await getDocs(collection(db, "markers"));
-            markersSnapshot.forEach(async (docSnap) => {
-              await deleteDoc(doc(db, "markers", docSnap.id));
-            });
-            const linesSnapshot = await getDocs(collection(db, "lines"));
-            linesSnapshot.forEach(async (docSnap) => {
-              await deleteDoc(doc(db, "lines", docSnap.id));
-            });
-            const bezierSnapshot = await getDocs(collection(db, "bezierCurves"));
-            bezierSnapshot.forEach(async (docSnap) => {
-              await deleteDoc(doc(db, "bezierCurves", docSnap.id));
-            });
-            const polygonsSnapshot = await getDocs(collection(db, "polygons"));
-            polygonsSnapshot.forEach(async (docSnap) => {
-              await deleteDoc(doc(db, "polygons", docSnap.id));
-            });
-            
-            // Create new history entry after deleting everything
-            await createHistoryEntry();
-            
-            recordAuditLog("delete_all", {});
-          } catch (error) {
-            console.error("Error deleting all elements:", error);
-          }
-        }
+    });
+  }
+  
+  function toggleChat() {
+    const chatMessages = document.getElementById("chat-messages");
+    const chatToggle = document.getElementById("chat-toggle");
+    
+    if (chatMessages.style.display === "none") {
+      chatMessages.style.display = "flex";
+      document.getElementById("chat-input").style.display = "flex";
+      chatToggle.textContent = "−";
+    } else {
+      chatMessages.style.display = "none";
+      document.getElementById("chat-input").style.display = "none";
+      chatToggle.textContent = "+";
+    }
+  }
+  
+  function closeChat() {
+    document.getElementById("chat-panel").style.display = "none";
+  }
+  
+  function sendChatMessage() {
+    const chatInput = document.getElementById("chat-input").querySelector("input");
+    const text = chatInput.value.trim();
+    
+    if (!text || !auth.currentUser) return;
+    
+    // Add to Firestore
+    addDoc(collection(db, "chatMessages"), {
+      text: text,
+      user: auth.currentUser.email,
+      userId: auth.currentUser.uid,
+      timestamp: serverTimestamp()
+    }).then(() => {
+      // Success - message will be added via the onSnapshot listener
+    }).catch(error => {
+      console.error("Error sending message:", error);
+      alert("Failed to send message. Please try again.");
+    });
+    
+    // Clear input
+    chatInput.value = "";
+  }
+  
+  function addChatMessage(user, text, isSent) {
+    const chatMessages = document.getElementById("chat-messages");
+    
+    const messageDiv = document.createElement("div");
+    messageDiv.className = `chat-message ${isSent ? "sent" : "received"}`;
+    
+    const userDiv = document.createElement("div");
+    userDiv.className = "chat-user";
+    userDiv.textContent = user;
+    
+    const textDiv = document.createElement("div");
+    textDiv.textContent = text;
+    
+    messageDiv.appendChild(userDiv);
+    messageDiv.appendChild(textDiv);
+    
+    chatMessages.appendChild(messageDiv);
+    
+    // Scroll to bottom
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+  
+  async function clearChatHistory() {
+    if (!confirm("Delete all chat messages? This cannot be undone.")) return;
+    
+    try {
+      const chatQuery = query(collection(db, "chatMessages"));
+      const snapshot = await getDocs(chatQuery);
+      
+      const deletePromises = [];
+      snapshot.forEach(doc => {
+        deletePromises.push(deleteDoc(doc.ref));
       });
+      
+      await Promise.all(deletePromises);
+      
+      // Clear chat display
+      const chatMessages = document.getElementById("chat-messages");
+      chatMessages.innerHTML = "";
+      
+      // Add system message
+      addChatMessage("System", "Chat history has been cleared.", false);
+      
+      recordAuditLog("clear_chat", {});
+    } catch (error) {
+      console.error("Error clearing chat history:", error);
+      alert("Failed to clear chat history. Please try again.");
     }
+  }
 
-    function showLoading() {
-      currentProgress = 0;
-      loadingText.textContent = "0%";
-      loadingOverlay.style.display = "flex";
-      loadingInterval = setInterval(() => {
-        if (currentProgress < 90) {
-          currentProgress += Math.floor(Math.random() * 3) + 1;
-          if (currentProgress > 90) currentProgress = 90;
-          loadingText.textContent = currentProgress + "%";
-        }
-      }, 100);
-    }
+  function setupColorPicker() {
+    // Updated color palette based on the hexagonal grid in the image
+    const colorGrid = document.getElementById("color-grid");
+    const hexColors = [
+      // Greens (top)
+      "#004000", "#006000", "#008000", "#00A000", "#00C000", "#00FF00", "#80FF80",
+      // Blues (top-right)
+      "#000040", "#000080", "#0000C0", "#0000FF", "#4040FF", "#8080FF", "#C0C0FF",
+      // Purples (right)
+      "#400040", "#600060", "#800080", "#A000A0", "#C000C0", "#FF00FF", "#FF80FF",
+      // Reds (bottom-right)
+      "#400000", "#600000", "#800000", "#A00000", "#C00000", "#FF0000", "#FF8080",
+      // Oranges and yellows (bottom)
+      "#402000", "#603000", "#804000", "#A05000", "#C06000", "#FF8000", "#FFFF00",
+      // Browns (bottom-left)
+      "#202020", "#404020", "#606030", "#808040", "#A0A050", "#C0C060", "#E0E080",
+      // Grays (center and left)
+      "#000000", "#202020", "#404040", "#606060", "#808080", "#A0A0A0", "#FFFFFF",
+      // Teal/Cyan (top-left)
+      "#004040", "#006060", "#008080", "#00A0A0", "#00C0C0", "#00FFFF", "#80FFFF"
+    ];
 
-    function hideLoading() {
-      clearInterval(loadingInterval);
-      loadingText.textContent = "100%";
-      setTimeout(() => { loadingOverlay.style.display = "none"; }, 300);
-      document.getElementById("db-connection-status").textContent = "🟢";
-    }
-
-    function setupLogin() {
-      document.getElementById("login-button").addEventListener("click", () => {
-        const email = document.getElementById("email").value.trim();
-        const password = document.getElementById("password").value.trim();
-        const errorDiv = document.getElementById("login-error");
-
-        signInWithEmailAndPassword(auth, email, password)
-          .then(() => {
-            errorDiv.textContent = "";
-            document.getElementById("login-screen").style.display = "none";
-            document.getElementById("app").style.display = "block";
-            initializeMap();
-          })
-          .catch((error) => { errorDiv.textContent = error.message; });
+    // Create color cells
+    hexColors.forEach(color => {
+      const cell = document.createElement("div");
+      cell.className = "color-cell";
+      cell.style.backgroundColor = color;
+      cell.addEventListener("click", () => {
+        selectedColor = color;
+        document.getElementById("paint-fill").setAttribute("fill", selectedColor);
+        closeColorPicker();
       });
+      colorGrid.appendChild(cell);
+    });
+    
+    // Close button event
+    document.getElementById("color-picker-close").addEventListener("click", closeColorPicker);
+  }
 
-      onAuthStateChanged(auth, (user) => {
-        if (user) {
+  function openColorPicker() {
+    document.getElementById("color-picker-modal").style.display = "block";
+  }
+
+  function closeColorPicker() {
+    document.getElementById("color-picker-modal").style.display = "none";
+  }
+
+  function setupMenuToggles() {
+    document.querySelectorAll(".menu-toggle").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const menu = btn.closest(".menu-container");
+        menu.classList.toggle("hidden");
+        btn.innerHTML = menu.classList.contains("hidden") ? "&#9654;" : "&#9664;";
+      });
+    });
+  }
+
+  function setupAdminPanelControls() {
+    const minimizeBtn = document.getElementById("minimize-panel");
+    const auditContainer = document.getElementById("audit-log-container");
+    let isMinimized = false;
+    minimizeBtn.addEventListener("click", () => {
+      if (!isMinimized) {
+        auditContainer.style.display = "none";
+        minimizeBtn.textContent = "➕";
+        isMinimized = true;
+      } else {
+        auditContainer.style.display = "block";
+        minimizeBtn.textContent = "➖";
+        isMinimized = false;
+      }
+    });
+
+    document.getElementById("copy-log").addEventListener("click", () => {
+      let logText = "";
+      auditContainer.querySelectorAll("div").forEach(entry => {
+        logText += entry.innerText + "\n";
+      });
+      navigator.clipboard.writeText(logText);
+    });
+
+    document.getElementById("clear-logs").addEventListener("click", async () => {
+      if (confirm("Delete all audit logs?")) {
+        try {
+          const auditSnapshot = await getDocs(collection(db, "auditLogs"));
+          auditSnapshot.forEach(async (docSnap) => {
+            await deleteDoc(doc(db, "auditLogs", docSnap.id));
+          });
+        } catch (error) {
+          console.error("Error deleting audit logs:", error);
+        }
+      }
+    });
+
+    document.getElementById("delete-all-markers").addEventListener("click", async () => {
+      if (confirm("Delete all markers? This cannot be undone.")) {
+        try {
+          const markersSnapshot = await getDocs(collection(db, "markers"));
+          markersSnapshot.forEach(async (docSnap) => {
+            await deleteDoc(doc(db, "markers", docSnap.id));
+          });
+          const linesSnapshot = await getDocs(collection(db, "lines"));
+          linesSnapshot.forEach(async (docSnap) => {
+            await deleteDoc(doc(db, "lines", docSnap.id));
+          });
+          const bezierSnapshot = await getDocs(collection(db, "bezierCurves"));
+          bezierSnapshot.forEach(async (docSnap) => {
+            await deleteDoc(doc(db, "bezierCurves", docSnap.id));
+          });
+          const polygonsSnapshot = await getDocs(collection(db, "polygons"));
+          polygonsSnapshot.forEach(async (docSnap) => {
+            await deleteDoc(doc(db, "polygons", docSnap.id));
+          });
+          
+          // Create new history entry after deleting everything
+          await createHistoryEntry();
+          
+          recordAuditLog("delete_all", {});
+        } catch (error) {
+          console.error("Error deleting all elements:", error);
+        }
+      }
+    });
+  }
+
+  function showLoading() {
+    currentProgress = 0;
+    loadingText.textContent = "0%";
+    loadingOverlay.style.display = "flex";
+    loadingInterval = setInterval(() => {
+      if (currentProgress < 90) {
+        currentProgress += Math.floor(Math.random() * 3) + 1;
+        if (currentProgress > 90) currentProgress = 90;
+        loadingText.textContent = currentProgress + "%";
+      }
+    }, 100);
+  }
+
+  function hideLoading() {
+    clearInterval(loadingInterval);
+    loadingText.textContent = "100%";
+    setTimeout(() => { loadingOverlay.style.display = "none"; }, 300);
+    document.getElementById("db-connection-status").textContent = "🟢";
+  }
+
+  function setupLogin() {
+    document.getElementById("login-button").addEventListener("click", () => {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const errorDiv = document.getElementById("login-error");
+
+      signInWithEmailAndPassword(auth, email, password)
+        .then(() => {
+          errorDiv.textContent = "";
           document.getElementById("login-screen").style.display = "none";
           document.getElementById("app").style.display = "block";
           initializeMap();
-          getDoc(doc(db, "admins", user.email))
-            .then((docSnap) => {
-              if (docSnap.exists()) {
-                document.getElementById("admin-panel").style.display = "block";
-                document.getElementById("user-status").textContent = "admin";
-                listenForAuditLogs();
-              } else {
-                console.log("User is not an admin according to Firestore");
-                document.getElementById("user-status").textContent = "user";
-              }
-            })
-            .catch((err) => console.error("Error checking admin status:", err));
-        } else {
-          document.getElementById("login-screen").style.display = "flex";
-          document.getElementById("app").style.display = "none";
-        }
-      });
-    }
-
-    function initializeMap() { 
-      switchMap("https://regnumsolis.com/planner/images/mvmvmdfs.svg");
-    }
-
-    function switchMap(url) {
-      if (panZoomInstance) { panZoomInstance.destroy(); }
-      isMapReady = false;
-      const container = document.getElementById("map-svg-container");
-      showLoading();
-      fetch(url)
-        .then(response => response.text())
-        .then(svgText => {
-          container.innerHTML = svgText;
-          setupPanZoomLayers();
-          setupDragAndDrop();
-          setupDrawingTools();
-          listenForMarkers();
-          listenForLines();
-          listenForBezierCurves();
-          listenForPolygons();
-          isMapReady = true;
-          hideLoading();
-          
-          // Create initial history entry
-          createHistoryEntry();
         })
-        .catch(error => {
-          console.error("Error loading SVG:", error);
-          displayErrorOverlay("Error loading map data.");
-          hideLoading();
-          document.getElementById("db-connection-status").textContent = "🔴";
-        });
-    }
-
-    function setupMapSwitchControls() {
-      document.getElementById("tactical-map").addEventListener("click", () => {
-        switchMap("https://regnumsolis.com/planner/images/mvmvmdfstactical.svg");
-      });
-      document.getElementById("style-map").addEventListener("click", () => {
-        switchMap("https://regnumsolis.com/planner/images/mvmvmdfs.svg");
-      });
-    }
-
-    function setupPanZoomLayers() {
-      svgRoot = document.getElementById("map-svg-container").querySelector("svg");
-      svgRoot.setAttribute("width", "100%");
-      svgRoot.setAttribute("height", "100%");
-      svgRoot.setAttribute("preserveAspectRatio", "xMidYMid meet");
-
-      panLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
-      panLayer.id = "pan-layer";
-      while (svgRoot.firstChild) { panLayer.appendChild(svgRoot.firstChild); }
-      svgRoot.appendChild(panLayer);
-
-      lineLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
-      lineLayer.id = "line-layer";
-      panLayer.appendChild(lineLayer);
-      
-      markerLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
-      markerLayer.id = "marker-layer";
-      panLayer.appendChild(markerLayer);
-      
-      textLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
-      textLayer.id = "text-layer";
-      panLayer.appendChild(textLayer);
-
-      // Configure pan-zoom
-      panZoomInstance = svgPanZoom(svgRoot, {
-        zoomEnabled: true, 
-        panEnabled: true, 
-        controlIconsEnabled: false, 
-        minZoom: 0.5, 
-        maxZoom: 5,
-        zoomScaleSensitivity: 0.4,
-        dblClickZoomEnabled: true,
-        preventMouseEventsDefault: true,
-        beforeMouseDown: function(e) {
-          // Allow click-through for bezier and polygon tools
-          if (activeTool === "bezier" || activeTool === "polygon") {
-            return false;
-          }
-          
-          // Allow click-through for markers and other interactive elements
-          if (e.target.getAttribute("data-marker") === "true" ||
-              (e.target.parentNode && e.target.parentNode.getAttribute("data-marker") === "true")) {
-            return false;
-          }
-          
-          return true;
-        }
-      });
-      
-      // Add event listener for handling map clicks
-      svgRoot.addEventListener("click", handleMapClick);
-      svgRoot.addEventListener("contextmenu", handleContextMenu);
-    }
-    
-    function handleMapClick(e) {
-      if (isUndoRedoAction) return;
-      
-      const pt = getSVGPoint(e);
-      
-      if (activeTool === "bezier") {
-        bezierControlPoints.push({ x: pt.x, y: pt.y });
-        updateBezierPreview();
-      } else if (activeTool === "polygon") {
-        polygonVertices.push({ x: pt.x, y: pt.y });
-        updatePolygonPreview();
-      }
-    }
-    
-    function handleContextMenu(e) {
-      e.preventDefault();
-      
-      if (activeTool === "bezier") {
-        commitBezier();
-      } else if (activeTool === "polygon") {
-        commitPolygon();
-      }
-    }
-
-    function setupToolbox() {
-      document.querySelectorAll("#toolbox .tool").forEach((tool) => {
-        const type = tool.dataset.type;
-        
-        // Handle color picker
-        if (type === "color") {
-          tool.addEventListener("click", () => {
-            activeTool = null;
-            document.querySelectorAll("#toolbox .tool").forEach(t => t.style.borderColor = "rgba(223,197,136,0.5)");
-            openColorPicker();
-          });
-        }
-        // Handle bezier tool
-        else if (type === "bezier") {
-          tool.addEventListener("click", () => {
-            activeTool = "bezier";
-            bezierControlPoints = [];
-            if (currentBezierPath) { currentBezierPath.remove(); currentBezierPath = null; }
-            markerLayer.style.pointerEvents = "none";
-            document.querySelectorAll("#toolbox .tool").forEach(t => t.style.borderColor = "rgba(223,197,136,0.5)");
-            tool.style.borderColor = "red";
-          });
-        } 
-        // Handle polygon tool
-        else if (type === "polygon") {
-          tool.addEventListener("click", () => {
-            activeTool = "polygon";
-            polygonVertices = [];
-            if (currentPolygonElement) { currentPolygonElement.remove(); currentPolygonElement = null; }
-            markerLayer.style.pointerEvents = "none";
-            document.querySelectorAll("#toolbox .tool").forEach(t => t.style.borderColor = "rgba(223,197,136,0.5)");
-            tool.style.borderColor = "red";
-          });
-        }
-        // Handle draggable marker tools
-        else {
-          tool.addEventListener("dragstart", (e) => {
-            e.dataTransfer.setData("text/plain", type);
-            const emptyImg = new Image();
-            emptyImg.src = "data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg'></svg>";
-            e.dataTransfer.setDragImage(emptyImg, 0, 0);
-            const dragClone = tool.cloneNode(true);
-            dragClone.classList.add("drag-clone");
-            dragClone.style.position = "fixed";
-            dragClone.style.top = "0px";
-            dragClone.style.left = "0px";
-            dragClone.style.pointerEvents = "none";
-            dragClone.style.zIndex = "1000";
-            document.body.appendChild(dragClone);
-            tool.dragClone = dragClone;
-          });
-          tool.addEventListener("drag", (e) => {
-            if (!tool.dragClone) return;
-            const offsetX = 10;
-            const offsetY = 10;
-            if (e.clientX > 0) { // Only update if coordinates are valid
-              tool.dragClone.style.left = e.clientX + offsetX + "px";
-              tool.dragClone.style.top = e.clientY + offsetY + "px";
-            }
-          });
-          tool.addEventListener("dragend", (e) => {
-            if (tool.dragClone) {
-              tool.dragClone.remove();
-              tool.dragClone = null;
-            }
-          });
-        }
-      });
-    }
-    document.addEventListener("dragover", (e) => {
-      const activeClone = document.querySelector(".drag-clone");
-      if (activeClone) {
-        activeClone.style.left = (e.clientX + 10) + "px";
-        activeClone.style.top = (e.clientY + 10) + "px";
-      }
+        .catch((error) => { errorDiv.textContent = error.message; });
     });
 
-    function setupDragAndDrop() {
-      svgRoot.addEventListener("dragover", (e) => {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = "move";
-      });
-
-      svgRoot.addEventListener("drop", async (e) => {
-        if (!isMapReady || activeTool === "bezier" || activeTool === "polygon") return;
-        e.preventDefault();
-        const type = e.dataTransfer.getData("text/plain");
-        const cursorPos = getSVGPoint(e);
-        
-        // Create a history entry before adding a new marker
-        await createHistoryEntry();
-await addMarkerToFirestore(type, cursorPos.x, cursorPos.y);
-      });
-    }
-
-    function setupDrawingTools() {
-      // These events are now handled by click and contextmenu handlers
-    }
-
-    // Bezier helper: de Casteljau algorithm
-    function calculateBezier(points, t) {
-      let temp = points.map(p => ({...p}));
-      for (let i = temp.length - 1; i > 0; i--) {
-        for (let j = 0; j < i; j++) {
-          temp[j] = {
-            x: temp[j].x + (temp[j+1].x - temp[j].x) * t,
-            y: temp[j].y + (temp[j+1].y - temp[j].y) * t
-          };
-        }
-      }
-      return temp[0];
-    }
-    
-    // Helper: approximate arc-length midpoint along the bezier curve
-    function getBezierArcMidpoint(controlPoints, samples = 100) {
-      let pts = [];
-      for (let i = 0; i <= samples; i++) {
-        let t = i / samples;
-        pts.push(calculateBezier(controlPoints, t));
-      }
-      let totalLength = 0;
-      let cumulative = [0];
-      for (let i = 1; i < pts.length; i++) {
-        let dx = pts[i].x - pts[i-1].x;
-        let dy = pts[i].y - pts[i-1].y;
-        let d = Math.sqrt(dx*dx+dy*dy);
-        totalLength += d;
-        cumulative.push(totalLength);
-      }
-      let half = totalLength / 2;
-      let index = cumulative.findIndex(val => val >= half);
-      if (index <= 0) return pts[0];
-      let d0 = cumulative[index-1];
-      let d1 = cumulative[index];
-      let factor = (half - d0) / (d1 - d0);
-      let p0 = pts[index-1];
-      let p1 = pts[index];
-      return { x: p0.x + factor*(p1.x - p0.x), y: p0.y + factor*(p1.y - p0.y) };
-    }
-
-    function updateBezierPreview() {
-      if (currentBezierPath) { currentBezierPath.remove(); }
-      if (bezierControlPoints.length < 2) return;
-      currentBezierPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
-      let d = "";
-      const samples = 50;
-      for (let i = 0; i <= samples; i++) {
-        let t = i / samples;
-        let pt = calculateBezier(bezierControlPoints, t);
-        d += (i === 0 ? `M ${pt.x} ${pt.y}` : ` L ${pt.x} ${pt.y}`);
-      }
-      currentBezierPath.setAttribute("d", d);
-      currentBezierPath.setAttribute("stroke", "yellow");
-      currentBezierPath.setAttribute("stroke-width", "3");
-      currentBezierPath.setAttribute("fill", "none");
-      lineLayer.appendChild(currentBezierPath);
-    }
-
-    function updatePolygonPreview() {
-      if (currentPolygonElement) { currentPolygonElement.remove(); }
-      if (polygonVertices.length < 2) return;
-      currentPolygonElement = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-      const pointsStr = polygonVertices.map(p => `${p.x},${p.y}`).join(" ");
-      currentPolygonElement.setAttribute("points", pointsStr);
-      currentPolygonElement.setAttribute("stroke", selectedColor);
-      currentPolygonElement.setAttribute("stroke-width", "2");
-      currentPolygonElement.setAttribute("fill", selectedColor);
-      currentPolygonElement.setAttribute("fill-opacity", "0.3");
-      lineLayer.appendChild(currentPolygonElement);
-    }
-
-    async function commitBezier() {
-      if (bezierControlPoints.length < 2) return;
-      if (currentBezierPath) { currentBezierPath.remove(); currentBezierPath = null; }
-      
-      // Create a history entry before adding a new bezier
-      await createHistoryEntry();
-      
-      // Use the globally selectedColor
-      const bezierColor = selectedColor;
-      
-      // Create a group to hold the bezier path and its arrows
-      const bezierGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
-
-      // Create the bezier path element
-      const pathElem = document.createElementNS("http://www.w3.org/2000/svg", "path");
-      let d = "";
-      const samples = 100;
-      for (let i = 0; i <= samples; i++) {
-        let t = i / samples;
-        let pt = calculateBezier(bezierControlPoints, t);
-        d += (i === 0 ? `M ${pt.x} ${pt.y}` : ` L ${pt.x} ${pt.y}`);
-      }
-      pathElem.setAttribute("d", d);
-      pathElem.setAttribute("stroke", bezierColor);
-      pathElem.setAttribute("stroke-width", "3");
-      pathElem.setAttribute("fill", "none");
-      bezierGroup.appendChild(pathElem);
-
-      // Arrow at the end (using t=0.98 to t=1.0)
-      let pt1 = calculateBezier(bezierControlPoints, 0.98);
-      let pt2 = calculateBezier(bezierControlPoints, 1.0);
-      let angleEnd = Math.atan2(pt2.y - pt1.y, pt2.x - pt1.x) * (180/Math.PI);
-      const arrowEnd = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-      arrowEnd.setAttribute("points", "0,-8 16,0 0,8");
-      arrowEnd.setAttribute("fill", bezierColor);
-      arrowEnd.setAttribute("transform", `translate(${pt2.x},${pt2.y}) rotate(${angleEnd})`);
-      bezierGroup.appendChild(arrowEnd);
-
-      // Calculate arc-length midpoint and arrow in the middle
-      let midPt = getBezierArcMidpoint(bezierControlPoints, 100);
-      let angleMid = Math.atan2(pt2.y - midPt.y, pt2.x - midPt.x) * (180/Math.PI);
-      const arrowMid = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-      arrowMid.setAttribute("points", "0,-8 16,0 0,8");
-      arrowMid.setAttribute("fill", bezierColor);
-      arrowMid.setAttribute("transform", `translate(${midPt.x},${midPt.y}) rotate(${angleMid})`);
-      bezierGroup.appendChild(arrowMid);
-
-      lineLayer.appendChild(bezierGroup);
-
-      try {
-        const docRef = await addDoc(collection(db, "bezierCurves"), {
-          controlPoints: bezierControlPoints,
-          color: bezierColor,
-          timestamp: serverTimestamp(),
-          owner: auth.currentUser.uid
-        });
-        recordAuditLog("add_bezier", { bezierId: docRef.id });
-        bezierGroup.dataset.id = docRef.id;
-        bezierGroup.setAttribute("data-bezier", "true");
-      } catch (error) {
-        console.error("Error adding bezier curve:", error);
-      }
-      
-      // Add click handler for deletion
-      bezierGroup.addEventListener("click", (e) => {
-        e.stopPropagation();
-        
-        if (activeTool === "bezier" || activeTool === "polygon") return;
-        
-        // Prevent double deletion prompts
-        if (isDeleteInProgress) return;
-        isDeleteInProgress = true;
-        
-        customConfirm("Delete this bezier curve?").then(async confirmed => {
-          if (confirmed) {
-            // Create a history entry before deleting
-            await createHistoryEntry();
-            
-            deleteDoc(doc(db, "bezierCurves", bezierGroup.dataset.id))
-              .then(() => {
-                recordAuditLog("delete_bezier", { bezierId: bezierGroup.dataset.id });
-                bezierGroup.remove();
-              })
-              .catch(error => {
-                console.error("Error deleting bezier curve:", error);
-              })
-              .finally(() => {
-                isDeleteInProgress = false;
-              });
-          } else {
-            isDeleteInProgress = false;
-          }
-        });
-      });
-      
-      activeTool = null;
-      bezierControlPoints = [];
-      markerLayer.style.pointerEvents = "auto";
-      document.querySelectorAll("#toolbox .tool").forEach(t => t.style.borderColor = "rgba(223,197,136,0.5)");
-    }
-
-    async function commitPolygon() {
-      if (polygonVertices.length < 3) return;
-      if (currentPolygonElement) { currentPolygonElement.remove(); currentPolygonElement = null; }
-      
-      // Create a history entry before adding a new polygon
-      await createHistoryEntry();
-      
-      const polygonElem = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-      const pointsStr = polygonVertices.map(p => `${p.x},${p.y}`).join(" ");
-      polygonElem.setAttribute("points", pointsStr);
-      polygonElem.setAttribute("stroke", selectedColor);
-      polygonElem.setAttribute("stroke-width", "2");
-      polygonElem.setAttribute("fill", selectedColor);
-      polygonElem.setAttribute("fill-opacity", "0.3");
-      polygonElem.setAttribute("data-polygon", "true");
-      lineLayer.appendChild(polygonElem);
-      
-      try {
-        const docRef = await addDoc(collection(db, "polygons"), {
-          vertices: polygonVertices,
-          color: selectedColor,
-          timestamp: serverTimestamp(),
-          owner: auth.currentUser.uid
-        });
-        recordAuditLog("add_polygon", { polygonId: docRef.id });
-        polygonElem.dataset.id = docRef.id;
-      } catch (error) {
-        console.error("Error adding polygon:", error);
-      }
-      
-      // Add click handler for deletion
-      polygonElem.addEventListener("click", (e) => {
-        e.stopPropagation();
-        
-        if (activeTool === "bezier" || activeTool === "polygon") return;
-        
-        // Prevent double deletion prompts
-        if (isDeleteInProgress) return;
-        isDeleteInProgress = true;
-        
-        customConfirm("Delete this polygon?").then(async confirmed => {
-          if (confirmed) {
-            // Create a history entry before deleting
-            await createHistoryEntry();
-            
-            deleteDoc(doc(db, "polygons", polygonElem.dataset.id))
-              .then(() => {
-                recordAuditLog("delete_polygon", { polygonId: polygonElem.dataset.id });
-                polygonElem.remove();
-              })
-              .catch(error => {
-                console.error("Error deleting polygon:", error);
-              })
-              .finally(() => {
-                isDeleteInProgress = false;
-              });
-          } else {
-            isDeleteInProgress = false;
-          }
-        });
-      });
-      
-      activeTool = null;
-      polygonVertices = [];
-      markerLayer.style.pointerEvents = "auto";
-      document.querySelectorAll("#toolbox .tool").forEach(t => t.style.borderColor = "rgba(223,197,136,0.5)");
-    }
-
-    async function addMarkerToFirestore(type, x, y) {
-      const user = auth.currentUser;
-      if (!user) { console.error("User not authenticated"); return; }
-      
-      let markerData = { 
-        type, x, y, 
-        timestamp: serverTimestamp(), 
-        owner: user.uid 
-      };
-      
-      if (["homestead", "keep", "torch", "cave", "sword", "spear", "bow", "beacon", "camp", "catapult", "ram"].includes(type)) {
-        markerData.text = await customPrompt("Enter marker text:", "") || "";
-        markerData.color = selectedColor;
-      }
-      
-      try {
-        const docRef = await addDoc(collection(db, "markers"), markerData);
-        recordAuditLog("add", { markerId: docRef.id, markerType: type });
-      } catch (error) {
-        console.error("Error adding marker:", error);
-      }
-    }
-
-    function listenForBezierCurves() {
-      const bezierQuery = query(collection(db, "bezierCurves"), orderBy("timestamp"));
-      onSnapshot(bezierQuery, (snapshot) => {
-        // Clear all bezier elements without an ID
-        lineLayer.querySelectorAll("g:not([data-id])").forEach(elem => elem.remove());
-
-        // Clear all bezier elements with an ID that's not in the current snapshot
-        const currentIds = new Set();
-        snapshot.forEach(docSnap => { currentIds.add(docSnap.id); });
-
-        lineLayer.querySelectorAll("g[data-bezier='true'][data-id]").forEach(elem => {
-          if (!currentIds.has(elem.dataset.id)) {
-            elem.remove();
-          }
-        });
-
-        // Create or update bezier elements from snapshot
-        snapshot.forEach(docSnap => {
-          const id = docSnap.id;
-          const existingElem = lineLayer.querySelector(`g[data-id="${id}"]`);
-          if (!existingElem) {
-            createBezierElement(id, docSnap.data());
-          }
-        });
-      });
-    }
-
-    function createBezierElement(id, data) {
-      const bezierGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
-      bezierGroup.dataset.id = id;
-      bezierGroup.setAttribute("data-bezier", "true");
-      
-      const pathElem = document.createElementNS("http://www.w3.org/2000/svg", "path");
-      let d = "";
-      const samples = 100;
-      for (let i = 0; i <= samples; i++) {
-        let t = i / samples;
-        let pt = calculateBezier(data.controlPoints, t);
-        d += (i === 0 ? `M ${pt.x} ${pt.y}` : ` L ${pt.x} ${pt.y}`);
-      }
-      pathElem.setAttribute("d", d);
-      pathElem.setAttribute("stroke", data.color);
-      pathElem.setAttribute("stroke-width", "3");
-      pathElem.setAttribute("fill", "none");
-      bezierGroup.appendChild(pathElem);
-
-      let pt1 = calculateBezier(data.controlPoints, 0.98);
-      let pt2 = calculateBezier(data.controlPoints, 1.0);
-      let angleEnd = Math.atan2(pt2.y - pt1.y, pt2.x - pt1.x) * (180/Math.PI);
-      const arrowEnd = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-      arrowEnd.setAttribute("points", "0,-8 16,0 0,8");
-      arrowEnd.setAttribute("fill", data.color);
-      arrowEnd.setAttribute("transform", `translate(${pt2.x},${pt2.y}) rotate(${angleEnd})`);
-      bezierGroup.appendChild(arrowEnd);
-
-      let midPt = getBezierArcMidpoint(data.controlPoints, 100);
-      let angleMid = Math.atan2(pt2.y - midPt.y, pt2.x - midPt.x) * (180/Math.PI);
-      const arrowMid = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-      arrowMid.setAttribute("points", "0,-8 16,0 0,8");
-      arrowMid.setAttribute("fill", data.color);
-      arrowMid.setAttribute("transform", `translate(${midPt.x},${midPt.y}) rotate(${angleMid})`);
-      bezierGroup.appendChild(arrowMid);
-      
-      // Add click handler for deletion
-      bezierGroup.addEventListener("click", (e) => {
-        e.stopPropagation();
-        
-        if (activeTool === "bezier" || activeTool === "polygon") return;
-        
-        // Prevent double deletion prompts
-        if (isDeleteInProgress) return;
-        isDeleteInProgress = true;
-        
-        customConfirm("Delete this bezier curve?").then(async confirmed => {
-          if (confirmed) {
-            // Create a history entry before deleting
-            await createHistoryEntry();
-            
-            deleteDoc(doc(db, "bezierCurves", id))
-              .then(() => {
-                recordAuditLog("delete_bezier", { bezierId: id });
-                bezierGroup.remove();
-              })
-              .catch(error => {
-                console.error("Error deleting bezier curve:", error);
-              })
-              .finally(() => {
-                isDeleteInProgress = false;
-              });
-          } else {
-            isDeleteInProgress = false;
-          }
-        });
-      });
-
-      lineLayer.appendChild(bezierGroup);
-    }
-
-    function listenForPolygons() {
-      const polyQuery = query(collection(db, "polygons"), orderBy("timestamp"));
-      onSnapshot(polyQuery, (snapshot) => {
-        // Clear all polygon elements without an ID
-        lineLayer.querySelectorAll("polygon:not([data-id])").forEach(elem => elem.remove());
-
-        // Clear all polygon elements with an ID that's not in the current snapshot
-        const currentIds = new Set();
-        snapshot.forEach(docSnap => { currentIds.add(docSnap.id); });
-
-        lineLayer.querySelectorAll("polygon[data-polygon='true'][data-id]").forEach(elem => {
-          if (!currentIds.has(elem.dataset.id)) {
-            elem.remove();
-          }
-        });
-
-        // Create or update polygon elements from snapshot
-        snapshot.forEach(docSnap => {
-          const id = docSnap.id;
-          const existingElem = lineLayer.querySelector(`polygon[data-id="${id}"]`);
-          if (!existingElem) {
-            createPolygonElement(id, docSnap.data());
-          }
-        });
-      });
-    }
-
-    function createPolygonElement(id, data) {
-      const polygonElem = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-      const pointsStr = data.vertices.map(p => `${p.x},${p.y}`).join(" ");
-      polygonElem.setAttribute("points", pointsStr);
-      polygonElem.setAttribute("stroke", data.color);
-      polygonElem.setAttribute("stroke-width", "2");
-      polygonElem.setAttribute("fill", data.color);
-      polygonElem.setAttribute("fill-opacity", "0.3");
-      polygonElem.dataset.id = id;
-      polygonElem.setAttribute("data-polygon", "true");
-      
-      // Add click handler for deletion
-      polygonElem.addEventListener("click", (e) => {
-        e.stopPropagation();
-        
-        if (activeTool === "bezier" || activeTool === "polygon") return;
-        
-        // Prevent double deletion prompts
-        if (isDeleteInProgress) return;
-        isDeleteInProgress = true;
-        
-        customConfirm("Delete this polygon?").then(async confirmed => {
-          if (confirmed) {
-            // Create a history entry before deleting
-            await createHistoryEntry();
-            
-            deleteDoc(doc(db, "polygons", id))
-              .then(() => {
-                recordAuditLog("delete_polygon", { polygonId: id });
-                polygonElem.remove();
-              })
-              .catch(error => {
-                console.error("Error deleting polygon:", error);
-              })
-              .finally(() => {
-                isDeleteInProgress = false;
-              });
-          } else {
-            isDeleteInProgress = false;
-          }
-        });
-      });
-      
-      lineLayer.appendChild(polygonElem);
-    }
-
-    function listenForMarkers() {
-      let snapshotReceived = false;
-      const markersQuery = query(collection(db, "markers"), orderBy("timestamp"));
-      const unsubscribe = onSnapshot(markersQuery, (snapshot) => {
-        snapshotReceived = true;
-        while (markerLayer.firstChild) { markerLayer.removeChild(markerLayer.firstChild); }
-        snapshot.forEach((docSnap) => { createMarkerElement(docSnap.id, docSnap.data()); });
-        updateMarkerVisibility();
-      }, (error) => {
-        console.error("Firestore connection error:", error);
-        displayErrorOverlay("Firestore connection failed.");
-      });
-      setTimeout(() => {
-        if (!snapshotReceived) { console.error("No Firestore snapshot received within timeout."); displayErrorOverlay("Firestore connection failed."); unsubscribe(); }
-      }, 5000);
-    }
-
-    function listenForLines() {
-      const linesQuery = query(collection(db, "lines"), orderBy("timestamp"));
-      onSnapshot(linesQuery, (snapshot) => {
-        lineLayer.querySelectorAll(".line-group").forEach(elem => elem.remove());
-        snapshot.forEach((docSnap) => { createLineElement(docSnap.id, docSnap.data()); });
-        updateLineVisibility();
-      });
-    }
-
-    function createMarkerElement(id, data) {
-      let markerEl = document.createElementNS("http://www.w3.org/2000/svg", "g");
-      markerEl.setAttribute("data-marker", "true");
-      markerEl.dataset.type = data.type;
-      markerEl.dataset.id = id;
-      
-      let imgSrc, imgWidth, imgHeight, imgXOffset, imgYOffset, fontSize;
-      if (data.type === "homestead") {
-        imgSrc = "https://regnumsolis.com/planner/images/marker.svg";
-        imgWidth = 30 * 1.7; imgHeight = 30 * 1.7;
-        imgXOffset = -(imgWidth / 2); imgYOffset = -20 * 1.7; fontSize = 16 * 1.7;
-      } else if (data.type === "keep") {
-        imgSrc = "https://regnumsolis.com/planner/images/citadel.svg";
-        imgWidth = 30 * 1.7 * 1.2; imgHeight = 30 * 1.7 * 1.2;
-        imgXOffset = -15 * 1.7 * 1.2; imgYOffset = -15 * 1.7 * 1.2; fontSize = 14 * 1.7 * 1.2;
-      } else if (data.type === "torch") {
-        imgSrc = "https://regnumsolis.com/planner/images/torch.svg";
-        imgWidth = 30 * 1.7; imgHeight = 30 * 1.7;
-        imgXOffset = -15 * 1.7; imgYOffset = -15 * 1.7; fontSize = 14 * 1.7;
-      } else if (data.type === "cave") {
-        imgSrc = "https://regnumsolis.com/planner/images/cave.svg";
-        imgWidth = 30 * 1.7; imgHeight = 30 * 1.7;
-        imgXOffset = -15 * 1.7; imgYOffset = -15 * 1.7; fontSize = 14 * 1.7;
-      } else if (data.type === "sword") {
-        imgSrc = "https://regnumsolis.com/planner/images/sword.svg";
-        imgWidth = 30 * 1.7; imgHeight = 30 * 1.7;
-        imgXOffset = -15 * 1.7; imgYOffset = -15 * 1.7; fontSize = 14 * 1.7;
-      } else if (data.type === "spear") {
-        imgSrc = "https://regnumsolis.com/planner/images/spear.svg";
-        imgWidth = 30 * 1.7; imgHeight = 30 * 1.7;
-        imgXOffset = -15 * 1.7; imgYOffset = -15 * 1.7; fontSize = 14 * 1.7;
-      } else if (data.type === "bow") {
-        imgSrc = "https://regnumsolis.com/planner/images/bow.svg";
-        imgWidth = 30 * 1.7; imgHeight = 30 * 1.7;
-        imgXOffset = -15 * 1.7; imgYOffset = -15 * 1.7; fontSize = 14 * 1.7;
-      } else if (data.type === "beacon") {
-        imgSrc = "https://regnumsolis.com/planner/images/beacon.svg";
-        imgWidth = 30 * 1.7 * 1.2; imgHeight = 30 * 1.7 * 1.2;
-        imgXOffset = -15 * 1.7 * 1.2; imgYOffset = -15 * 1.7 * 1.2; fontSize = 14 * 1.7 * 1.2;
-      } else if (data.type === "camp") {
-        imgSrc = "https://regnumsolis.com/planner/images/camp.svg";
-        imgWidth = 30 * 1.7 * 1.2; imgHeight = 30 * 1.7 * 1.2;
-        imgXOffset = -15 * 1.7 * 1.2; imgYOffset = -15 * 1.7 * 1.2; fontSize = 14 * 1.7 * 1.2;
-      } else if (data.type === "catapult") {
-        imgSrc = "https://regnumsolis.com/planner/images/catapult.svg";
-        imgWidth = 30 * 1.7 * 1.2; imgHeight = 30 * 1.7 * 1.2;
-        imgXOffset = -15 * 1.7 * 1.2; imgYOffset = -15 * 1.7 * 1.2; fontSize = 14 * 1.7 * 1.2;
-      } else if (data.type === "ram") {
-        imgSrc = "https://regnumsolis.com/planner/images/ram.svg";
-        imgWidth = 30 * 1.7 * 1.2; imgHeight = 30 * 1.7 * 1.2;
-        imgXOffset = -15 * 1.7 * 1.2; imgYOffset = -15 * 1.7 * 1.2; fontSize = 14 * 1.7 * 1.2;
-      }
-      let textXOffset = imgXOffset + imgWidth;
-      const imgEl = document.createElementNS("http://www.w3.org/2000/svg", "image");
-      imgEl.setAttributeNS("http://www.w3.org/1999/xlink", "href", imgSrc);
-      imgEl.setAttribute("width", imgWidth);
-      imgEl.setAttribute("height", imgHeight);
-      imgEl.setAttribute("x", data.x + imgXOffset);
-      imgEl.setAttribute("y", data.y + imgYOffset);
-      markerEl.appendChild(imgEl);
-      const textEl = document.createElementNS("http://www.w3.org/2000/svg", "text");
-      textEl.textContent = data.text;
-      textEl.setAttribute("fill", data.color || "#dfc588");
-      textEl.setAttribute("font-size", fontSize);
-      textEl.setAttribute("x", data.x + textXOffset);
-      textEl.setAttribute("y", data.y);
-      textEl.setAttribute("text-anchor", "start");
-      textEl.setAttribute("dominant-baseline", "middle");
-      textEl.style.fontFamily = "'Bebas Neue', sans-serif";
-      markerEl.appendChild(textEl);
-      requestAnimationFrame(() => {
-        const bbox = textEl.getBBox();
-        const textLength = textEl.getComputedTextLength();
-        const rectEl = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-        rectEl.setAttribute("x", bbox.x);
-        rectEl.setAttribute("y", bbox.y);
-        rectEl.setAttribute("width", textLength);
-        rectEl.setAttribute("height", bbox.height);
-        rectEl.setAttribute("fill", "#1e1e1e");
-        rectEl.setAttribute("opacity", "0.63");
-        markerEl.insertBefore(rectEl, textEl);
-      });
-      markerEl.classList.add("marker");
-      
-      // Add click handler for deletion
-      markerEl.addEventListener("click", async (e) => {
-        e.stopPropagation();
-        if (activeTool === "bezier" || activeTool === "polygon") return;
-        
-        // Prevent double deletion prompts
-        if (isDeleteInProgress) return;
-        isDeleteInProgress = true;
-        
-        try {
-          if (await customConfirm("Delete this marker?")) {
-            // Create a history entry before deleting
-            await createHistoryEntry();
-            
-            await deleteDoc(doc(db, "markers", id));
-            recordAuditLog("delete", { markerId: id, markerType: data.type });
-            markerEl.remove();
-          }
-        } catch (error) {
-          console.error("Error deleting marker:", error);
-        } finally {
-          isDeleteInProgress = false;
-        }
-      });
-      
-      markerLayer.appendChild(markerEl);
-    }
-
-    function createLineElement(id, data) {
-      const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
-      group.classList.add("line-group");
-      group.dataset.id = id;
-      
-      const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-      line.setAttribute("x1", data.x1);
-      line.setAttribute("y1", data.y1);
-      line.setAttribute("x2", data.x2);
-      line.setAttribute("y2", data.y2);
-      line.setAttribute("stroke", data.color);
-      line.setAttribute("stroke-width", "3.2");
-      
-      const arrow = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-      arrow.setAttribute("points", "0,-8 16,0 0,8");
-      arrow.setAttribute("fill", data.color);
-      arrow.setAttribute("transform", `translate(${data.midX},${data.midY}) rotate(${data.angle})`);
-      
-      group.appendChild(line);
-      group.appendChild(arrow);
-      
-      // Add click handler for deletion
-      group.addEventListener("click", async (e) => {
-        e.stopPropagation();
-        
-        if (activeTool === "bezier" || activeTool === "polygon") return;
-        
-        // Prevent double deletion prompts
-        if (isDeleteInProgress) return;
-        isDeleteInProgress = true;
-        
-        try {
-          if (await customConfirm("Delete this line?")) {
-            // Create a history entry before deleting
-            await createHistoryEntry();
-            
-            await deleteDoc(doc(db, "lines", id));
-            recordAuditLog("delete_line", { lineId: id });
-            group.remove();
-          }
-        } catch (error) {
-          console.error("Error deleting line:", error);
-        } finally {
-          isDeleteInProgress = false;
-        }
-      });
-      
-      lineLayer.appendChild(group);
-    }
-
-    function recordAuditLog(action, details) {
-      const user = auth.currentUser;
-      if (!user) return;
-      const logData = { action, details, user: user.email, timestamp: serverTimestamp() };
-      addDoc(collection(db, "auditLogs"), logData)
-        .catch(error => console.error("Error writing audit log:", error));
-    }
-
-    function listenForAuditLogs() {
-      const auditContainer = document.getElementById("audit-log-container");
-      const auditQuery = query(collection(db, "auditLogs"), orderBy("timestamp", "asc"));
-      onSnapshot(auditQuery, (snapshot) => {
-        const logs = [];
-        snapshot.forEach(docSnap => {
-          logs.push(docSnap.data());
-        });
-        const grouped = [];
-        logs.forEach(log => {
-          if (grouped.length === 0) {
-            grouped.push({ log: log, count: 1 });
-          } else {
-            const lastGroup = grouped[grouped.length - 1];
-            const sameAction = lastGroup.log.action === log.action;
-            let sameMarkerType = true;
-            if (log.action === "add" || log.action === "delete") {
-              sameMarkerType = (lastGroup.log.details.markerType === log.details.markerType);
-            }
-            if (sameAction && sameMarkerType) {
-              lastGroup.count++;
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        document.getElementById("login-screen").style.display = "none";
+        document.getElementById("app").style.display = "block";
+        initializeMap();
+        getDoc(doc(db, "admins", user.email))
+          .then((docSnap) => {
+            if (docSnap.exists()) {
+              document.getElementById("admin-panel").style.display = "block";
+              document.getElementById("user-status").textContent = "admin";
+              listenForAuditLogs();
             } else {
-              grouped.push({ log: log, count: 1 });
+              console.log("User is not an admin according to Firestore");
+              document.getElementById("user-status").textContent = "user";
             }
-          }
-        });
-        auditContainer.innerHTML = "";
-        grouped.forEach(group => {
-          const log = group.log;
-          const dateStr = new Date(log.timestamp ? log.timestamp.seconds * 1000 : Date.now()).toLocaleString();
-          let detailsText = "";
-          if (log.details && log.details.markerType) {
-            detailsText = ` (${log.details.markerType})`;
-          }
-          const groupCount = group.count > 1 ? ` <span class="log-group">(x${group.count})</span>` : "";
-          const entry = document.createElement("div");
-          entry.innerHTML = `[${dateStr}] <span class="log-user">${log.user}</span> <span class="log-action">${log.action}${detailsText}</span>${groupCount}`;
-          auditContainer.appendChild(entry);
-        });
-      });
-    }
-
-    function getSVGPoint(e) {
-      const pt = svgRoot.createSVGPoint();
-      pt.x = e.clientX; pt.y = e.clientY;
-      return pt.matrixTransform(panLayer.getScreenCTM().inverse());
-    }
-
-    function displayErrorOverlay(message) {
-      const overlay = document.getElementById("error-overlay");
-      overlay.textContent = message;
-      overlay.style.display = "flex";
-      console.warn("Error overlay activated:", message);
-    }
-  </script>
-  <script>
-    function customPrompt(message, defaultValue) {
-      return new Promise((resolve) => {
-        const overlay = document.getElementById("custom-prompt-overlay");
-        const promptMessage = document.getElementById("custom-prompt-message");
-        const promptInput = document.getElementById("custom-prompt-input");
-        const okButton = document.getElementById("custom-prompt-ok");
-        const cancelButton = document.getElementById("custom-prompt-cancel");
-        promptMessage.textContent = message;
-        promptInput.value = defaultValue || "";
-        promptInput.style.display = "block";
-        overlay.style.display = "flex";
-        promptInput.focus();
-        function cleanup() {
-          overlay.style.display = "none";
-          okButton.removeEventListener("click", onOk);
-          cancelButton.removeEventListener("click", onCancel);
-          promptInput.removeEventListener("keydown", onKeyDown);
-        }
-        function onOk() { resolve(promptInput.value); cleanup(); }
-        function onCancel() { resolve(null); cleanup(); }
-        function onKeyDown(e) { if (e.key === "Enter") { onOk(); } }
-        okButton.addEventListener("click", onOk);
-        cancelButton.addEventListener("click", onCancel);
-        promptInput.addEventListener("keydown", onKeyDown);
-      });
-    }
-  </script>
-  <script>
-    function customConfirm(message) {
-      return new Promise((resolve) => {
-        const overlay = document.getElementById("custom-prompt-overlay");
-        const promptMessage = document.getElementById("custom-prompt-message");
-        const promptInput = document.getElementById("custom-prompt-input");
-        const okButton = document.getElementById("custom-prompt-ok");
-        const cancelButton = document.getElementById("custom-prompt-cancel");
-
-        promptMessage.textContent = message;
-        promptInput.style.display = "none";
-        overlay.style.display = "flex";
-
-        function cleanup() {
-          overlay.style.display = "none";
-          promptInput.style.display = "block";
-          okButton.removeEventListener("click", onOk);
-          cancelButton.removeEventListener("click", onCancel);
-          // Reset the isDeleteInProgress flag when the dialog is closed
-          isDeleteInProgress = false;
-        }
-
-        function onOk() { 
-          cleanup();
-          resolve(true); 
-        }
-
-        function onCancel() { 
-          cleanup();
-          resolve(false); 
-        }
-
-        okButton.addEventListener("click", onOk);
-        cancelButton.addEventListener("click", onCancel);
-      });
-    }
-  </script>
-  <script>
-    // WebGL background shader setup restored
-    const canvas = document.getElementById('waveCanvas');
-    canvas.width = window.innerWidth; 
-    canvas.height = window.innerHeight;
-    const gl = canvas.getContext("webgl");
-    if (!gl) { alert("WebGL is not supported in your browser."); }
-
-    const vertexShaderSource = `
-      attribute vec2 a_position;
-      varying vec2 v_uv;
-      void main() {
-        v_uv = a_position * 0.5 + 0.5;
-        gl_Position = vec4(a_position, 0.0, 1.0);
+          })
+          .catch((err) => console.error("Error checking admin status:", err));
+      } else {
+        document.getElementById("login-screen").style.display = "flex";
+        document.getElementById("app").style.display = "none";
       }
-    `;
-    const fragmentShaderSource = `
-      precision mediump float;
-      uniform float u_time;
-      uniform vec2 u_resolution;
-      varying vec2 v_uv;
-      float wave(vec2 st, float angle, float frequency, float amplitude, float speed) {
-        vec2 dir = vec2(cos(angle), sin(angle));
-        float phaseOffset = angle * 7.0;
-        return sin(dot(st, dir) * frequency + u_time * speed + phaseOffset) * amplitude;
-      }
-      float waveHeight(vec2 st) {
-        float h = 0.0;
-        h += wave(st, 0.0, 30.1, 0.0020, 0.81);
-        h += wave(st, 0.7, 40.3, 0.0017, 0.63);
-        h += wave(st, 1.4, 55.7, 0.0010, 1.04);
-        h += wave(st, 2.1, 65.2, 0.0012, 0.91);
-        h += wave(st, 2.8, 50.5, 0.0015, 1.12);
-        h += wave(st, 3.3, 60.9, 0.0013, 0.87);
-        h += wave(st, 4.0, 45.6, 0.0014, 1.05);
-        h += wave(st, 4.7, 70.8, 0.0011, 0.99);
-        return h;
-      }
-      vec3 computeNormal(vec2 st, float h) {
-        float eps = 0.001;
-        float hx = waveHeight(st + vec2(eps, 0.0));
-        float hy = waveHeight(st + vec2(0.0, eps));
-        float dFdx = (hx - h) / eps;
-        float dFdy = (hy - h) / eps;
-        return normalize(vec3(-dFdx, -dFdy, 1.0));
-      }
-      void main(){
-        vec2 st = gl_FragCoord.xy / u_resolution.xy;
-        st.y *= u_resolution.y / u_resolution.x;
-        float h = waveHeight(st);
-        vec3 normal = computeNormal(st, h);
-        vec3 deepWater = vec3(0.0, 0.15, 0.35);
-        vec3 shallowWater = vec3(0.0, 0.45, 0.75);
-        vec3 baseColor = mix(deepWater, shallowWater, st.y + h * 0.5);
-        vec3 sunDir = normalize(vec3(0.3, 0.8, 1.0));
-        float diffuse = max(dot(normal, sunDir), 0.0);
-        vec3 viewDir = normalize(vec3(0.0, 0.0, 1.0));
-        vec3 halfDir = normalize(sunDir + viewDir);
-        float spec = pow(max(dot(normal, halfDir), 0.0), 50.0);
-        float fresnel = pow(1.0 - max(dot(viewDir, normal), 0.0), 3.0) * 0.6;
-        vec3 color = baseColor * (0.4 + 0.6 * diffuse) + vec3(1.0, 0.95, 0.8) * spec;
-        color = mix(color, vec3(1.0), fresnel);
-        color *= 0.1;
-        gl_FragColor = vec4(color, 1.0);
-      }
-    `;
-
-    function createShader(gl, type, source) {
-      const shader = gl.createShader(type);
-      gl.shaderSource(shader, source);
-      gl.compileShader(shader);
-      if(!gl.getShaderParameter(shader, gl.COMPILE_STATUS)){
-        console.error("Shader compile error: ", gl.getShaderInfoLog(shader));
-        gl.deleteShader(shader);
-        return null;
-      }
-      return shader;
-    }
-
-    function createProgram(gl, vertexShader, fragmentShader) {
-      const program = gl.createProgram();
-      gl.attachShader(program, vertexShader);
-      gl.attachShader(program, fragmentShader);
-      gl.linkProgram(program);
-      if(!gl.getProgramParameter(program, gl.LINK_STATUS)){
-        console.error("Program link error: ", gl.getProgramInfoLog(program));
-        gl.deleteProgram(program);
-        return null;
-      }
-      return program;
-    }
-
-    const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
-    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
-    const program = createProgram(gl, vertexShader, fragmentShader);
-    gl.useProgram(program);
-
-    const positionAttributeLocation = gl.getAttribLocation(program, "a_position");
-    const positionBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-    const positions = [
-      -1, -1,
-      1, -1,
-      -1, 1,
-      -1, 1,
-      1, -1,
-      1, 1,
-    ];
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
-    gl.enableVertexAttribArray(positionAttributeLocation);
-    gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
-
-    const resolutionUniformLocation = gl.getUniformLocation(program, "u_resolution");
-    const timeUniformLocation = gl.getUniformLocation(program, "u_time");
-
-    function render(time) {
-      time *= 0.001;
-      gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-      gl.clear(gl.COLOR_BUFFER_BIT);
-      gl.uniform2f(resolutionUniformLocation, gl.canvas.width, gl.canvas.height);
-      gl.uniform1f(timeUniformLocation, time);
-      gl.drawArrays(gl.TRIANGLES, 0, 6);
-      requestAnimationFrame(render);
-    }
-    requestAnimationFrame(render);
-    
-    // Add event listener to handle window resize properly
-    window.addEventListener('resize', function() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
     });
-  </script>
+  }
+
+  function initializeMap() { 
+    switchMap("https://regnumsolis.com/planner/images/mvmvmdfs.svg");
+  }
+
+  function switchMap(url) {
+    if (panZoomInstance) { panZoomInstance.destroy(); }
+    isMapReady = false;
+    const container = document.getElementById("map-svg-container");
+    showLoading();
+    fetch(url)
+      .then(response => response.text())
+      .then(svgText => {
+        container.innerHTML = svgText;
+        setupPanZoomLayers();
+        setupDragAndDrop();
+        setupDrawingTools();
+        listenForMarkers();
+        listenForLines();
+        listenForBezierCurves();
+        listenForPolygons();
+        isMapReady = true;
+        hideLoading();
+        
+        // Create initial history entry
+        createHistoryEntry();
+      })
+      .catch(error => {
+        console.error("Error loading SVG:", error);
+        displayErrorOverlay("Error loading map data.");
+        hideLoading();
+        document.getElementById("db-connection-status").textContent = "🔴";
+      });
+  }
+
+  function setupMapSwitchControls() {
+    document.getElementById("tactical-map").addEventListener("click", () => {
+      switchMap("https://regnumsolis.com/planner/images/mvmvmdfstactical.svg");
+    });
+    document.getElementById("style-map").addEventListener("click", () => {
+      switchMap("https://regnumsolis.com/planner/images/mvmvmdfs.svg");
+    });
+  }
+
+  function setupPanZoomLayers() {
+    svgRoot = document.getElementById("map-svg-container").querySelector("svg");
+    svgRoot.setAttribute("width", "100%");
+    svgRoot.setAttribute("height", "100%");
+    svgRoot.setAttribute("preserveAspectRatio", "xMidYMid meet");
+
+    panLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    panLayer.id = "pan-layer";
+    while (svgRoot.firstChild) { panLayer.appendChild(svgRoot.firstChild); }
+    svgRoot.appendChild(panLayer);
+
+    lineLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    lineLayer.id = "line-layer";
+    panLayer.appendChild(lineLayer);
+    
+    markerLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    markerLayer.id = "marker-layer";
+    panLayer.appendChild(markerLayer);
+    
+    textLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    textLayer.id = "text-layer";
+    panLayer.appendChild(textLayer);
+
+    // Configure pan-zoom
+    panZoomInstance = svgPanZoom(svgRoot, {
+      zoomEnabled: true, 
+      panEnabled: true, 
+      controlIconsEnabled: false, 
+      minZoom: 0.5, 
+      maxZoom: 5,
+      zoomScaleSensitivity: 0.4,
+      dblClickZoomEnabled: true,
+      preventMouseEventsDefault: true,
+      beforeMouseDown: function(e) {
+        // Allow click-through for bezier and polygon tools
+        if (activeTool === "bezier" || activeTool === "polygon") {
+          return false;
+        }
+        
+        // Allow click-through for markers and other interactive elements
+        if (e.target.getAttribute("data-marker") === "true" ||
+            (e.target.parentNode && e.target.parentNode.getAttribute("data-marker") === "true")) {
+          return false;
+        }
+        
+        return true;
+      }
+    });
+    
+    // Add event listener for handling map clicks
+    svgRoot.addEventListener("click", handleMapClick);
+    svgRoot.addEventListener("contextmenu", handleContextMenu);
+  }
+  
+  function handleMapClick(e) {
+    if (isUndoRedoAction) return;
+    
+    const pt = getSVGPoint(e);
+    
+    if (activeTool === "bezier") {
+      bezierControlPoints.push({ x: pt.x, y: pt.y });
+      updateBezierPreview();
+    } else if (activeTool === "polygon") {
+      polygonVertices.push({ x: pt.x, y: pt.y });
+      updatePolygonPreview();
+    }
+  }
+  
+  function handleContextMenu(e) {
+    e.preventDefault();
+    
+    if (activeTool === "bezier") {
+      commitBezier();
+    } else if (activeTool === "polygon") {
+      commitPolygon();
+    }
+  }
+
+  function setupToolbox() {
+    document.querySelectorAll("#toolbox .tool").forEach((tool) => {
+      const type = tool.dataset.type;
+      
+      // Handle color picker
+      if (type === "color") {
+        tool.addEventListener("click", () => {
+          activeTool = null;
+          document.querySelectorAll("#toolbox .tool").forEach(t => t.style.borderColor = "rgba(223,197,136,0.5)");
+          openColorPicker();
+        });
+      }
+      // Handle bezier tool
+      else if (type === "bezier") {
+        tool.addEventListener("click", () => {
+          activeTool = "bezier";
+          bezierControlPoints = [];
+          if (currentBezierPath) { currentBezierPath.remove(); currentBezierPath = null; }
+          markerLayer.style.pointerEvents = "none";
+          document.querySelectorAll("#toolbox .tool").forEach(t => t.style.borderColor = "rgba(223,197,136,0.5)");
+          tool.style.borderColor = "red";
+        });
+      } 
+      // Handle polygon tool
+      else if (type === "polygon") {
+        tool.addEventListener("click", () => {
+          activeTool = "polygon";
+          polygonVertices = [];
+          if (currentPolygonElement) { currentPolygonElement.remove(); currentPolygonElement = null; }
+          markerLayer.style.pointerEvents = "none";
+          document.querySelectorAll("#toolbox .tool").forEach(t => t.style.borderColor = "rgba(223,197,136,0.5)");
+          tool.style.borderColor = "red";
+        });
+      }
+      // Handle draggable marker tools
+      else {
+        tool.addEventListener("dragstart", (e) => {
+          e.dataTransfer.setData("text/plain", type);
+          const emptyImg = new Image();
+          emptyImg.src = "data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg'></svg>";
+          e.dataTransfer.setDragImage(emptyImg, 0, 0);
+          const dragClone = tool.cloneNode(true);
+          dragClone.classList.add("drag-clone");
+          dragClone.style.position = "fixed";
+          dragClone.style.top = "0px";
+          dragClone.style.left = "0px";
+          dragClone.style.pointerEvents = "none";
+          dragClone.style.zIndex = "1000";
+          document.body.appendChild(dragClone);
+          tool.dragClone = dragClone;
+        });
+        tool.addEventListener("drag", (e) => {
+          if (!tool.dragClone) return;
+          const offsetX = 10;
+          const offsetY = 10;
+          if (e.clientX > 0) { // Only update if coordinates are valid
+            tool.dragClone.style.left = e.clientX + offsetX + "px";
+            tool.dragClone.style.top = e.clientY + offsetY + "px";
+          }
+        });
+        tool.addEventListener("dragend", (e) => {
+          if (tool.dragClone) {
+            tool.dragClone.remove();
+            tool.dragClone = null;
+          }
+        });
+      }
+    });
+  }        
+document.addEventListener("dragover", (e) => {
+  const activeClone = document.querySelector(".drag-clone");
+  if (activeClone) {
+    activeClone.style.left = (e.clientX + 10) + "px";
+    activeClone.style.top = (e.clientY + 10) + "px";
+  }
+});
+
+function setupDragAndDrop() {
+  svgRoot.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  });
+
+  svgRoot.addEventListener("drop", async (e) => {
+    if (!isMapReady || activeTool === "bezier" || activeTool === "polygon") return;
+    e.preventDefault();
+    const type = e.dataTransfer.getData("text/plain");
+    const cursorPos = getSVGPoint(e);
+    
+    // Create a history entry before adding a new marker
+    await createHistoryEntry();
+    await addMarkerToFirestore(type, cursorPos.x, cursorPos.y);
+  });
+}
+
+function setupDrawingTools() {
+  // These events are now handled by click and contextmenu handlers
+}
+
+// Bezier helper: de Casteljau algorithm
+function calculateBezier(points, t) {
+  let temp = points.map(p => ({...p}));
+  for (let i = temp.length - 1; i > 0; i--) {
+    for (let j = 0; j < i; j++) {
+      temp[j] = {
+        x: temp[j].x + (temp[j+1].x - temp[j].x) * t,
+        y: temp[j].y + (temp[j+1].y - temp[j].y) * t
+      };
+    }
+  }
+  return temp[0];
+}
+
+// Helper: approximate arc-length midpoint along the bezier curve
+function getBezierArcMidpoint(controlPoints, samples = 100) {
+  let pts = [];
+  for (let i = 0; i <= samples; i++) {
+    let t = i / samples;
+    pts.push(calculateBezier(controlPoints, t));
+  }
+  let totalLength = 0;
+  let cumulative = [0];
+  for (let i = 1; i < pts.length; i++) {
+    let dx = pts[i].x - pts[i-1].x;
+    let dy = pts[i].y - pts[i-1].y;
+    let d = Math.sqrt(dx*dx+dy*dy);
+    totalLength += d;
+    cumulative.push(totalLength);
+  }
+  let half = totalLength / 2;
+  let index = cumulative.findIndex(val => val >= half);
+  if (index <= 0) return pts[0];
+  let d0 = cumulative[index-1];
+  let d1 = cumulative[index];
+  let factor = (half - d0) / (d1 - d0);
+  let p0 = pts[index-1];
+  let p1 = pts[index];
+  return { x: p0.x + factor*(p1.x - p0.x), y: p0.y + factor*(p1.y - p0.y) };
+}
+
+function updateBezierPreview() {
+  if (currentBezierPath) { currentBezierPath.remove(); }
+  if (bezierControlPoints.length < 2) return;
+  currentBezierPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  let d = "";
+  const samples = 50;
+  for (let i = 0; i <= samples; i++) {
+    let t = i / samples;
+    let pt = calculateBezier(bezierControlPoints, t);
+    d += (i === 0 ? `M ${pt.x} ${pt.y}` : ` L ${pt.x} ${pt.y}`);
+  }
+  currentBezierPath.setAttribute("d", d);
+  currentBezierPath.setAttribute("stroke", "yellow");
+  currentBezierPath.setAttribute("stroke-width", "3");
+  currentBezierPath.setAttribute("fill", "none");
+  lineLayer.appendChild(currentBezierPath);
+}
+
+function updatePolygonPreview() {
+  if (currentPolygonElement) { currentPolygonElement.remove(); }
+  if (polygonVertices.length < 2) return;
+  currentPolygonElement = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+  const pointsStr = polygonVertices.map(p => `${p.x},${p.y}`).join(" ");
+  currentPolygonElement.setAttribute("points", pointsStr);
+  currentPolygonElement.setAttribute("stroke", selectedColor);
+  currentPolygonElement.setAttribute("stroke-width", "2");
+  currentPolygonElement.setAttribute("fill", selectedColor);
+  currentPolygonElement.setAttribute("fill-opacity", "0.3");
+  lineLayer.appendChild(currentPolygonElement);
+}
+
+async function commitBezier() {
+  if (bezierControlPoints.length < 2) return;
+  if (currentBezierPath) { currentBezierPath.remove(); currentBezierPath = null; }
+  
+  // Create a history entry before adding a new bezier
+  await createHistoryEntry();
+  
+  // Use the globally selectedColor
+  const bezierColor = selectedColor;
+  
+  // Create a group to hold the bezier path and its arrows
+  const bezierGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+
+  // Create the bezier path element
+  const pathElem = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  let d = "";
+  const samples = 100;
+  for (let i = 0; i <= samples; i++) {
+    let t = i / samples;
+    let pt = calculateBezier(bezierControlPoints, t);
+    d += (i === 0 ? `M ${pt.x} ${pt.y}` : ` L ${pt.x} ${pt.y}`);
+  }
+  pathElem.setAttribute("d", d);
+  pathElem.setAttribute("stroke", bezierColor);
+  pathElem.setAttribute("stroke-width", "3");
+  pathElem.setAttribute("fill", "none");
+  bezierGroup.appendChild(pathElem);
+
+  // Arrow at the end (using t=0.98 to t=1.0)
+  let pt1 = calculateBezier(bezierControlPoints, 0.98);
+  let pt2 = calculateBezier(bezierControlPoints, 1.0);
+  let angleEnd = Math.atan2(pt2.y - pt1.y, pt2.x - pt1.x) * (180/Math.PI);
+  const arrowEnd = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+  arrowEnd.setAttribute("points", "0,-8 16,0 0,8");
+  arrowEnd.setAttribute("fill", bezierColor);
+  arrowEnd.setAttribute("transform", `translate(${pt2.x},${pt2.y}) rotate(${angleEnd})`);
+  bezierGroup.appendChild(arrowEnd);
+
+  // Calculate arc-length midpoint and arrow in the middle
+  let midPt = getBezierArcMidpoint(bezierControlPoints, 100);
+  let angleMid = Math.atan2(pt2.y - midPt.y, pt2.x - midPt.x) * (180/Math.PI);
+  const arrowMid = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+  arrowMid.setAttribute("points", "0,-8 16,0 0,8");
+  arrowMid.setAttribute("fill", bezierColor);
+  arrowMid.setAttribute("transform", `translate(${midPt.x},${midPt.y}) rotate(${angleMid})`);
+  bezierGroup.appendChild(arrowMid);
+
+  lineLayer.appendChild(bezierGroup);
+
+  try {
+    const docRef = await addDoc(collection(db, "bezierCurves"), {
+      controlPoints: bezierControlPoints,
+      color: bezierColor,
+      timestamp: serverTimestamp(),
+      owner: auth.currentUser.uid
+    });
+    recordAuditLog("add_bezier", { bezierId: docRef.id });
+    bezierGroup.dataset.id = docRef.id;
+    bezierGroup.setAttribute("data-bezier", "true");
+  } catch (error) {
+    console.error("Error adding bezier curve:", error);
+  }
+  
+  // Add click handler for deletion
+  bezierGroup.addEventListener("click", (e) => {
+    e.stopPropagation();
+    
+    if (activeTool === "bezier" || activeTool === "polygon") return;
+    
+    // Prevent double deletion prompts
+    if (isDeleteInProgress) return;
+    isDeleteInProgress = true;
+    
+    customConfirm("Delete this bezier curve?").then(async confirmed => {
+      if (confirmed) {
+        // Create a history entry before deleting
+        await createHistoryEntry();
+        
+        deleteDoc(doc(db, "bezierCurves", bezierGroup.dataset.id))
+          .then(() => {
+            recordAuditLog("delete_bezier", { bezierId: bezierGroup.dataset.id });
+            bezierGroup.remove();
+          })
+          .catch(error => {
+            console.error("Error deleting bezier curve:", error);
+          })
+          .finally(() => {
+            isDeleteInProgress = false;
+          });
+      } else {
+        isDeleteInProgress = false;
+      }
+    });
+  });
+  
+  activeTool = null;
+  bezierControlPoints = [];
+  markerLayer.style.pointerEvents = "auto";
+  document.querySelectorAll("#toolbox .tool").forEach(t => t.style.borderColor = "rgba(223,197,136,0.5)");
+}
+
+async function commitPolygon() {
+  if (polygonVertices.length < 3) return;
+  if (currentPolygonElement) { currentPolygonElement.remove(); currentPolygonElement = null; }
+  
+  // Create a history entry before adding a new polygon
+  await createHistoryEntry();
+  
+  const polygonElem = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+  const pointsStr = polygonVertices.map(p => `${p.x},${p.y}`).join(" ");
+  polygonElem.setAttribute("points", pointsStr);
+  polygonElem.setAttribute("stroke", selectedColor);
+  polygonElem.setAttribute("stroke-width", "2");
+  polygonElem.setAttribute("fill", selectedColor);
+  polygonElem.setAttribute("fill-opacity", "0.3");
+  polygonElem.setAttribute("data-polygon", "true");
+  lineLayer.appendChild(polygonElem);
+  
+  try {
+    const docRef = await addDoc(collection(db, "polygons"), {
+      vertices: polygonVertices,
+      color: selectedColor,
+      timestamp: serverTimestamp(),
+      owner: auth.currentUser.uid
+    });
+    recordAuditLog("add_polygon", { polygonId: docRef.id });
+    polygonElem.dataset.id = docRef.id;
+  } catch (error) {
+    console.error("Error adding polygon:", error);
+  }
+  
+  // Add click handler for deletion
+  polygonElem.addEventListener("click", (e) => {
+    e.stopPropagation();
+    
+    if (activeTool === "bezier" || activeTool === "polygon") return;
+    
+    // Prevent double deletion prompts
+    if (isDeleteInProgress) return;
+    isDeleteInProgress = true;
+    
+    customConfirm("Delete this polygon?").then(async confirmed => {
+      if (confirmed) {
+        // Create a history entry before deleting
+        await createHistoryEntry();
+        
+        deleteDoc(doc(db, "polygons", polygonElem.dataset.id))
+          .then(() => {
+            recordAuditLog("delete_polygon", { polygonId: polygonElem.dataset.id });
+            polygonElem.remove();
+          })
+          .catch(error => {
+            console.error("Error deleting polygon:", error);
+          })
+          .finally(() => {
+            isDeleteInProgress = false;
+          });
+      } else {
+        isDeleteInProgress = false;
+      }
+    });
+  });
+  
+  activeTool = null;
+  polygonVertices = [];
+  markerLayer.style.pointerEvents = "auto";
+  document.querySelectorAll("#toolbox .tool").forEach(t => t.style.borderColor = "rgba(223,197,136,0.5)");
+}
+
+async function addMarkerToFirestore(type, x, y) {
+  const user = auth.currentUser;
+  if (!user) { console.error("User not authenticated"); return; }
+  
+  let markerData = { 
+    type, x, y, 
+    timestamp: serverTimestamp(), 
+    owner: user.uid 
+  };
+  
+  if (["homestead", "keep", "torch", "cave", "sword", "spear", "bow", "beacon", "camp", "catapult", "ram"].includes(type)) {
+    markerData.text = await customPrompt("Enter marker text:", "") || "";
+    markerData.color = selectedColor;
+  }
+  
+  try {
+    const docRef = await addDoc(collection(db, "markers"), markerData);
+    recordAuditLog("add", { markerId: docRef.id, markerType: type });
+  } catch (error) {
+    console.error("Error adding marker:", error);
+  }
+}
+
+function listenForBezierCurves() {
+  const bezierQuery = query(collection(db, "bezierCurves"), orderBy("timestamp"));
+  onSnapshot(bezierQuery, (snapshot) => {
+    // Clear all bezier elements without an ID
+    lineLayer.querySelectorAll("g:not([data-id])").forEach(elem => elem.remove());
+
+    // Clear all bezier elements with an ID that's not in the current snapshot
+    const currentIds = new Set();
+    snapshot.forEach(docSnap => { currentIds.add(docSnap.id); });
+
+    lineLayer.querySelectorAll("g[data-bezier='true'][data-id]").forEach(elem => {
+      if (!currentIds.has(elem.dataset.id)) {
+        elem.remove();
+      }
+    });
+
+    // Create or update bezier elements from snapshot
+    snapshot.forEach(docSnap => {
+      const id = docSnap.id;
+      const existingElem = lineLayer.querySelector(`g[data-id="${id}"]`);
+      if (!existingElem) {
+        createBezierElement(id, docSnap.data());
+      }
+    });
+  });
+}
+
+function createBezierElement(id, data) {
+  const bezierGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  bezierGroup.dataset.id = id;
+  bezierGroup.setAttribute("data-bezier", "true");
+  
+  const pathElem = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  let d = "";
+  const samples = 100;
+  for (let i = 0; i <= samples; i++) {
+    let t = i / samples;
+    let pt = calculateBezier(data.controlPoints, t);
+    d += (i === 0 ? `M ${pt.x} ${pt.y}` : ` L ${pt.x} ${pt.y}`);
+  }
+  pathElem.setAttribute("d", d);
+  pathElem.setAttribute("stroke", data.color);
+  pathElem.setAttribute("stroke-width", "3");
+  pathElem.setAttribute("fill", "none");
+  bezierGroup.appendChild(pathElem);
+
+  let pt1 = calculateBezier(data.controlPoints, 0.98);
+  let pt2 = calculateBezier(data.controlPoints, 1.0);
+  let angleEnd = Math.atan2(pt2.y - pt1.y, pt2.x - pt1.x) * (180/Math.PI);
+  const arrowEnd = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+  arrowEnd.setAttribute("points", "0,-8 16,0 0,8");
+  arrowEnd.setAttribute("fill", data.color);
+  arrowEnd.setAttribute("transform", `translate(${pt2.x},${pt2.y}) rotate(${angleEnd})`);
+  bezierGroup.appendChild(arrowEnd);
+
+  let midPt = getBezierArcMidpoint(data.controlPoints, 100);
+  let angleMid = Math.atan2(pt2.y - midPt.y, pt2.x - midPt.x) * (180/Math.PI);
+  const arrowMid = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+  arrowMid.setAttribute("points", "0,-8 16,0 0,8");
+  arrowMid.setAttribute("fill", data.color);
+  arrowMid.setAttribute("transform", `translate(${midPt.x},${midPt.y}) rotate(${angleMid})`);
+  bezierGroup.appendChild(arrowMid);
+  
+  // Add click handler for deletion
+  bezierGroup.addEventListener("click", (e) => {
+    e.stopPropagation();
+    
+    if (activeTool === "bezier" || activeTool === "polygon") return;
+    
+    // Prevent double deletion prompts
+    if (isDeleteInProgress) return;
+    isDeleteInProgress = true;
+    
+    customConfirm("Delete this bezier curve?").then(async confirmed => {
+      if (confirmed) {
+        // Create a history entry before deleting
+        await createHistoryEntry();
+        
+        deleteDoc(doc(db, "bezierCurves", id))
+          .then(() => {
+            recordAuditLog("delete_bezier", { bezierId: id });
+            bezierGroup.remove();
+          })
+          .catch(error => {
+            console.error("Error deleting bezier curve:", error);
+          })
+          .finally(() => {
+            isDeleteInProgress = false;
+          });
+      } else {
+        isDeleteInProgress = false;
+      }
+    });
+  });
+
+  lineLayer.appendChild(bezierGroup);
+}
+
+function listenForPolygons() {
+  const polyQuery = query(collection(db, "polygons"), orderBy("timestamp"));
+  onSnapshot(polyQuery, (snapshot) => {
+    // Clear all polygon elements without an ID
+    lineLayer.querySelectorAll("polygon:not([data-id])").forEach(elem => elem.remove());
+
+    // Clear all polygon elements with an ID that's not in the current snapshot
+    const currentIds = new Set();
+    snapshot.forEach(docSnap => { currentIds.add(docSnap.id); });
+
+    lineLayer.querySelectorAll("polygon[data-polygon='true'][data-id]").forEach(elem => {
+      if (!currentIds.has(elem.dataset.id)) {
+        elem.remove();
+      }
+    });
+
+    // Create or update polygon elements from snapshot
+    snapshot.forEach(docSnap => {
+      const id = docSnap.id;
+      const existingElem = lineLayer.querySelector(`polygon[data-id="${id}"]`);
+      if (!existingElem) {
+        createPolygonElement(id, docSnap.data());
+      }
+    });
+  });
+}
+
+function createPolygonElement(id, data) {
+  const polygonElem = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+  const pointsStr = data.vertices.map(p => `${p.x},${p.y}`).join(" ");
+  polygonElem.setAttribute("points", pointsStr);
+  polygonElem.setAttribute("stroke", data.color);
+  polygonElem.setAttribute("stroke-width", "2");
+  polygonElem.setAttribute("fill", data.color);
+  polygonElem.setAttribute("fill-opacity", "0.3");
+  polygonElem.dataset.id = id;
+  polygonElem.setAttribute("data-polygon", "true");
+  
+  // Add click handler for deletion
+  polygonElem.addEventListener("click", (e) => {
+    e.stopPropagation();
+    
+    if (activeTool === "bezier" || activeTool === "polygon") return;
+    
+    // Prevent double deletion prompts
+    if (isDeleteInProgress) return;
+    isDeleteInProgress = true;
+    
+    customConfirm("Delete this polygon?").then(async confirmed => {
+      if (confirmed) {
+        // Create a history entry before deleting
+        await createHistoryEntry();
+        
+        deleteDoc(doc(db, "polygons", id))
+          .then(() => {
+            recordAuditLog("delete_polygon", { polygonId: id });
+            polygonElem.remove();
+          })
+          .catch(error => {
+            console.error("Error deleting polygon:", error);
+          })
+          .finally(() => {
+            isDeleteInProgress = false;
+          });
+      } else {
+        isDeleteInProgress = false;
+      }
+    });
+  });
+  
+  lineLayer.appendChild(polygonElem);
+}
+
+function listenForMarkers() {
+  let snapshotReceived = false;
+  const markersQuery = query(collection(db, "markers"), orderBy("timestamp"));
+  const unsubscribe = onSnapshot(markersQuery, (snapshot) => {
+    snapshotReceived = true;
+    while (markerLayer.firstChild) { markerLayer.removeChild(markerLayer.firstChild); }
+    snapshot.forEach((docSnap) => { createMarkerElement(docSnap.id, docSnap.data()); });
+    updateMarkerVisibility();
+  }, (error) => {
+    console.error("Firestore connection error:", error);
+    displayErrorOverlay("Firestore connection failed.");
+  });
+  setTimeout(() => {
+    if (!snapshotReceived) { console.error("No Firestore snapshot received within timeout."); displayErrorOverlay("Firestore connection failed."); unsubscribe(); }
+  }, 5000);
+}
+
+function listenForLines() {
+  const linesQuery = query(collection(db, "lines"), orderBy("timestamp"));
+  onSnapshot(linesQuery, (snapshot) => {
+    lineLayer.querySelectorAll(".line-group").forEach(elem => elem.remove());
+    snapshot.forEach((docSnap) => { createLineElement(docSnap.id, docSnap.data()); });
+    updateLineVisibility();
+  });
+}
+
+function createMarkerElement(id, data) {
+  let markerEl = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  markerEl.setAttribute("data-marker", "true");
+  markerEl.dataset.type = data.type;
+  markerEl.dataset.id = id;
+  
+  let imgSrc, imgWidth, imgHeight, imgXOffset, imgYOffset, fontSize;
+  if (data.type === "homestead") {
+    imgSrc = "https://regnumsolis.com/planner/images/marker.svg";
+    imgWidth = 30 * 1.7; imgHeight = 30 * 1.7;
+    imgXOffset = -(imgWidth / 2); imgYOffset = -20 * 1.7; fontSize = 16 * 1.7;
+  } else if (data.type === "keep") {
+    imgSrc = "https://regnumsolis.com/planner/images/citadel.svg";
+    imgWidth = 30 * 1.7 * 1.2; imgHeight = 30 * 1.7 * 1.2;
+    imgXOffset = -15 * 1.7 * 1.2; imgYOffset = -15 * 1.7 * 1.2; fontSize = 14 * 1.7 * 1.2;
+  } else if (data.type === "torch") {
+    imgSrc = "https://regnumsolis.com/planner/images/torch.svg";
+    imgWidth = 30 * 1.7; imgHeight = 30 * 1.7;
+    imgXOffset = -15 * 1.7; imgYOffset = -15 * 1.7; fontSize = 14 * 1.7;
+  } else if (data.type === "cave") {
+    imgSrc = "https://regnumsolis.com/planner/images/cave.svg";
+    imgWidth = 30 * 1.7; imgHeight = 30 * 1.7;
+    imgXOffset = -15 * 1.7; imgYOffset = -15 * 1.7; fontSize = 14 * 1.7;
+  } else if (data.type === "sword") {
+    imgSrc = "https://regnumsolis.com/planner/images/sword.svg";
+    imgWidth = 30 * 1.7; imgHeight = 30 * 1.7;
+    imgXOffset = -15 * 1.7; imgYOffset = -15 * 1.7; fontSize = 14 * 1.7;
+  } else if (data.type === "spear") {
+    imgSrc = "https://regnumsolis.com/planner/images/spear.svg";
+    imgWidth = 30 * 1.7; imgHeight = 30 * 1.7;
+    imgXOffset = -15 * 1.7; imgYOffset = -15 * 1.7; fontSize = 14 * 1.7;
+  } else if (data.type === "bow") {
+    imgSrc = "https://regnumsolis.com/planner/images/bow.svg";
+    imgWidth = 30 * 1.7; imgHeight = 30 * 1.7;
+    imgXOffset = -15 * 1.7; imgYOffset = -15 * 1.7; fontSize = 14 * 1.7;
+  } else if (data.type === "beacon") {
+    imgSrc = "https://regnumsolis.com/planner/images/beacon.svg";
+    imgWidth = 30 * 1.7 * 1.2; imgHeight = 30 * 1.7 * 1.2;
+    imgXOffset = -15 * 1.7 * 1.2; imgYOffset = -15 * 1.7 * 1.2; fontSize = 14 * 1.7 * 1.2;
+  } else if (data.type === "camp") {
+    imgSrc = "https://regnumsolis.com/planner/images/camp.svg";
+    imgWidth = 30 * 1.7 * 1.2; imgHeight = 30 * 1.7 * 1.2;
+    imgXOffset = -15 * 1.7 * 1.2; imgYOffset = -15 * 1.7 * 1.2; fontSize = 14 * 1.7 * 1.2;
+  } else if (data.type === "catapult") {
+    imgSrc = "https://regnumsolis.com/planner/images/catapult.svg";
+    imgWidth = 30 * 1.7 * 1.2; imgHeight = 30 * 1.7 * 1.2;
+    imgXOffset = -15 * 1.7 * 1.2; imgYOffset = -15 * 1.7 * 1.2; fontSize = 14 * 1.7 * 1.2;
+  } else if (data.type === "ram") {
+    imgSrc = "https://regnumsolis.com/planner/images/ram.svg";
+    imgWidth = 30 * 1.7 * 1.2; imgHeight = 30 * 1.7 * 1.2;
+    imgXOffset = -15 * 1.7 * 1.2; imgYOffset = -15 * 1.7 * 1.2; fontSize = 14 * 1.7 * 1.2;
+  }
+  let textXOffset = imgXOffset + imgWidth;
+  const imgEl = document.createElementNS("http://www.w3.org/2000/svg", "image");
+  imgEl.setAttributeNS("http://www.w3.org/1999/xlink", "href", imgSrc);
+  imgEl.setAttribute("width", imgWidth);
+  imgEl.setAttribute("height", imgHeight);
+  imgEl.setAttribute("x", data.x + imgXOffset);
+  imgEl.setAttribute("y", data.y + imgYOffset);
+  markerEl.appendChild(imgEl);
+  const textEl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+  textEl.textContent = data.text;
+  textEl.setAttribute("fill", data.color || "#dfc588");
+  textEl.setAttribute("font-size", fontSize);
+  textEl.setAttribute("x", data.x + textXOffset);
+  textEl.setAttribute("y", data.y);
+  textEl.setAttribute("text-anchor", "start");
+  textEl.setAttribute("dominant-baseline", "middle");
+  textEl.style.fontFamily = "'Bebas Neue', sans-serif";
+  markerEl.appendChild(textEl);
+  requestAnimationFrame(() => {
+    const bbox = textEl.getBBox();
+    const textLength = textEl.getComputedTextLength();
+    const rectEl = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    rectEl.setAttribute("x", bbox.x);
+    rectEl.setAttribute("y", bbox.y);
+    rectEl.setAttribute("width", textLength);
+    rectEl.setAttribute("height", bbox.height);
+    rectEl.setAttribute("fill", "#1e1e1e");
+    rectEl.setAttribute("opacity", "0.63");
+    markerEl.insertBefore(rectEl, textEl);
+  });
+  markerEl.classList.add("marker");
+  
+  // Add click handler for deletion
+  markerEl.addEventListener("click", async (e) => {
+    e.stopPropagation();
+    if (activeTool === "bezier" || activeTool === "polygon") return;
+    
+    // Prevent double deletion prompts
+    if (isDeleteInProgress) return;
+    isDeleteInProgress = true;
+    
+    try {
+      if (await customConfirm("Delete this marker?")) {
+        // Create a history entry before deleting
+        await createHistoryEntry();
+        
+        await deleteDoc(doc(db, "markers", id));
+        recordAuditLog("delete", { markerId: id, markerType: data.type });
+        markerEl.remove();
+      }
+    } catch (error) {
+      console.error("Error deleting marker:", error);
+    } finally {
+      isDeleteInProgress = false;
+    }
+  });
+  
+  markerLayer.appendChild(markerEl);
+}
+
+function createLineElement(id, data) {
+  const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  group.classList.add("line-group");
+  group.dataset.id = id;
+  
+  const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+  line.setAttribute("x1", data.x1);
+  line.setAttribute("y1", data.y1);
+  line.setAttribute("x2", data.x2);
+  line.setAttribute("y2", data.y2);
+  line.setAttribute("stroke", data.color);
+  line.setAttribute("stroke-width", "3.2");
+  
+const arrow = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+  arrow.setAttribute("points", "0,-8 16,0 0,8");
+  arrow.setAttribute("fill", data.color);
+  arrow.setAttribute("transform", `translate(${data.midX},${data.midY}) rotate(${data.angle})`);
+  
+  group.appendChild(line);
+  group.appendChild(arrow);
+  
+  // Add click handler for deletion
+  group.addEventListener("click", async (e) => {
+    e.stopPropagation();
+    
+    if (activeTool === "bezier" || activeTool === "polygon") return;
+    
+    // Prevent double deletion prompts
+    if (isDeleteInProgress) return;
+    isDeleteInProgress = true;
+    
+    try {
+      if (await customConfirm("Delete this line?")) {
+        // Create a history entry before deleting
+        await createHistoryEntry();
+        
+        await deleteDoc(doc(db, "lines", id));
+        recordAuditLog("delete_line", { lineId: id });
+        group.remove();
+      }
+    } catch (error) {
+      console.error("Error deleting line:", error);
+    } finally {
+      isDeleteInProgress = false;
+    }
+  });
+  
+  lineLayer.appendChild(group);
+}
+
+function recordAuditLog(action, details) {
+  const user = auth.currentUser;
+  if (!user) return;
+  const logData = { action, details, user: user.email, timestamp: serverTimestamp() };
+  addDoc(collection(db, "auditLogs"), logData)
+    .catch(error => console.error("Error writing audit log:", error));
+}
+
+function listenForAuditLogs() {
+  const auditContainer = document.getElementById("audit-log-container");
+  const auditQuery = query(collection(db, "auditLogs"), orderBy("timestamp", "asc"));
+  onSnapshot(auditQuery, (snapshot) => {
+    const logs = [];
+    snapshot.forEach(docSnap => {
+      logs.push(docSnap.data());
+    });
+    const grouped = [];
+    logs.forEach(log => {
+      if (grouped.length === 0) {
+        grouped.push({ log: log, count: 1 });
+      } else {
+        const lastGroup = grouped[grouped.length - 1];
+        const sameAction = lastGroup.log.action === log.action;
+        let sameMarkerType = true;
+        if (log.action === "add" || log.action === "delete") {
+          sameMarkerType = (lastGroup.log.details.markerType === log.details.markerType);
+        }
+        if (sameAction && sameMarkerType) {
+          lastGroup.count++;
+        } else {
+          grouped.push({ log: log, count: 1 });
+        }
+      }
+    });
+    auditContainer.innerHTML = "";
+    grouped.forEach(group => {
+      const log = group.log;
+      const dateStr = new Date(log.timestamp ? log.timestamp.seconds * 1000 : Date.now()).toLocaleString();
+      let detailsText = "";
+      if (log.details && log.details.markerType) {
+        detailsText = ` (${log.details.markerType})`;
+      }
+      const groupCount = group.count > 1 ? ` <span class="log-group">(x${group.count})</span>` : "";
+      const entry = document.createElement("div");
+      entry.innerHTML = `[${dateStr}] <span class="log-user">${log.user}</span> <span class="log-action">${log.action}${detailsText}</span>${groupCount}`;
+      auditContainer.appendChild(entry);
+    });
+  });
+}
+
+function getSVGPoint(e) {
+  const pt = svgRoot.createSVGPoint();
+  pt.x = e.clientX; pt.y = e.clientY;
+  return pt.matrixTransform(panLayer.getScreenCTM().inverse());
+}
+
+function displayErrorOverlay(message) {
+  const overlay = document.getElementById("error-overlay");
+  overlay.textContent = message;
+  overlay.style.display = "flex";
+  console.warn("Error overlay activated:", message);
+}
+</script>
+<script>
+function customPrompt(message, defaultValue) {
+  return new Promise((resolve) => {
+    const overlay = document.getElementById("custom-prompt-overlay");
+    const promptMessage = document.getElementById("custom-prompt-message");
+    const promptInput = document.getElementById("custom-prompt-input");
+    const okButton = document.getElementById("custom-prompt-ok");
+    const cancelButton = document.getElementById("custom-prompt-cancel");
+    promptMessage.textContent = message;
+    promptInput.value = defaultValue || "";
+    promptInput.style.display = "block";
+    overlay.style.display = "flex";
+    promptInput.focus();
+    function cleanup() {
+      overlay.style.display = "none";
+      okButton.removeEventListener("click", onOk);
+      cancelButton.removeEventListener("click", onCancel);
+      promptInput.removeEventListener("keydown", onKeyDown);
+    }
+    function onOk() { resolve(promptInput.value); cleanup(); }
+    function onCancel() { resolve(null); cleanup(); }
+    function onKeyDown(e) { if (e.key === "Enter") { onOk(); } }
+    okButton.addEventListener("click", onOk);
+    cancelButton.addEventListener("click", onCancel);
+    promptInput.addEventListener("keydown", onKeyDown);
+  });
+}
+</script>
+<script>
+function customConfirm(message) {
+  return new Promise((resolve) => {
+    const overlay = document.getElementById("custom-prompt-overlay");
+    const promptMessage = document.getElementById("custom-prompt-message");
+    const promptInput = document.getElementById("custom-prompt-input");
+    const okButton = document.getElementById("custom-prompt-ok");
+    const cancelButton = document.getElementById("custom-prompt-cancel");
+
+    promptMessage.textContent = message;
+    promptInput.style.display = "none";
+    overlay.style.display = "flex";
+
+    function cleanup() {
+      overlay.style.display = "none";
+      promptInput.style.display = "block";
+      okButton.removeEventListener("click", onOk);
+      cancelButton.removeEventListener("click", onCancel);
+      // Reset the isDeleteInProgress flag when the dialog is closed
+      isDeleteInProgress = false;
+    }
+
+    function onOk() { 
+      cleanup();
+      resolve(true); 
+    }
+
+    function onCancel() { 
+      cleanup();
+      resolve(false); 
+    }
+
+    okButton.addEventListener("click", onOk);
+    cancelButton.addEventListener("click", onCancel);
+  });
+}
+</script>
+<script>
+// WebGL background shader setup restored
+const canvas = document.getElementById('waveCanvas');
+canvas.width = window.innerWidth; 
+canvas.height = window.innerHeight;
+const gl = canvas.getContext("webgl");
+if (!gl) { alert("WebGL is not supported in your browser."); }
+
+const vertexShaderSource = `
+  attribute vec2 a_position;
+  varying vec2 v_uv;
+  void main() {
+    v_uv = a_position * 0.5 + 0.5;
+    gl_Position = vec4(a_position, 0.0, 1.0);
+  }
+`;
+const fragmentShaderSource = `
+  precision mediump float;
+  uniform float u_time;
+  uniform vec2 u_resolution;
+  varying vec2 v_uv;
+  float wave(vec2 st, float angle, float frequency, float amplitude, float speed) {
+    vec2 dir = vec2(cos(angle), sin(angle));
+    float phaseOffset = angle * 7.0;
+    return sin(dot(st, dir) * frequency + u_time * speed + phaseOffset) * amplitude;
+  }
+  float waveHeight(vec2 st) {
+    float h = 0.0;
+    h += wave(st, 0.0, 30.1, 0.0020, 0.81);
+    h += wave(st, 0.7, 40.3, 0.0017, 0.63);
+    h += wave(st, 1.4, 55.7, 0.0010, 1.04);
+    h += wave(st, 2.1, 65.2, 0.0012, 0.91);
+    h += wave(st, 2.8, 50.5, 0.0015, 1.12);
+    h += wave(st, 3.3, 60.9, 0.0013, 0.87);
+    h += wave(st, 4.0, 45.6, 0.0014, 1.05);
+    h += wave(st, 4.7, 70.8, 0.0011, 0.99);
+    return h;
+  }
+  vec3 computeNormal(vec2 st, float h) {
+    float eps = 0.001;
+    float hx = waveHeight(st + vec2(eps, 0.0));
+    float hy = waveHeight(st + vec2(0.0, eps));
+    float dFdx = (hx - h) / eps;
+    float dFdy = (hy - h) / eps;
+    return normalize(vec3(-dFdx, -dFdy, 1.0));
+  }
+  void main(){
+    vec2 st = gl_FragCoord.xy / u_resolution.xy;
+    st.y *= u_resolution.y / u_resolution.x;
+    float h = waveHeight(st);
+    vec3 normal = computeNormal(st, h);
+    vec3 deepWater = vec3(0.0, 0.15, 0.35);
+    vec3 shallowWater = vec3(0.0, 0.45, 0.75);
+    vec3 baseColor = mix(deepWater, shallowWater, st.y + h * 0.5);
+    vec3 sunDir = normalize(vec3(0.3, 0.8, 1.0));
+    float diffuse = max(dot(normal, sunDir), 0.0);
+    vec3 viewDir = normalize(vec3(0.0, 0.0, 1.0));
+    vec3 halfDir = normalize(sunDir + viewDir);
+    float spec = pow(max(dot(normal, halfDir), 0.0), 50.0);
+    float fresnel = pow(1.0 - max(dot(viewDir, normal), 0.0), 3.0) * 0.6;
+    vec3 color = baseColor * (0.4 + 0.6 * diffuse) + vec3(1.0, 0.95, 0.8) * spec;
+    color = mix(color, vec3(1.0), fresnel);
+    color *= 0.1;
+    gl_FragColor = vec4(color, 1.0);
+  }
+`;
+
+function createShader(gl, type, source) {
+  const shader = gl.createShader(type);
+  gl.shaderSource(shader, source);
+  gl.compileShader(shader);
+  if(!gl.getShaderParameter(shader, gl.COMPILE_STATUS)){
+    console.error("Shader compile error: ", gl.getShaderInfoLog(shader));
+    gl.deleteShader(shader);
+    return null;
+  }
+  return shader;
+}
+
+function createProgram(gl, vertexShader, fragmentShader) {
+  const program = gl.createProgram();
+  gl.attachShader(program, vertexShader);
+  gl.attachShader(program, fragmentShader);
+  gl.linkProgram(program);
+  if(!gl.getProgramParameter(program, gl.LINK_STATUS)){
+    console.error("Program link error: ", gl.getProgramInfoLog(program));
+    gl.deleteProgram(program);
+    return null;
+  }
+  return program;
+}
+
+const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
+const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+const program = createProgram(gl, vertexShader, fragmentShader);
+gl.useProgram(program);
+
+const positionAttributeLocation = gl.getAttribLocation(program, "a_position");
+const positionBuffer = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+const positions = [
+  -1, -1,
+  1, -1,
+  -1, 1,
+  -1, 1,
+  1, -1,
+  1, 1,
+];
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+gl.enableVertexAttribArray(positionAttributeLocation);
+gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
+
+const resolutionUniformLocation = gl.getUniformLocation(program, "u_resolution");
+const timeUniformLocation = gl.getUniformLocation(program, "u_time");
+
+function render(time) {
+  time *= 0.001;
+  gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.uniform2f(resolutionUniformLocation, gl.canvas.width, gl.canvas.height);
+  gl.uniform1f(timeUniformLocation, time);
+  gl.drawArrays(gl.TRIANGLES, 0, 6);
+  requestAnimationFrame(render);
+}
+requestAnimationFrame(render);
+
+// Add event listener to handle window resize properly
+window.addEventListener('resize', function() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+});
+</script>
 </body>
 </html>
