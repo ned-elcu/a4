@@ -479,6 +479,693 @@
         z-index: 5;
       }
     }
+
+    /* NEW STYLES FOR REQUESTED FEATURES */
+    
+    /* 1. Undo/Redo System */
+    #history-controls {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      display: flex;
+      gap: 10px;
+      z-index: 25;
+    }
+    #history-controls button {
+      width: 40px;
+      height: 40px;
+      border: none;
+      border-radius: 4px;
+      background: rgba(30,30,30,0.9);
+      border: 1px solid rgba(223,197,136,0.5);
+      color: rgba(223,197,136,0.8);
+      font-size: 1.2em;
+      cursor: pointer;
+      transition: transform 0.3s, box-shadow 0.3s;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+    #history-controls button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 15px rgba(223,197,136,0.5);
+    }
+    #history-controls button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    
+    /* 2. Element Selection and Multi-Edit */
+    .selectable {
+      transition: filter 0.2s ease;
+    }
+    .selected {
+      filter: drop-shadow(0 0 5px rgba(223,197,136,0.8));
+      outline: 2px dashed rgba(223,197,136,0.8);
+      outline-offset: 2px;
+    }
+    .selection-area {
+      position: absolute;
+      border: 2px dashed rgba(223,197,136,0.8);
+      background: rgba(223,197,136,0.2);
+      pointer-events: none;
+      z-index: 15;
+    }
+    #selection-panel {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      width: 280px;
+      background: rgba(30,30,30,0.9);
+      border: 1px solid rgba(223,197,136,0.5);
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(223,197,136,0.5);
+      z-index: 30;
+      display: none;
+      animation: fadeIn 0.5s ease-out;
+      padding: 10px;
+    }
+    #selection-panel h3 {
+      font-size: 1.2em;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    #selection-panel .selection-actions {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    #selection-panel button {
+      padding: 8px 12px;
+      font-size: 0.9em;
+      border: none;
+      border-radius: 4px;
+      background: rgba(223,197,136,0.8);
+      color: white;
+      cursor: pointer;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    #selection-panel button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 15px rgba(223,197,136,0.5);
+    }
+    #selection-count {
+      text-align: center;
+      margin-top: 5px;
+      font-size: 0.9em;
+    }
+    
+    /* 3. Grouping System */
+    .group-container {
+      stroke-dasharray: 5,5;
+      stroke: rgba(223,197,136,0.8);
+      fill: rgba(223,197,136,0.1);
+      pointer-events: all;
+    }
+    #group-panel {
+      position: fixed;
+      bottom: 20px;
+      left: 320px;
+      width: 200px;
+      background: rgba(30,30,30,0.9);
+      border: 1px solid rgba(223,197,136,0.5);
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(223,197,136,0.5);
+      z-index: 30;
+      display: none;
+      animation: fadeIn 0.5s ease-out;
+      padding: 10px;
+    }
+    #group-list {
+      max-height: 150px;
+      overflow-y: auto;
+      margin-bottom: 10px;
+    }
+    .group-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px 0;
+      border-bottom: 1px solid rgba(223,197,136,0.3);
+    }
+    .group-item:last-child {
+      border-bottom: none;
+    }
+    .group-item-name {
+      flex-grow: 1;
+      font-size: 0.9em;
+    }
+    .group-visibility {
+      cursor: pointer;
+      margin-right: 5px;
+    }
+    .group-delete {
+      cursor: pointer;
+      color: #e74c3c;
+      font-size: 1.1em;
+    }
+    
+    /* 4. Layer Management */
+    #layer-panel {
+      position: fixed;
+      top: 100px;
+      left: 320px;
+      width: 200px;
+      background: rgba(30,30,30,0.9);
+      border: 1px solid rgba(223,197,136,0.5);
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(223,197,136,0.5);
+      z-index: 30;
+      display: none;
+      animation: fadeIn 0.5s ease-out;
+      padding: 10px;
+    }
+    #layer-panel h3 {
+      text-align: center;
+      margin-bottom: 10px;
+      font-size: 1.2em;
+    }
+    #layer-list {
+      max-height: 200px;
+      overflow-y: auto;
+      margin-bottom: 10px;
+    }
+    .layer-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px 0;
+      border-bottom: 1px solid rgba(223,197,136,0.3);
+    }
+    .layer-item:last-child {
+      border-bottom: none;
+    }
+    .layer-item-name {
+      flex-grow: 1;
+      font-size: 0.9em;
+      cursor: pointer;
+    }
+    .layer-visibility {
+      cursor: pointer;
+      margin-right: 5px;
+    }
+    .layer-lock {
+      cursor: pointer;
+      margin-right: 5px;
+    }
+    .layer-actions {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+    }
+    .layer-actions button {
+      padding: 5px 10px;
+      font-size: 0.8em;
+      border: none;
+      border-radius: 4px;
+      background: rgba(223,197,136,0.8);
+      color: white;
+      cursor: pointer;
+    }
+    
+    /* 5. Text Labels Tool */
+    #text-editor {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 300px;
+      background: rgba(30,30,30,0.95);
+      border: 1px solid rgba(223,197,136,0.8);
+      border-radius: 8px;
+      padding: 15px;
+      z-index: 3000;
+      display: none;
+    }
+    #text-editor input,
+    #text-editor select {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      border: 1px solid rgba(223,197,136,0.5);
+      border-radius: 4px;
+      background: rgba(50,50,50,0.9);
+      color: white;
+    }
+    #text-editor button {
+padding: 8px 15px;
+      margin: 0 5px;
+      background: rgba(223,197,136,0.8);
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #text-editor .text-controls {
+      display: flex;
+      justify-content: center;
+      margin-top: 10px;
+    }
+    
+    /* 6. Timeline Tool */
+    #timeline-container {
+      position: fixed;
+      bottom: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80%;
+      max-width: 800px;
+      background: rgba(30,30,30,0.9);
+      border: 1px solid rgba(223,197,136,0.5);
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(223,197,136,0.5);
+      padding: 10px;
+      z-index: 25;
+      display: none;
+    }
+    #timeline-slider {
+      width: 100%;
+      margin: 10px 0;
+      -webkit-appearance: none;
+      height: 8px;
+      background: rgba(223,197,136,0.3);
+      border-radius: 4px;
+      outline: none;
+    }
+    #timeline-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: rgba(223,197,136,0.8);
+      cursor: pointer;
+    }
+    #timeline-slider::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: rgba(223,197,136,0.8);
+      cursor: pointer;
+      border: none;
+    }
+    #timeline-controls {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-top: 5px;
+    }
+    #timeline-controls button {
+      padding: 5px 10px;
+      font-size: 0.9em;
+      border: none;
+      border-radius: 4px;
+      background: rgba(223,197,136,0.8);
+      color: white;
+      cursor: pointer;
+    }
+    #timeline-info {
+      text-align: center;
+      margin-top: 5px;
+      font-size: 0.9em;
+    }
+    
+    /* 7. Grid Overlay */
+    #grid-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 5;
+      opacity: 0.4;
+      display: none;
+    }
+    .grid-line {
+      stroke: rgba(223,197,136,0.5);
+      stroke-width: 1;
+    }
+    .grid-text {
+      fill: rgba(223,197,136,0.8);
+      font-family: Arial, sans-serif;
+      font-size: 12px;
+      text-anchor: middle;
+    }
+    
+    /* 8. Distance and Area Measurement */
+    #measurement-info {
+      position: fixed;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(30,30,30,0.9);
+      border: 1px solid rgba(223,197,136,0.5);
+      border-radius: 5px;
+      padding: 10px;
+      z-index: 25;
+      display: none;
+      font-family: Arial, sans-serif;
+      font-size: 0.9em;
+      min-width: 200px;
+      text-align: center;
+    }
+    .measurement-line {
+      stroke: rgba(223,197,136,0.8);
+      stroke-width: 2;
+      stroke-dasharray: 5,5;
+    }
+    .measurement-area {
+      fill: rgba(223,197,136,0.2);
+      stroke: rgba(223,197,136,0.8);
+      stroke-width: 2;
+      stroke-dasharray: 5,5;
+    }
+    
+    /* 9. Real-time Cursor & Collaboration */
+    .user-cursor {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 40;
+      transform: translate(-50%, -50%);
+    }
+    .user-cursor::after {
+      content: attr(data-username);
+      position: absolute;
+      top: -20px;
+      left: 10px;
+      white-space: nowrap;
+      background: rgba(30,30,30,0.8);
+      color: white;
+      padding: 2px 5px;
+      border-radius: 3px;
+      font-size: 0.8em;
+      font-family: Arial, sans-serif;
+    }
+    
+    /* 10. Chat Panel */
+    #chat-panel {
+      position: fixed;
+      bottom: 60px;
+      right: 20px;
+      width: 300px;
+      background: rgba(30,30,30,0.9);
+      border: 1px solid rgba(223,197,136,0.5);
+      border-radius: 5px 5px 0 0;
+      box-shadow: 0 0 10px rgba(223,197,136,0.5);
+      z-index: 30;
+      display: none;
+      transition: height 0.3s ease;
+    }
+    #chat-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px;
+      border-bottom: 1px solid rgba(223,197,136,0.5);
+      cursor: pointer;
+    }
+    #chat-header h3 {
+      margin: 0;
+      font-size: 1.2em;
+    }
+    #chat-toggle {
+      background: none;
+      border: none;
+      color: rgba(223,197,136,0.8);
+      cursor: pointer;
+      font-size: 1.2em;
+    }
+    #chat-messages {
+      height: 200px;
+      overflow-y: auto;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .chat-message {
+      padding: 5px 8px;
+      border-radius: 5px;
+      max-width: 80%;
+      word-wrap: break-word;
+    }
+    .chat-message.sent {
+      align-self: flex-end;
+      background: rgba(223,197,136,0.8);
+      color: #1e1e1e;
+    }
+    .chat-message.received {
+      align-self: flex-start;
+      background: rgba(60,60,60,0.8);
+      color: white;
+    }
+    .chat-user {
+      font-size: 0.8em;
+      opacity: 0.8;
+      margin-bottom: 2px;
+    }
+    #chat-input {
+      display: flex;
+      padding: 10px;
+      border-top: 1px solid rgba(223,197,136,0.5);
+    }
+    #chat-input input {
+      flex-grow: 1;
+      padding: 5px;
+      border: 1px solid rgba(223,197,136,0.5);
+      border-radius: 3px;
+      background: rgba(50,50,50,0.9);
+      color: white;
+    }
+    #chat-input button {
+      margin-left: 5px;
+      padding: 5px 10px;
+      border: none;
+      border-radius: 3px;
+      background: rgba(223,197,136,0.8);
+      color: #1e1e1e;
+      cursor: pointer;
+    }
+    
+    /* 11. Tooltips and Tutorial */
+    #tutorial-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      z-index: 1000;
+      display: none;
+    }
+    .tutorial-step {
+      position: absolute;
+      background: rgba(30,30,30,0.95);
+      border: 2px solid rgba(223,197,136,0.8);
+      border-radius: 8px;
+      padding: 15px;
+      width: 300px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+      z-index: 1001;
+      font-family: Arial, sans-serif;
+      display: none;
+    }
+    .tutorial-step h3 {
+      margin-top: 0;
+      margin-bottom: 10px;
+      color: rgba(223,197,136,0.8);
+    }
+    .tutorial-step p {
+      margin-bottom: 15px;
+      line-height: 1.4;
+    }
+    .tutorial-nav {
+      display: flex;
+      justify-content: space-between;
+    }
+    .tutorial-nav button {
+      padding: 5px 10px;
+      border: none;
+      border-radius: 4px;
+      background: rgba(223,197,136,0.8);
+      color: #1e1e1e;
+      cursor: pointer;
+    }
+    
+    /* 12. Search Function */
+    #search-container {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 300px;
+      display: flex;
+      z-index: 25;
+    }
+    #search-input {
+      flex-grow: 1;
+      padding: 8px 12px;
+      border: 1px solid rgba(223,197,136,0.5);
+      border-right: none;
+      border-radius: 4px 0 0 4px;
+      background: rgba(30,30,30,0.9);
+      color: white;
+    }
+    #search-button {
+      padding: 8px 12px;
+      border: 1px solid rgba(223,197,136,0.5);
+      border-radius: 0 4px 4px 0;
+      background: rgba(223,197,136,0.8);
+      color: #1e1e1e;
+      cursor: pointer;
+    }
+    #search-results {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      width: 100%;
+      max-height: 200px;
+      overflow-y: auto;
+      background: rgba(30,30,30,0.95);
+      border: 1px solid rgba(223,197,136,0.5);
+      border-top: none;
+      border-radius: 0 0 4px 4px;
+      display: none;
+    }
+    .search-result {
+      padding: 8px 12px;
+      cursor: pointer;
+      border-bottom: 1px solid rgba(223,197,136,0.3);
+    }
+    .search-result:last-child {
+      border-bottom: none;
+    }
+    .search-result:hover {
+      background: rgba(223,197,136,0.3);
+    }
+    
+    /* 13. Offline Mode Indicator */
+    #offline-indicator {
+      position: fixed;
+      top: 20px;
+      width: 200px;
+      background: rgba(255,87,51,0.9);
+      color: white;
+      text-align: center;
+      padding: 8px;
+      border-radius: 4px;
+      font-family: Arial, sans-serif;
+      font-size: 0.9em;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 100;
+      display: none;
+    }
+    
+    /* 14. Statistics Panel */
+    #stats-panel {
+      position: fixed;
+      top: 100px;
+      right: 220px;
+      width: 200px;
+      background: rgba(30,30,30,0.9);
+      border: 1px solid rgba(223,197,136,0.5);
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(223,197,136,0.5);
+      z-index: 20;
+      padding: 10px;
+      display: none;
+    }
+    #stats-panel h3 {
+      text-align: center;
+      margin-bottom: 10px;
+      font-size: 1.2em;
+    }
+    .stats-group {
+      margin-bottom: 10px;
+    }
+    .stats-group h4 {
+      font-size: 1em;
+      margin-bottom: 5px;
+      border-bottom: 1px solid rgba(223,197,136,0.3);
+      padding-bottom: 3px;
+    }
+    .stats-item {
+      display: flex;
+      justify-content: space-between;
+      font-family: Arial, sans-serif;
+      font-size: 0.9em;
+      margin: 3px 0;
+    }
+    
+    /* 15. Map Templates Panel */
+    #templates-panel {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 400px;
+      background: rgba(30,30,30,0.95);
+      border: 1px solid rgba(223,197,136,0.8);
+      border-radius: 8px;
+      padding: 20px;
+      z-index: 3000;
+      display: none;
+    }
+    #templates-panel h3 {
+      text-align: center;
+      margin-bottom: 15px;
+      font-size: 1.4em;
+    }
+    #template-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+    .template-item {
+      background: rgba(50,50,50,0.9);
+      border: 1px solid rgba(223,197,136,0.5);
+      border-radius: 5px;
+      padding: 10px;
+      cursor: pointer;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .template-item:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 10px rgba(223,197,136,0.5);
+    }
+    .template-thumb {
+      width: 100%;
+      height: 100px;
+      background: #2c2c2c;
+      margin-bottom: 8px;
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(223,197,136,0.8);
+    }
+    .template-name {
+      text-align: center;
+      font-size: 0.9em;
+    }
+    #templates-panel .template-actions {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+    #templates-panel button {
+      padding: 8px 15px;
+      border: none;
+      border-radius: 4px;
+      background: rgba(223,197,136,0.8);
+      color: #1e1e1e;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -516,6 +1203,27 @@
       <h1>Regnum Solis Research and Development for the Remnant Senate</h1>
     </div>
 
+    <!-- NEW: Undo/Redo History Controls -->
+    <div id="history-controls">
+      <button id="undo-button" title="Undo (Ctrl+Z)">↩</button>
+      <button id="redo-button" title="Redo (Ctrl+Y)">↪</button>
+    </div>
+
+    <!-- NEW: Search Function -->
+    <div id="search-container">
+      <input id="search-input" type="text" placeholder="Search markers..." />
+      <button id="search-button">🔍</button>
+      <div id="search-results"></div>
+    </div>
+
+    <!-- NEW: Offline Indicator -->
+    <div id="offline-indicator">
+      Offline Mode - Changes will sync when online
+    </div>
+
+    <!-- NEW: Measurement Info Display -->
+    <div id="measurement-info"></div>
+
     <!-- Right-side menus container -->
     <div id="right-menus">
       <!-- Map Change Menu -->
@@ -527,6 +1235,8 @@
         <div class="menu-content">
           <button id="tactical-map">Tactical Map</button>
           <button id="style-map">Style Map</button>
+          <!-- NEW: Template Map Button -->
+          <button id="template-map">Templates</button>
         </div>
       </div>
 
@@ -553,6 +1263,11 @@
           <div id="toggle-container">
             <input type="checkbox" id="toggle-marker-text" class="toggle-switch" />
             <label for="toggle-marker-text" id="toggle-marker-text-label">Text on Hover</label>
+          </div>
+          <!-- NEW: Grid Toggle -->
+          <div id="toggle-grid-container" style="margin-top: 10px; display: flex; align-items: center; justify-content: center;">
+            <input type="checkbox" id="toggle-grid" class="toggle-switch" />
+            <label for="toggle-grid" style="margin-left: 10px; font-family: Arial, sans-serif;">Show Grid</label>
           </div>
           <div id="marker-visibility-container">
             <h3>Marker Visibility</h3>
@@ -604,13 +1319,54 @@
               <input type="checkbox" id="toggle-lines" class="toggle-switch" checked />
               <label for="toggle-lines">Lines</label>
             </div>
+            <!-- NEW: Toggle for Text Labels -->
+            <div class="toggle-item">
+              <input type="checkbox" id="toggle-labels" class="toggle-switch" checked />
+              <label for="toggle-labels">Text Labels</label>
+            </div>
           </div>
+        </div>
+      </div>
+
+      <!-- NEW: View Menu -->
+      <div id="view-options" class="menu-container hidden">
+        <div class="menu-header">
+          <span>View Options</span>
+          <button class="menu-toggle">&#9654;</button>
+        </div>
+        <div class="menu-content">
+          <button id="toggle-timeline">Timeline</button>
+          <button id="toggle-statistics">Statistics</button>
+          <button id="toggle-grid-button">Toggle Grid</button>
+          <button id="toggle-layers">Manage Layers</button>
+          <button id="toggle-chat">Chat</button>
+        </div>
+      </div>
+
+      <!-- NEW: Tools Menu -->
+      <div id="extra-tools" class="menu-container hidden">
+        <div class="menu-header">
+          <span>Tools</span>
+          <button class="menu-toggle">&#9654;</button>
+        </div>
+        <div class="menu-content">
+          <button id="measure-distance">Measure Distance</button>
+          <button id="measure-area">Measure Area</button>
+          <button id="select-multiple">Select Multiple</button>
+          <button id="start-tutorial">Tutorial</button>
         </div>
       </div>
     </div>
 
     <!-- Toolbox -->
     <div id="toolbox">
+      <!-- NEW: Selection Tool -->
+      <div class="tool" data-type="select" data-tooltip="Selection Tool">
+        <svg viewBox="0 0 24 24" width="24" height="24">
+          <path d="M7 19V5l13 7-13 7z" fill="none" stroke="white" stroke-width="2"/>
+        </svg>
+      </div>
+      
       <!-- Color Bucket Tool (replaces line tool) -->
       <div class="tool" data-type="color" data-tooltip="Change Color">
         <svg id="paint-bucket-svg" viewBox="0 0 64 64">
@@ -621,18 +1377,37 @@
         </svg>
       </div>
       
-      <!-- New Bezier Tool -->
+      <!-- NEW: Text Tool -->
+      <div class="tool" data-type="text" data-tooltip="Add Text Label">
+        <svg viewBox="0 0 24 24" width="24" height="24">
+          <text x="5" y="18" fill="white" font-family="Arial" font-size="18">T</text>
+        </svg>
+      </div>
+      
+      <!-- Bezier Tool -->
       <div class="tool" data-type="bezier" data-tooltip="Draw Bezier Curve">
         <svg width="50" height="50" viewBox="0 0 50 50">
           <path d="M10 40 Q25 10 40 40" stroke="white" stroke-width="3" fill="none" />
         </svg>
       </div>
-      <!-- New Polygon Tool -->
+      
+      <!-- Polygon Tool -->
       <div class="tool" data-type="polygon" data-tooltip="Draw Polygon">
         <svg width="50" height="50" viewBox="0 0 50 50">
           <polygon points="25,10 10,40 40,40" stroke="white" stroke-width="3" fill="none" />
         </svg>
       </div>
+      
+      <!-- NEW: Group Tool -->
+      <div class="tool" data-type="group" data-tooltip="Group Elements">
+        <svg viewBox="0 0 24 24" width="24" height="24">
+          <rect x="3" y="3" width="7" height="7" fill="none" stroke="white" stroke-width="2"/>
+          <rect x="14" y="3" width="7" height="7" fill="none" stroke="white" stroke-width="2"/>
+          <rect x="3" y="14" width="7" height="7" fill="none" stroke="white" stroke-width="2"/>
+          <rect x="14" y="14" width="7" height="7" fill="none" stroke="white" stroke-width="2"/>
+        </svg>
+      </div>
+      
       <!-- Other existing tools -->
       <div class="tool" draggable="true" data-type="torch" data-tooltip="Place Torch">
         <img src="https://regnumsolis.com/planner/images/torch.svg" alt="Torch" />
@@ -672,9 +1447,183 @@
     <!-- Map Container -->
     <div id="map-container">
       <div id="map-svg-container"></div>
+      <!-- NEW: Grid Overlay Container -->
+      <div id="grid-container"></div>
     </div>
 
-    <!-- New Admin Panel (only for admin users) -->
+    <!-- NEW: Timeline Container -->
+    <div id="timeline-container">
+      <input type="range" id="timeline-slider" min="0" max="100" value="100">
+      <div id="timeline-controls">
+        <button id="timeline-play">Play</button>
+        <button id="timeline-reset">Reset</button>
+        <button id="timeline-record">Record State</button>
+        <button id="timeline-close">Close</button>
+      </div>
+      <div id="timeline-info">Timeline: Current Time - 100%</div>
+    </div>
+
+    <!-- NEW: Text Editor Panel -->
+    <div id="text-editor">
+      <input id="text-content" type="text" placeholder="Enter text...">
+      <select id="text-size">
+        <option value="12">Small</option>
+        <option value="18" selected>Medium</option>
+        <option value="24">Large</option>
+        <option value="36">Extra Large</option>
+      </select>
+      <div class="text-controls">
+        <button id="text-save">Save</button>
+        <button id="text-cancel">Cancel</button>
+      </div>
+    </div>
+
+    <!-- NEW: Selection Panel -->
+    <div id="selection-panel">
+      <h3>Selection</h3>
+      <div class="selection-actions">
+        <button id="selection-color">Change Color</button>
+        <button id="selection-delete">Delete</button>
+        <button id="selection-group">Group</button>
+      </div>
+      <div id="selection-count">0 items selected</div>
+    </div>
+
+    <!-- NEW: Layer Panel -->
+    <div id="layer-panel">
+      <h3>Layers</h3>
+      <div id="layer-list">
+<!-- Layers will be added dynamically -->
+        <div class="layer-item">
+          <span class="layer-visibility">👁️</span>
+          <span class="layer-lock">🔓</span>
+          <span class="layer-item-name">Base Layer</span>
+        </div>
+      </div>
+      <div class="layer-actions">
+        <button id="add-layer">Add Layer</button>
+        <button id="rename-layer">Rename</button>
+        <button id="delete-layer">Delete</button>
+      </div>
+    </div>
+
+    <!-- NEW: Group Panel -->
+    <div id="group-panel">
+      <h3>Groups</h3>
+      <div id="group-list">
+        <!-- Groups will be added dynamically -->
+      </div>
+      <button id="ungroup-selected">Ungroup Selected</button>
+    </div>
+
+    <!-- NEW: Statistics Panel -->
+    <div id="stats-panel">
+      <h3>Statistics</h3>
+      <div class="stats-group">
+        <h4>Markers</h4>
+        <div class="stats-item">
+          <span>Homesteads:</span>
+          <span id="stat-homestead">0</span>
+        </div>
+        <div class="stats-item">
+          <span>Keeps:</span>
+          <span id="stat-keep">0</span>
+        </div>
+        <div class="stats-item">
+          <span>Torches:</span>
+          <span id="stat-torch">0</span>
+        </div>
+        <div class="stats-item">
+          <span>Weapons:</span>
+          <span id="stat-weapons">0</span>
+        </div>
+      </div>
+      <div class="stats-group">
+        <h4>Tactical</h4>
+        <div class="stats-item">
+          <span>Total Area:</span>
+          <span id="stat-area">0 sq units</span>
+        </div>
+        <div class="stats-item">
+          <span>Perimeter:</span>
+          <span id="stat-perimeter">0 units</span>
+        </div>
+        <div class="stats-item">
+          <span>Control Points:</span>
+          <span id="stat-control">0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- NEW: Chat Panel -->
+    <div id="chat-panel">
+      <div id="chat-header">
+        <h3>Team Chat</h3>
+        <button id="chat-toggle">−</button>
+      </div>
+      <div id="chat-messages">
+        <!-- Messages will be added dynamically -->
+        <div class="chat-message received">
+          <div class="chat-user">System</div>
+          <div>Welcome to the planning session!</div>
+        </div>
+      </div>
+      <div id="chat-input">
+        <input type="text" placeholder="Type your message...">
+        <button>Send</button>
+      </div>
+    </div>
+
+    <!-- NEW: Template Panel -->
+    <div id="templates-panel">
+      <h3>Map Templates</h3>
+      <div id="template-grid">
+        <div class="template-item" data-template="defense">
+          <div class="template-thumb">Defensive</div>
+          <div class="template-name">Defensive Position</div>
+        </div>
+        <div class="template-item" data-template="attack">
+          <div class="template-thumb">Attack</div>
+          <div class="template-name">Attack Formation</div>
+        </div>
+        <div class="template-item" data-template="siege">
+          <div class="template-thumb">Siege</div>
+          <div class="template-name">Siege Layout</div>
+        </div>
+        <div class="template-item" data-template="patrol">
+          <div class="template-thumb">Patrol</div>
+          <div class="template-name">Patrol Routes</div>
+        </div>
+      </div>
+      <div class="template-actions">
+        <button id="template-load">Load Template</button>
+        <button id="template-save">Save Current as Template</button>
+        <button id="template-cancel">Cancel</button>
+      </div>
+    </div>
+
+    <!-- NEW: Tutorial System -->
+    <div id="tutorial-overlay">
+      <div class="tutorial-step" data-step="1" style="top: 100px; left: 100px;">
+        <h3>Welcome to SOLIS Planner</h3>
+        <p>This tutorial will guide you through the basic features of the tactical planning tool.</p>
+        <div class="tutorial-nav">
+          <button data-action="skip">Skip Tutorial</button>
+          <button data-action="next">Next</button>
+        </div>
+      </div>
+      <div class="tutorial-step" data-step="2" style="top: 100px; left: 300px;">
+        <h3>Using Markers</h3>
+        <p>Drag markers from the toolbox to place them on the map. Click on markers to delete them.</p>
+        <div class="tutorial-nav">
+          <button data-action="prev">Previous</button>
+          <button data-action="next">Next</button>
+        </div>
+      </div>
+      <!-- More tutorial steps can be added -->
+    </div>
+
+    <!-- Admin Panel -->
     <div id="admin-panel">
       <header>
         <h3>Admin Panel</h3>
@@ -694,10 +1643,12 @@
   <!-- Footer -->
   <footer id="footer-info">
     <p>
-      Build version: v1.10.8rc |
+      Build version: v2.0.0rc |
       Encrypted database connection: <span id="db-connection-status">🟢</span> |
       Status: <span id="user-status">user</span> |
       <a href="https://regnumsolis.com">Return to Home</a>
+      <!-- NEW: Keyboard Shortcuts Hint -->
+      <a id="show-shortcuts">Keyboard Shortcuts</a>
     </p>
   </footer>
 
@@ -715,14 +1666,71 @@
     </div>
   </div>
 
+  <!-- NEW: Keyboard Shortcuts Modal -->
+  <div id="shortcuts-modal" style="display:none; position: fixed; top: 0; left: 0; width:100%; height:100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); align-items: center; justify-content: center; z-index: 2000;">
+    <div style="background: #1e1e1e; border: 1px solid rgba(223,197,136,0.8); padding: 20px; border-radius: 8px; color: white; min-width: 300px; max-width: 600px; max-height: 80vh; overflow-y: auto;">
+      <h3 style="text-align: center; margin-bottom: 15px;">Keyboard Shortcuts</h3>
+      <table style="width: 100%; border-collapse: collapse;">
+        <tr style="border-bottom: 1px solid rgba(223,197,136,0.5);">
+          <th style="text-align: left; padding: 8px;">Action</th>
+          <th style="text-align: right; padding: 8px;">Shortcut</th>
+        </tr>
+        <tr style="border-bottom: 1px solid rgba(223,197,136,0.3);">
+          <td style="padding: 8px;">Undo</td>
+          <td style="text-align: right; padding: 8px;">Ctrl+Z</td>
+        </tr>
+        <tr style="border-bottom: 1px solid rgba(223,197,136,0.3);">
+          <td style="padding: 8px;">Redo</td>
+          <td style="text-align: right; padding: 8px;">Ctrl+Y</td>
+        </tr>
+        <tr style="border-bottom: 1px solid rgba(223,197,136,0.3);">
+          <td style="padding: 8px;">Delete Selected</td>
+          <td style="text-align: right; padding: 8px;">Delete</td>
+        </tr>
+        <tr style="border-bottom: 1px solid rgba(223,197,136,0.3);">
+          <td style="padding: 8px;">Select All</td>
+          <td style="text-align: right; padding: 8px;">Ctrl+A</td>
+        </tr>
+        <tr style="border-bottom: 1px solid rgba(223,197,136,0.3);">
+          <td style="padding: 8px;">Group Selection</td>
+          <td style="text-align: right; padding: 8px;">Ctrl+G</td>
+        </tr>
+        <tr style="border-bottom: 1px solid rgba(223,197,136,0.3);">
+          <td style="padding: 8px;">Ungroup Selection</td>
+          <td style="text-align: right; padding: 8px;">Ctrl+Shift+G</td>
+        </tr>
+        <tr style="border-bottom: 1px solid rgba(223,197,136,0.3);">
+          <td style="padding: 8px;">Save State</td>
+          <td style="text-align: right; padding: 8px;">Ctrl+S</td>
+        </tr>
+        <tr style="border-bottom: 1px solid rgba(223,197,136,0.3);">
+          <td style="padding: 8px;">Toggle Grid</td>
+          <td style="text-align: right; padding: 8px;">G</td>
+        </tr>
+        <tr style="border-bottom: 1px solid rgba(223,197,136,0.3);">
+          <td style="padding: 8px;">Search</td>
+          <td style="text-align: right; padding: 8px;">Ctrl+F</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px;">Help</td>
+          <td style="text-align: right; padding: 8px;">F1</td>
+        </tr>
+      </table>
+      <div style="text-align: center; margin-top: 15px;">
+        <button id="close-shortcuts" style="padding: 8px 15px; background: rgba(223,197,136,0.8); border: none; border-radius: 4px; cursor: pointer;">Close</button>
+      </div>
+    </div>
+  </div>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-    import { getFirestore, collection, addDoc, orderBy, query, onSnapshot, deleteDoc, doc, serverTimestamp, getDocs, getDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, orderBy, query, onSnapshot, deleteDoc, doc, serverTimestamp, getDocs, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 
     // Global selected color for tools. Default is set to "#dfc588"
     let selectedColor = "#dfc588";
 
+    // Firebase configuration
     const firebaseConfig = {
       apiKey: "AIzaSyAIws_FKV_CTaiHdnwc8WigDqRkyUCOjtE",
       authDomain: "regnum-d3ddf.firebaseapp.com",
@@ -737,7 +1745,7 @@
     const db = getFirestore(app);
     const auth = getAuth(app);
 
-    let panZoomInstance, svgRoot, panLayer, lineLayer, markerLayer;
+    let panZoomInstance, svgRoot, panLayer, lineLayer, markerLayer, textLayer, gridLayer, groupLayer;
     let isMapReady = false;
     let activeTool = null;
     
@@ -749,29 +1757,85 @@
     
     // Variable to prevent duplicate delete confirmations
     let isDeleteInProgress = false;
-
+    
+    // NEW: History for undo/redo system
+    let historyStack = [];
+    let historyIndex = -1;
+    let isUndoRedoAction = false;
+    
+    // NEW: Selection system variables
+    let selectedElements = new Set();
+    let isSelecting = false;
+    let selectionStartX, selectionStartY;
+    let selectionArea = null;
+    
+    // NEW: Layer system variables
+    let layers = [{
+      id: 'base-layer',
+      name: 'Base Layer',
+      visible: true,
+      locked: false,
+      elements: []
+    }];
+    let activeLayerId = 'base-layer';
+    
+    // NEW: Group system variables
+    let groups = [];
+    
+    // NEW: Measurement system variables
+    let measurePoints = [];
+    let measurementPath = null;
+    let isMeasuringDistance = false;
+    let isMeasuringArea = false;
+    
+    // NEW: Timeline variables
+    let timelineStates = [];
+    let currentTimelineIndex = 0;
+    
+    // NEW: Text tool variables
+    let textEditorActive = false;
+    let textEditPosition = { x: 0, y: 0 };
+    
+    // NEW: Offline mode variables
+    let isOnline = navigator.onLine;
+    let offlineChanges = [];
+    
+    // NEW: Collaborative variables
+    let currentUsers = {};
+    let myUserId = '';
+    
     // Global visibility state
     const visibilityState = {
       homestead: true, keep: true, torch: true, cave: true,
       sword: true, spear: true, bow: true, beacon: true,
-      camp: true, catapult: true, ram: true, lines: true
+      camp: true, catapult: true, ram: true, lines: true,
+      labels: true // NEW: text label toggle
     };
 
+    // Update marker visibility functions
     function updateMarkerVisibility() {
       markerLayer.querySelectorAll("[data-marker='true']").forEach(markerEl => {
         const type = markerEl.getAttribute("data-type");
         markerEl.style.display = visibilityState[type] ? "" : "none";
       });
     }
+    
     function updateLineVisibility() {
       lineLayer.style.display = visibilityState.lines ? "" : "none";
     }
+    
+    // NEW: Update text label visibility
+    function updateLabelVisibility() {
+      textLayer.style.display = visibilityState.labels ? "" : "none";
+    }
 
+    // Loading animation
     let loadingInterval;
     let currentProgress = 0;
     const loadingOverlay = document.getElementById("loading-overlay");
     const loadingText = document.getElementById("loading-text");
 
+    // Initialize the application once DOM is ready
     document.addEventListener("DOMContentLoaded", () => {
       setupLogin();
       setupToolbox();
@@ -779,7 +1843,26 @@
       setupMenuToggles();
       setupAdminPanelControls();
       setupColorPicker();
+      
+      // NEW: Set up enhanced features
+      setupUndoRedo();
+      setupSelection();
+      setupLayers();
+      setupGroups();
+      setupMeasurementTools();
+      setupTimelineTools();
+      setupTextTool();
+      setupGridSystem();
+      setupSearchFunction();
+      setupStatisticsPanel();
+      setupChatSystem();
+      setupTutorial();
+      setupKeyboardShortcuts();
+      setupOfflineDetection();
+      setupCollaborativeFeatures();
+      setupTemplates();
 
+      // Toggle for text hover behavior
       const toggleMarkerTextCheckbox = document.getElementById("toggle-marker-text");
       const toggleLabel = document.getElementById("toggle-marker-text-label");
       toggleMarkerTextCheckbox.addEventListener("change", function() {
@@ -792,13 +1875,18 @@
         }
       });
 
+      // Set up visibility state toggle handlers
       Object.keys(visibilityState).forEach(key => {
         const checkbox = document.getElementById(`toggle-${key}`);
         if (checkbox) {
           checkbox.addEventListener("change", function() {
             visibilityState[key] = this.checked;
             if (key === "lines") updateLineVisibility();
+            else if (key === "labels") updateLabelVisibility();
             else updateMarkerVisibility();
+            
+            // NEW: Update statistics when visibility changes
+            updateStatistics();
           });
         }
       });
@@ -829,8 +1917,2068 @@
         if (panZoomInstance && isMapReady) {
           panZoomInstance.resetZoom();
         }
+        
+        // NEW: Update grid if it's visible
+        if (document.getElementById("grid-container").style.display === "block") {
+          updateGrid();
+        }
       });
     });
+    
+    // NEW: Set up Undo/Redo functionality
+    function setupUndoRedo() {
+      document.getElementById("undo-button").addEventListener("click", performUndo);
+      document.getElementById("redo-button").addEventListener("click", performRedo);
+      
+      // Keyboard shortcuts
+      document.addEventListener("keydown", (e) => {
+        if (e.ctrlKey && e.key === "z") {
+          e.preventDefault();
+          performUndo();
+        } else if (e.ctrlKey && e.key === "y") {
+          e.preventDefault();
+          performRedo();
+        }
+      });
+      
+      // Update button states
+      updateUndoRedoButtons();
+    }
+    
+    function performUndo() {
+      if (historyIndex > 0) {
+        historyIndex--;
+        isUndoRedoAction = true;
+        applyHistoryState(historyStack[historyIndex]);
+        updateUndoRedoButtons();
+      }
+    }
+    
+    function performRedo() {
+      if (historyIndex < historyStack.length - 1) {
+        historyIndex++;
+        isUndoRedoAction = true;
+        applyHistoryState(historyStack[historyIndex]);
+        updateUndoRedoButtons();
+      }
+    }
+    
+    function addToHistory(state) {
+      // If we're in the middle of the stack, remove everything after current index
+      if (historyIndex < historyStack.length - 1) {
+        historyStack = historyStack.slice(0, historyIndex + 1);
+      }
+      
+      historyStack.push(state);
+      historyIndex = historyStack.length - 1;
+      updateUndoRedoButtons();
+    }
+    
+    function applyHistoryState(state) {
+      // Implementation depends on your state structure
+      // This is a placeholder for the actual implementation
+      console.log("Applying state:", state);
+    }
+    
+    function updateUndoRedoButtons() {
+      document.getElementById("undo-button").disabled = historyIndex <= 0;
+      document.getElementById("redo-button").disabled = historyIndex >= historyStack.length - 1;
+    }
+    
+    // NEW: Set up Selection System
+    function setupSelection() {
+      document.getElementById("select-multiple").addEventListener("click", () => {
+        activeTool = "select";
+        document.querySelectorAll("#toolbox .tool").forEach(t => t.style.borderColor = "rgba(223,197,136,0.5)");
+        document.querySelector("#toolbox .tool[data-type='select']").style.borderColor = "red";
+      });
+      
+      document.getElementById("selection-color").addEventListener("click", () => {
+        openColorPicker(true); // true indicates we're changing selected elements' color
+      });
+      
+      document.getElementById("selection-delete").addEventListener("click", deleteSelectedElements);
+      document.getElementById("selection-group").addEventListener("click", groupSelectedElements);
+      
+      // Keyboard shortcut for delete
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Delete" && selectedElements.size > 0) {
+          deleteSelectedElements();
+        }
+      });
+    }
+    
+    function startSelection(e) {
+      if (activeTool !== "select") return;
+      
+      isSelecting = true;
+      const pt = getSVGPoint(e);
+      selectionStartX = pt.x;
+      selectionStartY = pt.y;
+      
+      // Create selection area
+      if (!selectionArea) {
+        selectionArea = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        selectionArea.setAttribute("class", "selection-area");
+        selectionArea.setAttribute("x", selectionStartX);
+        selectionArea.setAttribute("y", selectionStartY);
+        selectionArea.setAttribute("width", 0);
+        selectionArea.setAttribute("height", 0);
+        panLayer.appendChild(selectionArea);
+      }
+    }
+    
+    function updateSelection(e) {
+      if (!isSelecting || activeTool !== "select") return;
+      
+      const pt = getSVGPoint(e);
+      const x = Math.min(pt.x, selectionStartX);
+      const y = Math.min(pt.y, selectionStartY);
+      const width = Math.abs(pt.x - selectionStartX);
+      const height = Math.abs(pt.y - selectionStartY);
+      
+      selectionArea.setAttribute("x", x);
+      selectionArea.setAttribute("y", y);
+      selectionArea.setAttribute("width", width);
+      selectionArea.setAttribute("height", height);
+    }
+    
+    function endSelection() {
+      if (!isSelecting) return;
+      
+      isSelecting = false;
+      
+      // Get elements inside selection area
+      const selectionBox = selectionArea.getBBox();
+      
+      // Check which elements are inside the selection box
+      // This is a simplified example - you'll need to adapt this to your element structure
+      let elementsInSelection = [];
+      
+      // Check markers
+      markerLayer.querySelectorAll("[data-marker='true']").forEach(marker => {
+        const markerBBox = marker.getBBox();
+        if (boxesIntersect(selectionBox, markerBBox)) {
+          elementsInSelection.push(marker);
+        }
+      });
+      
+      // Check lines, beziers, polygons
+      lineLayer.querySelectorAll("g, polygon").forEach(element => {
+        const elementBBox = element.getBBox();
+        if (boxesIntersect(selectionBox, elementBBox)) {
+          elementsInSelection.push(element);
+        }
+      });
+      
+      // Check text labels
+      textLayer.querySelectorAll("g").forEach(element => {
+        const elementBBox = element.getBBox();
+        if (boxesIntersect(selectionBox, elementBBox)) {
+          elementsInSelection.push(element);
+        }
+      });
+      
+      // Update selection
+      if (elementsInSelection.length > 0) {
+        // If shift is not pressed, clear previous selection
+        if (!e.shiftKey) {
+          clearSelection();
+        }
+        
+        // Add new elements to selection
+        elementsInSelection.forEach(element => {
+          addToSelection(element);
+        });
+        
+        showSelectionPanel();
+      }
+      
+      // Remove selection area
+      if (selectionArea) {
+        selectionArea.remove();
+        selectionArea = null;
+      }
+    }
+    
+    function boxesIntersect(a, b) {
+      return (
+        a.x <= b.x + b.width &&
+        a.x + a.width >= b.x &&
+        a.y <= b.y + b.height &&
+        a.y + a.height >= b.y
+      );
+    }
+    
+    function addToSelection(element) {
+      selectedElements.add(element);
+      element.classList.add("selected");
+      updateSelectionPanel();
+    }
+    
+    function removeFromSelection(element) {
+      selectedElements.delete(element);
+      element.classList.remove("selected");
+      updateSelectionPanel();
+    }
+    
+    function clearSelection() {
+      selectedElements.forEach(element => {
+        element.classList.remove("selected");
+      });
+      selectedElements.clear();
+      updateSelectionPanel();
+    }
+    
+    function updateSelectionPanel() {
+      document.getElementById("selection-count").textContent = `${selectedElements.size} items selected`;
+      
+      if (selectedElements.size === 0) {
+        document.getElementById("selection-panel").style.display = "none";
+      } else {
+        document.getElementById("selection-panel").style.display = "block";
+      }
+    }
+    
+    function showSelectionPanel() {
+      document.getElementById("selection-panel").style.display = "block";
+      updateSelectionPanel();
+    }
+    
+    function deleteSelectedElements() {
+      if (selectedElements.size === 0) return;
+      
+      // Create a history entry before making changes
+      createHistoryEntry();
+      
+      const promises = [];
+      
+      selectedElements.forEach(async (element) => {
+        const id = element.dataset.id;
+        const type = element.dataset.type || element.tagName;
+        
+        let collectionName;
+        if (element.dataset.marker === "true") collectionName = "markers";
+        else if (element.classList.contains("text-label")) collectionName = "textLabels";
+        else if (type === "polygon") collectionName = "polygons";
+        else if (element.dataset.bezier === "true") collectionName = "bezierCurves";
+        else if (element.classList.contains("line-group")) collectionName = "lines";
+        else if (element.classList.contains("group-container")) collectionName = "groups";
+        
+        if (collectionName && id) {
+          promises.push(deleteDoc(doc(db, collectionName, id)).then(() => {
+            recordAuditLog(`delete_${collectionName.slice(0, -1)}`, { id });
+            element.remove();
+          }));
+        }
+      });
+      
+      Promise.all(promises).then(() => {
+        clearSelection();
+        updateStatistics();
+      }).catch(error => {
+        console.error("Error deleting elements:", error);
+      });
+    }
+    
+    function groupSelectedElements() {
+      if (selectedElements.size < 2) return;
+      
+      // Create a history entry before making changes
+      createHistoryEntry();
+      
+      // Get bounding box that contains all selected elements
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      
+      selectedElements.forEach(element => {
+        const bbox = element.getBBox();
+        minX = Math.min(minX, bbox.x);
+        minY = Math.min(minY, bbox.y);
+        maxX = Math.max(maxX, bbox.x + bbox.width);
+        maxY = Math.max(maxY, bbox.y + bbox.height);
+      });
+      
+      // Create a group container
+      const groupId = `group-${Date.now()}`;
+      const groupContainer = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      groupContainer.setAttribute("x", minX - 10);
+      groupContainer.setAttribute("y", minY - 10);
+      groupContainer.setAttribute("width", maxX - minX + 20);
+      groupContainer.setAttribute("height", maxY - minY + 20);
+      groupContainer.setAttribute("class", "group-container");
+      groupContainer.dataset.id = groupId;
+      
+      // Store references to the group members
+      const memberIds = [];
+      selectedElements.forEach(element => {
+        memberIds.push(element.dataset.id);
+      });
+      
+      // Add to Firestore
+      addDoc(collection(db, "groups"), {
+        x: minX - 10,
+        y: minY - 10,
+        width: maxX - minX + 20,
+        height: maxY - minY + 20,
+        members: memberIds,
+        timestamp: serverTimestamp(),
+        owner: auth.currentUser.uid
+      }).then(docRef => {
+        groupContainer.dataset.id = docRef.id;
+        recordAuditLog("create_group", { groupId: docRef.id });
+        
+        // Add the group to the DOM
+        groupLayer.appendChild(groupContainer);
+        
+        // Add the group to our groups array
+        groups.push({
+          id: docRef.id,
+          members: memberIds
+        });
+        
+        // Update the UI and clear selection
+        updateGroupPanel();
+        clearSelection();
+      }).catch(error => {
+        console.error("Error creating group:", error);
+      });
+    }
+    
+  // NEW: Set up Layer Management System
+    function setupLayers() {
+      document.getElementById("toggle-layers").addEventListener("click", () => {
+        document.getElementById("layer-panel").style.display = "block";
+      });
+      
+      document.getElementById("add-layer").addEventListener("click", createNewLayer);
+      document.getElementById("rename-layer").addEventListener("click", renameActiveLayer);
+      document.getElementById("delete-layer").addEventListener("click", deleteActiveLayer);
+      
+      updateLayerPanel();
+    }
+    
+    function createNewLayer() {
+      const layerId = `layer-${Date.now()}`;
+      const layerName = `Layer ${layers.length + 1}`;
+      
+      layers.push({
+        id: layerId,
+        name: layerName,
+        visible: true,
+        locked: false,
+        elements: []
+      });
+      
+      // Create a new SVG group for this layer
+      const layerGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      layerGroup.id = layerId;
+      panLayer.appendChild(layerGroup);
+      
+      // Update Firestore
+      addDoc(collection(db, "layers"), {
+        id: layerId,
+        name: layerName,
+        visible: true,
+        locked: false,
+        timestamp: serverTimestamp(),
+        owner: auth.currentUser.uid
+      }).then(() => {
+        recordAuditLog("create_layer", { layerId });
+        updateLayerPanel();
+      }).catch(error => {
+        console.error("Error creating layer:", error);
+      });
+    }
+    
+    function setActiveLayer(layerId) {
+      activeLayerId = layerId;
+      
+      // Update the UI to reflect the active layer
+      const layerItems = document.querySelectorAll(".layer-item");
+      layerItems.forEach(item => {
+        if (item.dataset.id === layerId) {
+          item.classList.add("active-layer");
+        } else {
+          item.classList.remove("active-layer");
+        }
+      });
+    }
+    
+    function toggleLayerVisibility(layerId) {
+      const layer = layers.find(l => l.id === layerId);
+      if (layer) {
+        layer.visible = !layer.visible;
+        
+        // Update the SVG
+        const layerGroup = document.getElementById(layerId);
+        if (layerGroup) {
+          layerGroup.style.display = layer.visible ? "block" : "none";
+        }
+        
+        // Update Firestore
+        updateLayerInFirestore(layer);
+        
+        // Update the UI
+        updateLayerPanel();
+      }
+    }
+    
+    function toggleLayerLock(layerId) {
+      const layer = layers.find(l => l.id === layerId);
+      if (layer) {
+        layer.locked = !layer.locked;
+        
+        // Update Firestore
+        updateLayerInFirestore(layer);
+        
+        // Update the UI
+        updateLayerPanel();
+      }
+    }
+    
+    function updateLayerInFirestore(layer) {
+      // Get the document reference
+      const layerDocRef = doc(db, "layers", layer.id);
+      
+      // Update the document
+      updateDoc(layerDocRef, {
+        visible: layer.visible,
+        locked: layer.locked,
+        name: layer.name
+      }).catch(error => {
+        console.error("Error updating layer:", error);
+      });
+    }
+    
+    function renameActiveLayer() {
+      const layer = layers.find(l => l.id === activeLayerId);
+      if (layer) {
+        customPrompt("Enter new layer name:", layer.name).then(newName => {
+          if (newName && newName.trim() !== "") {
+            layer.name = newName.trim();
+            updateLayerInFirestore(layer);
+            updateLayerPanel();
+          }
+        });
+      }
+    }
+    
+    function deleteActiveLayer() {
+      if (activeLayerId === 'base-layer') {
+        alert("Cannot delete the base layer.");
+        return;
+      }
+      
+      if (layers.length <= 1) {
+        alert("Cannot delete the only layer.");
+        return;
+      }
+      
+      if (confirm("Delete this layer? All elements on this layer will be deleted.")) {
+        // Delete from Firestore
+        const layerDoc = doc(db, "layers", activeLayerId);
+        deleteDoc(layerDoc).then(() => {
+          // Remove elements belonging to this layer
+          const elements = document.querySelectorAll(`[data-layer="${activeLayerId}"]`);
+          elements.forEach(element => {
+            const id = element.dataset.id;
+            const type = element.dataset.type || element.tagName;
+            
+            let collectionName;
+            if (element.dataset.marker === "true") collectionName = "markers";
+            else if (element.classList.contains("text-label")) collectionName = "textLabels";
+            else if (type === "polygon") collectionName = "polygons";
+            else if (element.dataset.bezier === "true") collectionName = "bezierCurves";
+            else if (element.classList.contains("line-group")) collectionName = "lines";
+            
+            if (collectionName && id) {
+              deleteDoc(doc(db, collectionName, id));
+            }
+            
+            element.remove();
+          });
+          
+          // Remove the layer from our array
+          layers = layers.filter(l => l.id !== activeLayerId);
+          
+          // Set a new active layer
+          setActiveLayer(layers[0].id);
+          
+          // Update the UI
+          updateLayerPanel();
+          
+          // Remove the SVG group for this layer
+          const layerGroup = document.getElementById(activeLayerId);
+          if (layerGroup) {
+            layerGroup.remove();
+          }
+          
+          recordAuditLog("delete_layer", { layerId: activeLayerId });
+        }).catch(error => {
+          console.error("Error deleting layer:", error);
+        });
+      }
+    }
+    
+    function updateLayerPanel() {
+      const layerList = document.getElementById("layer-list");
+      layerList.innerHTML = "";
+      
+      layers.forEach(layer => {
+        const layerItem = document.createElement("div");
+        layerItem.className = "layer-item";
+        layerItem.dataset.id = layer.id;
+        if (layer.id === activeLayerId) {
+          layerItem.classList.add("active-layer");
+        }
+        
+        const visibilityIcon = document.createElement("span");
+        visibilityIcon.className = "layer-visibility";
+        visibilityIcon.textContent = layer.visible ? "👁️" : "👁️‍🗨️";
+        visibilityIcon.addEventListener("click", () => toggleLayerVisibility(layer.id));
+        
+        const lockIcon = document.createElement("span");
+        lockIcon.className = "layer-lock";
+        lockIcon.textContent = layer.locked ? "🔒" : "🔓";
+        lockIcon.addEventListener("click", () => toggleLayerLock(layer.id));
+        
+        const nameSpan = document.createElement("span");
+        nameSpan.className = "layer-item-name";
+        nameSpan.textContent = layer.name;
+        nameSpan.addEventListener("click", () => setActiveLayer(layer.id));
+        
+        layerItem.appendChild(visibilityIcon);
+        layerItem.appendChild(lockIcon);
+        layerItem.appendChild(nameSpan);
+        
+        layerList.appendChild(layerItem);
+      });
+    }
+    
+    // NEW: Set up Group Management
+    function setupGroups() {
+      document.getElementById("ungroup-selected").addEventListener("click", ungroupSelected);
+      updateGroupPanel();
+    }
+    
+    function updateGroupPanel() {
+      const groupList = document.getElementById("group-list");
+      groupList.innerHTML = "";
+      
+      groups.forEach(group => {
+        const groupItem = document.createElement("div");
+        groupItem.className = "group-item";
+        groupItem.dataset.id = group.id;
+        
+        const visibilityIcon = document.createElement("span");
+        visibilityIcon.className = "group-visibility";
+        visibilityIcon.textContent = "👁️";
+        visibilityIcon.addEventListener("click", () => toggleGroupVisibility(group.id));
+        
+        const nameSpan = document.createElement("span");
+        nameSpan.className = "group-item-name";
+        nameSpan.textContent = `Group ${group.id.substring(0, 6)}`;
+        nameSpan.addEventListener("click", () => selectGroup(group.id));
+        
+        const deleteIcon = document.createElement("span");
+        deleteIcon.className = "group-delete";
+        deleteIcon.textContent = "×";
+        deleteIcon.addEventListener("click", () => deleteGroup(group.id));
+        
+        groupItem.appendChild(visibilityIcon);
+        groupItem.appendChild(nameSpan);
+        groupItem.appendChild(deleteIcon);
+        
+        groupList.appendChild(groupItem);
+      });
+      
+      // Show/hide the panel based on whether there are groups
+      document.getElementById("group-panel").style.display = groups.length > 0 ? "block" : "none";
+    }
+    
+    function toggleGroupVisibility(groupId) {
+      const group = document.querySelector(`.group-container[data-id="${groupId}"]`);
+      if (group) {
+        const isVisible = group.style.display !== "none";
+        group.style.display = isVisible ? "none" : "block";
+        
+        // Also toggle visibility of group members
+        const groupData = groups.find(g => g.id === groupId);
+        if (groupData) {
+          groupData.members.forEach(memberId => {
+            const member = document.querySelector(`[data-id="${memberId}"]`);
+            if (member) {
+              member.style.display = isVisible ? "none" : "block";
+            }
+          });
+        }
+      }
+    }
+    
+    function selectGroup(groupId) {
+      clearSelection();
+      
+      const groupData = groups.find(g => g.id === groupId);
+      if (groupData) {
+        groupData.members.forEach(memberId => {
+          const member = document.querySelector(`[data-id="${memberId}"]`);
+          if (member) {
+            addToSelection(member);
+          }
+        });
+      }
+      
+      updateSelectionPanel();
+    }
+    
+    function deleteGroup(groupId) {
+      if (confirm("Delete this group?")) {
+        // Delete from Firestore
+        deleteDoc(doc(db, "groups", groupId)).then(() => {
+          // Remove the group from the DOM
+          const group = document.querySelector(`.group-container[data-id="${groupId}"]`);
+          if (group) {
+            group.remove();
+          }
+          
+          // Remove from our groups array
+          groups = groups.filter(g => g.id !== groupId);
+          
+          updateGroupPanel();
+          recordAuditLog("delete_group", { groupId });
+        }).catch(error => {
+          console.error("Error deleting group:", error);
+        });
+      }
+    }
+    
+    function ungroupSelected() {
+      const selectedGroups = [];
+      selectedElements.forEach(element => {
+        if (element.classList.contains("group-container")) {
+          selectedGroups.push(element.dataset.id);
+        }
+      });
+      
+      if (selectedGroups.length === 0) return;
+      
+      // Create a history entry
+      createHistoryEntry();
+      
+      selectedGroups.forEach(groupId => {
+        deleteGroup(groupId);
+      });
+    }
+    
+    // NEW: Set up Measurement Tools
+    function setupMeasurementTools() {
+      document.getElementById("measure-distance").addEventListener("click", () => {
+        activeTool = "measure-distance";
+        isMeasuringDistance = true;
+        isMeasuringArea = false;
+        measurePoints = [];
+        
+        // Show the measurement info panel
+        document.getElementById("measurement-info").style.display = "block";
+        document.getElementById("measurement-info").textContent = "Click to place measurement points.";
+        
+        document.querySelectorAll("#toolbox .tool").forEach(t => t.style.borderColor = "rgba(223,197,136,0.5)");
+      });
+      
+      document.getElementById("measure-area").addEventListener("click", () => {
+        activeTool = "measure-area";
+        isMeasuringArea = true;
+        isMeasuringDistance = false;
+        measurePoints = [];
+        
+        // Show the measurement info panel
+        document.getElementById("measurement-info").style.display = "block";
+        document.getElementById("measurement-info").textContent = "Click to place points for area measurement. Right-click to finish.";
+        
+        document.querySelectorAll("#toolbox .tool").forEach(t => t.style.borderColor = "rgba(223,197,136,0.5)");
+      });
+    }
+    
+    function addMeasurementPoint(x, y) {
+      measurePoints.push({ x, y });
+      
+      // Clear previous measurement paths
+      if (measurementPath) {
+        measurementPath.remove();
+        measurementPath = null;
+      }
+      
+      if (isMeasuringDistance) {
+        if (measurePoints.length === 2) {
+          // Create line for distance measurement
+          measurementPath = document.createElementNS("http://www.w3.org/2000/svg", "line");
+          measurementPath.setAttribute("x1", measurePoints[0].x);
+          measurementPath.setAttribute("y1", measurePoints[0].y);
+          measurementPath.setAttribute("x2", measurePoints[1].x);
+          measurementPath.setAttribute("y2", measurePoints[1].y);
+          measurementPath.setAttribute("class", "measurement-line");
+          
+          // Add to the line layer
+          lineLayer.appendChild(measurementPath);
+          
+          // Calculate and display distance
+          const distance = calculateDistance(measurePoints[0], measurePoints[1]);
+          document.getElementById("measurement-info").textContent = `Distance: ${distance.toFixed(2)} units`;
+          
+          // Reset for another measurement
+          setTimeout(() => {
+            measurePoints = [];
+          }, 100);
+        }
+      } else if (isMeasuringArea) {
+        if (measurePoints.length >= 3) {
+          // Create polygon for area measurement
+          measurementPath = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+          const pointsStr = measurePoints.map(p => `${p.x},${p.y}`).join(" ");
+          measurementPath.setAttribute("points", pointsStr);
+          measurementPath.setAttribute("class", "measurement-area");
+          
+          // Add to the line layer
+          lineLayer.appendChild(measurementPath);
+          
+          // Calculate and display area
+          const area = calculatePolygonArea(measurePoints);
+          document.getElementById("measurement-info").textContent = `Area: ${area.toFixed(2)} square units`;
+        }
+      }
+    }
+    
+    function finishAreaMeasurement() {
+      if (isMeasuringArea && measurePoints.length >= 3) {
+        // Reset the tool
+        isMeasuringArea = false;
+        activeTool = null;
+        
+        // Keep the measurement display for a while
+        setTimeout(() => {
+          if (measurementPath) {
+            measurementPath.remove();
+            measurementPath = null;
+          }
+          document.getElementById("measurement-info").style.display = "none";
+        }, 5000);
+      }
+    }
+    
+    function calculateDistance(p1, p2) {
+      const dx = p2.x - p1.x;
+      const dy = p2.y - p1.y;
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+    
+    function calculatePolygonArea(points) {
+      let area = 0;
+      for (let i = 0; i < points.length; i++) {
+        const j = (i + 1) % points.length;
+        area += points[i].x * points[j].y;
+        area -= points[j].x * points[i].y;
+      }
+      return Math.abs(area / 2);
+    }
+    
+    // NEW: Set up Timeline Tools
+    function setupTimelineTools() {
+      document.getElementById("toggle-timeline").addEventListener("click", () => {
+        document.getElementById("timeline-container").style.display = "block";
+      });
+      
+      document.getElementById("timeline-close").addEventListener("click", () => {
+        document.getElementById("timeline-container").style.display = "none";
+      });
+      
+      document.getElementById("timeline-play").addEventListener("click", playTimeline);
+      document.getElementById("timeline-reset").addEventListener("click", resetTimeline);
+      document.getElementById("timeline-record").addEventListener("click", recordTimelineState);
+      
+      const timelineSlider = document.getElementById("timeline-slider");
+      timelineSlider.addEventListener("input", () => {
+        const value = timelineSlider.value;
+        document.getElementById("timeline-info").textContent = `Timeline: Current Time - ${value}%`;
+        
+        // Apply the timeline state based on the slider value
+        applyTimelineState(value);
+      });
+    }
+    
+    function recordTimelineState() {
+      // Create a snapshot of the current state
+      const currentState = captureState();
+      
+      // Add to timeline states
+      timelineStates.push(currentState);
+      currentTimelineIndex = timelineStates.length - 1;
+      
+      // Update the timeline info
+      document.getElementById("timeline-info").textContent = `Timeline: State ${currentTimelineIndex + 1} recorded`;
+      
+      // Record to Firestore
+      addDoc(collection(db, "timelineStates"), {
+        state: currentState,
+        timestamp: serverTimestamp(),
+        owner: auth.currentUser.uid
+      }).then(docRef => {
+        recordAuditLog("record_timeline", { stateId: docRef.id });
+      }).catch(error => {
+        console.error("Error recording timeline state:", error);
+      });
+    }
+    
+    function captureState() {
+      // This is a simplified example - you'll need to adapt this to your state structure
+      const state = {
+        markers: [],
+        lines: [],
+        beziers: [],
+        polygons: [],
+        texts: []
+      };
+      
+      // Capture markers
+      markerLayer.querySelectorAll("[data-marker='true']").forEach(marker => {
+        state.markers.push({
+          id: marker.dataset.id,
+          type: marker.dataset.type,
+          x: marker.getBBox().x + marker.getBBox().width / 2,
+          y: marker.getBBox().y + marker.getBBox().height / 2,
+          text: marker.querySelector("text")?.textContent || ""
+        });
+      });
+      
+      // Capture lines, beziers, polygons, texts
+      // Add similar code for each type of element
+      
+      return state;
+    }
+    
+    function playTimeline() {
+      if (timelineStates.length < 2) {
+        alert("Need at least 2 timeline states to play.");
+        return;
+      }
+      
+      const timelineSlider = document.getElementById("timeline-slider");
+      const playButton = document.getElementById("timeline-play");
+      
+      if (playButton.textContent === "Play") {
+        playButton.textContent = "Pause";
+        
+        // Start from beginning
+        timelineSlider.value = 0;
+        
+        // Animate through timeline
+        let step = 1;
+        const playInterval = setInterval(() => {
+          timelineSlider.value = parseInt(timelineSlider.value) + step;
+          document.getElementById("timeline-info").textContent = `Timeline: Current Time - ${timelineSlider.value}%`;
+          
+          applyTimelineState(timelineSlider.value);
+          
+          if (timelineSlider.value >= 100 || timelineSlider.value <= 0) {
+            clearInterval(playInterval);
+            playButton.textContent = "Play";
+          }
+        }, 50);
+        
+        playButton.dataset.interval = playInterval;
+      } else {
+        // Pause
+        clearInterval(playButton.dataset.interval);
+        playButton.textContent = "Play";
+      }
+    }
+    
+    function resetTimeline() {
+      const timelineSlider = document.getElementById("timeline-slider");
+      timelineSlider.value = 100;
+      document.getElementById("timeline-info").textContent = `Timeline: Current Time - 100%`;
+      
+      // Apply the latest state
+      applyTimelineState(100);
+    }
+    
+    function applyTimelineState(value) {
+      if (timelineStates.length === 0) return;
+      
+      // Calculate which state to show based on slider value
+      const stateIndex = Math.min(Math.floor(value / 100 * timelineStates.length), timelineStates.length - 1);
+      const state = timelineStates[stateIndex];
+      
+      // Implementation depends on your state structure
+      // This is a placeholder for the actual implementation
+      console.log("Applying timeline state:", state);
+    }
+    
+    // NEW: Set up Text Tool
+    function setupTextTool() {
+      document.querySelector("#toolbox .tool[data-type='text']").addEventListener("click", () => {
+        activeTool = "text";
+        document.querySelectorAll("#toolbox .tool").forEach(t => t.style.borderColor = "rgba(223,197,136,0.5)");
+        document.querySelector("#toolbox .tool[data-type='text']").style.borderColor = "red";
+      });
+      
+      document.getElementById("text-save").addEventListener("click", saveText);
+      document.getElementById("text-cancel").addEventListener("click", cancelText);
+    }
+    
+    function showTextEditor(x, y) {
+      const textEditor = document.getElementById("text-editor");
+      textEditor.style.display = "block";
+      document.getElementById("text-content").value = "";
+      document.getElementById("text-content").focus();
+      
+      textEditPosition = { x, y };
+      textEditorActive = true;
+    }
+    
+    function saveText() {
+      const textContent = document.getElementById("text-content").value.trim();
+      if (!textContent) {
+        cancelText();
+        return;
+      }
+      
+      const fontSize = document.getElementById("text-size").value;
+      
+      // Create a text element
+      const textGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      textGroup.classList.add("text-label");
+      textGroup.dataset.layer = activeLayerId;
+      
+      const textEl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      textEl.textContent = textContent;
+      textEl.setAttribute("x", textEditPosition.x);
+      textEl.setAttribute("y", textEditPosition.y);
+      textEl.setAttribute("font-size", fontSize);
+      textEl.setAttribute("fill", selectedColor);
+      textEl.setAttribute("text-anchor", "middle");
+      textEl.style.fontFamily = "'Bebas Neue', sans-serif";
+      
+      textGroup.appendChild(textEl);
+      textLayer.appendChild(textGroup);
+      
+      // Add to Firestore
+      addDoc(collection(db, "textLabels"), {
+        text: textContent,
+        x: textEditPosition.x,
+        y: textEditPosition.y,
+        fontSize: fontSize,
+        color: selectedColor,
+        layerId: activeLayerId,
+        timestamp: serverTimestamp(),
+        owner: auth.currentUser.uid
+      }).then(docRef => {
+        textGroup.dataset.id = docRef.id;
+        recordAuditLog("add_text", { textId: docRef.id });
+        
+        // Make text elements selectable
+        textGroup.classList.add("selectable");
+        textGroup.addEventListener("click", (e) => {
+          if (activeTool === "select") {
+            e.stopPropagation();
+            
+            // Toggle selection
+            if (selectedElements.has(textGroup)) {
+              removeFromSelection(textGroup);
+            } else {
+              // If shift is not pressed, clear previous selection
+              if (!e.shiftKey) {
+                clearSelection();
+              }
+              
+              addToSelection(textGroup);
+            }
+          } else if (!activeTool) {
+            if (confirm("Delete this text?")) {
+              deleteDoc(doc(db, "textLabels", docRef.id));
+              textGroup.remove();
+              recordAuditLog("delete_text", { textId: docRef.id });
+            }
+          }
+        });
+        
+        // Create history entry
+        createHistoryEntry();
+      }).catch(error => {
+        console.error("Error adding text:", error);
+      });
+      
+      // Reset the tool
+      textEditorActive = false;
+      document.getElementById("text-editor").style.display = "none";
+      activeTool = null;
+      document.querySelectorAll("#toolbox .tool").forEach(t => t.style.borderColor = "rgba(223,197,136,0.5)");
+    }
+    
+    function cancelText() {
+      textEditorActive = false;
+      document.getElementById("text-editor").style.display = "none";
+      activeTool = null;
+      document.querySelectorAll("#toolbox .tool").forEach(t => t.style.borderColor = "rgba(223,197,136,0.5)");
+    }
+    
+    // NEW: Set up Grid System
+    function setupGridSystem() {
+      document.getElementById("toggle-grid").addEventListener("change", function() {
+        const gridContainer = document.getElementById("grid-container");
+        gridContainer.style.display = this.checked ? "block" : "none";
+        
+        if (this.checked) {
+          createGrid();
+        }
+      });
+      
+      document.getElementById("toggle-grid-button").addEventListener("click", function() {
+        const gridCheckbox = document.getElementById("toggle-grid");
+        gridCheckbox.checked = !gridCheckbox.checked;
+        
+        // Trigger the change event
+        const event = new Event("change");
+        gridCheckbox.dispatchEvent(event);
+      });
+    }
+    
+    function createGrid() {
+      const gridContainer = document.getElementById("grid-container");
+      gridContainer.innerHTML = "";
+      
+      // Create SVG element for grid
+      const gridSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      gridSvg.setAttribute("width", "100%");
+      gridSvg.setAttribute("height", "100%");
+      gridSvg.style.position = "absolute";
+      gridSvg.style.top = "0";
+      gridSvg.style.left = "0";
+      gridContainer.appendChild(gridSvg);
+      
+      // Get map dimensions
+      const mapBounds = svgRoot.viewBox.baseVal;
+      const mapWidth = mapBounds.width;
+      const mapHeight = mapBounds.height;
+      
+      // Grid spacing
+      const gridSpacing = 100; // adjust as needed
+      
+      // Create horizontal lines
+      for (let y = 0; y <= mapHeight; y += gridSpacing) {
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", 0);
+        line.setAttribute("y1", y);
+        line.setAttribute("x2", mapWidth);
+        line.setAttribute("y2", y);
+        line.setAttribute("class", "grid-line");
+        gridSvg.appendChild(line);
+        
+        // Add coordinate label
+        const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        text.setAttribute("x", 10);
+        text.setAttribute("y", y - 5);
+        text.setAttribute("class", "grid-text");
+        text.textContent = y.toString();
+        gridSvg.appendChild(text);
+      }
+      
+      // Create vertical lines
+      for (let x = 0; x <= mapWidth; x += gridSpacing) {
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", x);
+        line.setAttribute("y1", 0);
+        line.setAttribute("x2", x);
+        line.setAttribute("y2", mapHeight);
+        line.setAttribute("class", "grid-line");
+        gridSvg.appendChild(line);
+        
+        // Add coordinate label
+        const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        text.setAttribute("x", x + 5);
+        text.setAttribute("y", 15);
+        text.setAttribute("class", "grid-text");
+        text.textContent = x.toString();
+        gridSvg.appendChild(text);
+      }
+    }
+    
+    function updateGrid() {
+      if (document.getElementById("toggle-grid").checked) {
+        createGrid();
+      }
+    }
+    
+    // NEW: Set up Search Function
+    function setupSearchFunction() {
+      const searchInput = document.getElementById("search-input");
+      const searchButton = document.getElementById("search-button");
+      const searchResults = document.getElementById("search-results");
+      
+      searchButton.addEventListener("click", performSearch);
+      searchInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          performSearch();
+        }
+      });
+      
+      // Keyboard shortcut for search
+      document.addEventListener("keydown", (e) => {
+        if (e.ctrlKey && e.key === "f") {
+          e.preventDefault();
+          searchInput.focus();
+        }
+      });
+    }
+    
+    function performSearch() {
+      const searchInput = document.getElementById("search-input");
+      const searchResults = document.getElementById("search-results");
+      const query = searchInput.value.trim().toLowerCase();
+      
+      if (!query) return;
+      
+      searchResults.innerHTML = "";
+      let resultsFound = false;
+      
+      // Search markers
+      markerLayer.querySelectorAll("[data-marker='true']").forEach(marker => {
+        const text = marker.querySelector("text")?.textContent?.toLowerCase() || "";
+        const type = marker.dataset.type?.toLowerCase() || "";
+        
+        if (text.includes(query) || type.includes(query)) {
+          addSearchResult(marker, text || type, searchResults);
+          resultsFound = true;
+        }
+      });
+      
+      // Search text labels
+      textLayer.querySelectorAll(".text-label").forEach(textLabel => {
+        const text = textLabel.querySelector("text")?.textContent?.toLowerCase() || "";
+        
+        if (text.includes(query)) {
+          addSearchResult(textLabel, text, searchResults);
+          resultsFound = true;
+        }
+      });
+      
+      if (resultsFound) {
+        searchResults.style.display = "block";
+      } else {
+        searchResults.innerHTML = "<div class='search-result'>No results found</div>";
+        searchResults.style.display = "block";
+      }
+    }
+    
+    function addSearchResult(element, text, resultsContainer) {
+      const resultItem = document.createElement("div");
+      resultItem.className = "search-result";
+      resultItem.textContent = text;
+      resultItem.addEventListener("click", () => {
+        // Highlight the found element
+        clearSelection();
+        addToSelection(element);
+        
+        // Center view on the element
+        const bbox = element.getBBox();
+        const centerX = bbox.x + bbox.width / 2;
+        const centerY = bbox.y + bbox.height / 2;
+        panZoomInstance.pan({ x: -centerX + window.innerWidth / 2, y: -centerY + window.innerHeight / 2 });
+        
+        // Hide search results
+        resultsContainer.style.display = "none";
+      });
+      
+      resultsContainer.appendChild(resultItem);
+    }
+    
+    // NEW: Set up Statistics Panel
+    function setupStatisticsPanel() {
+      document.getElementById("toggle-statistics").addEventListener("click", () => {
+        const statsPanel = document.getElementById("stats-panel");
+        statsPanel.style.display = statsPanel.style.display === "block" ? "none" : "block";
+        
+if (statsPanel.style.display === "block") {
+          updateStatistics();
+        }
+      });
+    }
+    
+    function updateStatistics() {
+      // Count markers by type
+      const counts = {
+        homestead: 0,
+        keep: 0,
+        torch: 0,
+        cave: 0,
+        sword: 0,
+        spear: 0,
+        bow: 0,
+        beacon: 0,
+        camp: 0,
+        catapult: 0,
+        ram: 0,
+        textLabels: 0
+      };
+      
+      // Only count visible markers
+      markerLayer.querySelectorAll("[data-marker='true']").forEach(marker => {
+        const type = marker.dataset.type;
+        if (type && marker.style.display !== "none") {
+          counts[type]++;
+        }
+      });
+      
+      // Count text labels
+      if (visibilityState.labels) {
+        counts.textLabels = textLayer.querySelectorAll(".text-label").length;
+      }
+      
+      // Count polygons for area calculation
+      let totalArea = 0;
+      let totalPerimeter = 0;
+      lineLayer.querySelectorAll("polygon").forEach(polygon => {
+        if (polygon.style.display !== "none") {
+          // Extract points from the polygon
+          const points = polygon.getAttribute("points")
+            .trim()
+            .split(" ")
+            .map(pair => {
+              const [x, y] = pair.split(",").map(Number);
+              return { x, y };
+            });
+            
+          // Calculate area and add to total
+          totalArea += calculatePolygonArea(points);
+          
+          // Calculate perimeter
+          let perimeter = 0;
+          for (let i = 0; i < points.length; i++) {
+            const j = (i + 1) % points.length;
+            perimeter += calculateDistance(points[i], points[j]);
+          }
+          totalPerimeter += perimeter;
+        }
+      });
+      
+      // Update statistics in the panel
+      document.getElementById("stat-homestead").textContent = counts.homestead;
+      document.getElementById("stat-keep").textContent = counts.keep;
+      document.getElementById("stat-torch").textContent = counts.torch;
+      document.getElementById("stat-weapons").textContent = counts.sword + counts.spear + counts.bow;
+      document.getElementById("stat-area").textContent = `${totalArea.toFixed(2)} sq units`;
+      document.getElementById("stat-perimeter").textContent = `${totalPerimeter.toFixed(2)} units`;
+      document.getElementById("stat-control").textContent = counts.keep + counts.beacon;
+    }
+    
+    // NEW: Set up Chat System
+    function setupChatSystem() {
+      document.getElementById("toggle-chat").addEventListener("click", () => {
+        document.getElementById("chat-panel").style.display = "block";
+      });
+      
+      document.getElementById("chat-toggle").addEventListener("click", toggleChat);
+      
+      const chatInput = document.getElementById("chat-input").querySelector("input");
+      const sendButton = document.getElementById("chat-input").querySelector("button");
+      
+      sendButton.addEventListener("click", sendChatMessage);
+      chatInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          sendChatMessage();
+        }
+      });
+      
+      // Listen for new messages
+      const chatQuery = query(collection(db, "chatMessages"), orderBy("timestamp"));
+      onSnapshot(chatQuery, (snapshot) => {
+        snapshot.docChanges().forEach(change => {
+          if (change.type === "added") {
+            const msg = change.doc.data();
+            addChatMessage(msg.user, msg.text, msg.userId === auth.currentUser.uid);
+          }
+        });
+      });
+    }
+    
+    function toggleChat() {
+      const chatPanel = document.getElementById("chat-panel");
+      const chatMessages = document.getElementById("chat-messages");
+      const chatToggle = document.getElementById("chat-toggle");
+      
+      if (chatMessages.style.display === "none") {
+        chatMessages.style.display = "flex";
+        document.getElementById("chat-input").style.display = "flex";
+        chatToggle.textContent = "−";
+      } else {
+        chatMessages.style.display = "none";
+        document.getElementById("chat-input").style.display = "none";
+        chatToggle.textContent = "+";
+      }
+    }
+    
+    function sendChatMessage() {
+      const chatInput = document.getElementById("chat-input").querySelector("input");
+      const text = chatInput.value.trim();
+      
+      if (!text) return;
+      
+      // Add to Firestore
+      addDoc(collection(db, "chatMessages"), {
+        text: text,
+        user: auth.currentUser.email,
+        userId: auth.currentUser.uid,
+        timestamp: serverTimestamp()
+      }).catch(error => {
+        console.error("Error sending message:", error);
+      });
+      
+      // Clear input
+      chatInput.value = "";
+    }
+    
+    function addChatMessage(user, text, isSent) {
+      const chatMessages = document.getElementById("chat-messages");
+      
+      const messageDiv = document.createElement("div");
+      messageDiv.className = `chat-message ${isSent ? "sent" : "received"}`;
+      
+      const userDiv = document.createElement("div");
+      userDiv.className = "chat-user";
+      userDiv.textContent = user;
+      
+      const textDiv = document.createElement("div");
+      textDiv.textContent = text;
+      
+      messageDiv.appendChild(userDiv);
+      messageDiv.appendChild(textDiv);
+      
+      chatMessages.appendChild(messageDiv);
+      
+      // Scroll to bottom
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+    
+    // NEW: Set up Tutorial
+    function setupTutorial() {
+      document.getElementById("start-tutorial").addEventListener("click", startTutorial);
+      
+      // Set up tutorial step navigation
+      document.querySelectorAll(".tutorial-step [data-action]").forEach(button => {
+        button.addEventListener("click", (e) => {
+          const action = e.target.dataset.action;
+          const currentStep = e.target.closest(".tutorial-step");
+          const currentStepNumber = parseInt(currentStep.dataset.step);
+          
+          if (action === "next") {
+            currentStep.style.display = "none";
+            document.querySelector(`.tutorial-step[data-step="${currentStepNumber + 1}"]`).style.display = "block";
+          } else if (action === "prev") {
+            currentStep.style.display = "none";
+            document.querySelector(`.tutorial-step[data-step="${currentStepNumber - 1}"]`).style.display = "block";
+          } else if (action === "skip") {
+            endTutorial();
+          }
+        });
+      });
+    }
+    
+    function startTutorial() {
+      document.getElementById("tutorial-overlay").style.display = "block";
+      document.querySelector(".tutorial-step[data-step='1']").style.display = "block";
+    }
+    
+    function endTutorial() {
+      document.getElementById("tutorial-overlay").style.display = "none";
+      document.querySelectorAll(".tutorial-step").forEach(step => {
+        step.style.display = "none";
+      });
+    }
+    
+    // NEW: Set up Keyboard Shortcuts
+    function setupKeyboardShortcuts() {
+      document.getElementById("show-shortcuts").addEventListener("click", () => {
+        document.getElementById("shortcuts-modal").style.display = "flex";
+      });
+      
+      document.getElementById("close-shortcuts").addEventListener("click", () => {
+        document.getElementById("shortcuts-modal").style.display = "none";
+      });
+      
+      // Global keyboard shortcuts
+      document.addEventListener("keydown", (e) => {
+        // F1 for help
+        if (e.key === "F1") {
+          e.preventDefault();
+          document.getElementById("shortcuts-modal").style.display = "flex";
+        }
+        
+        // G for grid toggle
+        if (e.key === "g" && !e.ctrlKey && !e.altKey && !e.shiftKey && document.activeElement.tagName !== "INPUT") {
+          e.preventDefault();
+          const gridCheckbox = document.getElementById("toggle-grid");
+          gridCheckbox.checked = !gridCheckbox.checked;
+          
+          // Trigger the change event
+          const event = new Event("change");
+          gridCheckbox.dispatchEvent(event);
+        }
+        
+        // Ctrl+A for select all
+        if (e.ctrlKey && e.key === "a" && document.activeElement.tagName !== "INPUT") {
+          e.preventDefault();
+          selectAllElements();
+        }
+        
+        // Ctrl+G for group selection
+        if (e.ctrlKey && e.key === "g" && !e.shiftKey && document.activeElement.tagName !== "INPUT") {
+          e.preventDefault();
+          groupSelectedElements();
+        }
+        
+        // Ctrl+Shift+G for ungroup selection
+        if (e.ctrlKey && e.shiftKey && e.key === "G" && document.activeElement.tagName !== "INPUT") {
+          e.preventDefault();
+          ungroupSelected();
+        }
+        
+        // Ctrl+S for save state
+        if (e.ctrlKey && e.key === "s" && document.activeElement.tagName !== "INPUT") {
+          e.preventDefault();
+          recordTimelineState();
+        }
+      });
+    }
+    
+    function selectAllElements() {
+      clearSelection();
+      
+      // Select all markers
+      markerLayer.querySelectorAll("[data-marker='true']").forEach(marker => {
+        if (marker.style.display !== "none") {
+          addToSelection(marker);
+        }
+      });
+      
+      // Select all lines, beziers, and polygons
+      lineLayer.querySelectorAll("g, polygon").forEach(element => {
+        if (element.style.display !== "none") {
+          addToSelection(element);
+        }
+      });
+      
+      // Select all text labels
+      textLayer.querySelectorAll(".text-label").forEach(element => {
+        if (element.style.display !== "none") {
+          addToSelection(element);
+        }
+      });
+      
+      updateSelectionPanel();
+    }
+    
+    // NEW: Set up Offline Detection
+    function setupOfflineDetection() {
+      window.addEventListener("online", () => {
+        isOnline = true;
+        document.getElementById("offline-indicator").style.display = "none";
+        syncOfflineChanges();
+      });
+      
+      window.addEventListener("offline", () => {
+        isOnline = false;
+        document.getElementById("offline-indicator").style.display = "block";
+      });
+    }
+    
+    function syncOfflineChanges() {
+      if (offlineChanges.length === 0) return;
+      
+      console.log("Syncing offline changes:", offlineChanges.length);
+      
+      const promises = [];
+      
+      offlineChanges.forEach(change => {
+        if (change.action === "add") {
+          promises.push(addDoc(collection(db, change.collection), change.data));
+        } else if (change.action === "update") {
+          promises.push(updateDoc(doc(db, change.collection, change.id), change.data));
+        } else if (change.action === "delete") {
+          promises.push(deleteDoc(doc(db, change.collection, change.id)));
+        }
+      });
+      
+      Promise.all(promises)
+        .then(() => {
+          console.log("All offline changes synced successfully");
+          offlineChanges = [];
+        })
+        .catch(error => {
+          console.error("Error syncing offline changes:", error);
+        });
+    }
+    
+    // NEW: Set up Collaborative Features
+    function setupCollaborativeFeatures() {
+      // Generate a unique ID for this user session
+      myUserId = auth.currentUser ? auth.currentUser.uid : `guest-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      
+      // Start sending cursor position
+      document.addEventListener("mousemove", throttle(updateCursorPosition, 50));
+      
+      // Listen for other users' cursors
+      const cursorQuery = query(collection(db, "userCursors"));
+      onSnapshot(cursorQuery, (snapshot) => {
+        snapshot.docChanges().forEach(change => {
+          const data = change.doc.data();
+          
+          // Don't show our own cursor
+          if (data.userId === myUserId) return;
+          
+          if (change.type === "added" || change.type === "modified") {
+            updateOtherUserCursor(data);
+          } else if (change.type === "removed") {
+            removeUserCursor(data.userId);
+          }
+        });
+      });
+    }
+    
+    // Utility function for throttling events
+    function throttle(func, limit) {
+      let lastCall = 0;
+      return function(...args) {
+        const now = Date.now();
+        if (now - lastCall >= limit) {
+          lastCall = now;
+          func.apply(this, args);
+        }
+      };
+    }
+    
+    function updateCursorPosition(e) {
+      if (!isOnline || !auth.currentUser) return;
+      
+      // Convert screen coordinates to SVG coordinates
+      const pt = getSVGPoint(e);
+      
+      // Update in Firestore
+      const cursorRef = doc(db, "userCursors", myUserId);
+      setDoc(cursorRef, {
+        userId: myUserId,
+        user: auth.currentUser.email,
+        x: pt.x,
+        y: pt.y,
+        timestamp: serverTimestamp()
+      }, { merge: true }).catch(error => {
+        console.log("Error updating cursor:", error);
+      });
+    }
+    
+    function updateOtherUserCursor(data) {
+      let cursorElement = document.getElementById(`cursor-${data.userId}`);
+      
+      if (!cursorElement) {
+        cursorElement = document.createElement("div");
+        cursorElement.id = `cursor-${data.userId}`;
+        cursorElement.className = "user-cursor";
+        cursorElement.dataset.username = data.user;
+        
+        // Assign a random color
+        const color = getRandomColor();
+        cursorElement.style.backgroundColor = color;
+        
+        document.body.appendChild(cursorElement);
+      }
+      
+      // Convert SVG coordinates to screen coordinates
+      const screenPt = svgToScreenPoint(data.x, data.y);
+      
+      // Update cursor position
+      cursorElement.style.left = `${screenPt.x}px`;
+      cursorElement.style.top = `${screenPt.y}px`;
+      
+      // Store cursor data
+      currentUsers[data.userId] = {
+        element: cursorElement,
+        lastSeen: Date.now()
+      };
+    }
+    
+    function removeUserCursor(userId) {
+      const cursorElement = document.getElementById(`cursor-${userId}`);
+      if (cursorElement) {
+        cursorElement.remove();
+      }
+      
+      delete currentUsers[userId];
+    }
+    
+    function getRandomColor() {
+      const colors = [
+        "#ff5733", "#33ff57", "#3357ff", "#ff33f5", 
+        "#33fff5", "#f5ff33", "#ff5733", "#ff8c33"
+      ];
+      return colors[Math.floor(Math.random() * colors.length)];
+    }
+    
+    function svgToScreenPoint(svgX, svgY) {
+      // Convert SVG point to screen coordinates
+      const svgPoint = svgRoot.createSVGPoint();
+      svgPoint.x = svgX;
+      svgPoint.y = svgY;
+      
+      const ctm = panLayer.getScreenCTM();
+      const screenPoint = svgPoint.matrixTransform(ctm);
+      
+      return {
+        x: screenPoint.x,
+        y: screenPoint.y
+      };
+    }
+    
+    // NEW: Set up Templates
+    function setupTemplates() {
+      document.getElementById("template-map").addEventListener("click", () => {
+        document.getElementById("templates-panel").style.display = "block";
+      });
+      
+      document.getElementById("template-cancel").addEventListener("click", () => {
+        document.getElementById("templates-panel").style.display = "none";
+      });
+      
+      document.getElementById("template-load").addEventListener("click", loadSelectedTemplate);
+      document.getElementById("template-save").addEventListener("click", saveCurrentAsTemplate);
+      
+      // Add click handler to template items
+      document.querySelectorAll(".template-item").forEach(item => {
+        item.addEventListener("click", (e) => {
+          // Remove selected class from all templates
+          document.querySelectorAll(".template-item").forEach(i => {
+            i.classList.remove("selected-template");
+          });
+          
+          // Add selected class to clicked template
+          item.classList.add("selected-template");
+        });
+      });
+    }
+    
+    function loadSelectedTemplate() {
+      const selectedTemplate = document.querySelector(".template-item.selected-template");
+      
+      if (!selectedTemplate) {
+        alert("Please select a template first.");
+        return;
+      }
+      
+      const templateId = selectedTemplate.dataset.template;
+      
+      // Confirm before replacing current map
+      if (!confirm("Loading a template will replace your current map. Continue?")) {
+        return;
+      }
+      
+      // Clear current map
+      clearMap();
+      
+      // Load template from Firestore
+      getDoc(doc(db, "templates", templateId))
+        .then((docSnap) => {
+          if (docSnap.exists()) {
+            const templateData = docSnap.data();
+            applyTemplate(templateData);
+          } else {
+            console.log("No such template!");
+            // Load built-in template
+            loadBuiltInTemplate(templateId);
+          }
+        })
+        .catch((error) => {
+          console.log("Error getting template:", error);
+          // Load built-in template as fallback
+          loadBuiltInTemplate(templateId);
+        })
+        .finally(() => {
+          document.getElementById("templates-panel").style.display = "none";
+        });
+    }
+    
+    function clearMap() {
+      // Clear markers
+      while (markerLayer.firstChild) {
+        markerLayer.removeChild(markerLayer.firstChild);
+      }
+      
+      // Clear lines
+      while (lineLayer.firstChild) {
+        lineLayer.removeChild(lineLayer.firstChild);
+      }
+      
+      // Clear text
+      while (textLayer.firstChild) {
+        textLayer.removeChild(textLayer.firstChild);
+      }
+      
+      // Clear groups
+      while (groupLayer.firstChild) {
+        groupLayer.removeChild(groupLayer.firstChild);
+      }
+    }
+    
+    function loadBuiltInTemplate(templateId) {
+      // Predefined templates
+      const templates = {
+        "defense": {
+          markers: [
+            { type: "keep", x: 500, y: 500, text: "Main Keep" },
+            { type: "torch", x: 450, y: 450, text: "Watch Post 1" },
+            { type: "torch", x: 550, y: 450, text: "Watch Post 2" },
+            { type: "torch", x: 450, y: 550, text: "Watch Post 3" },
+            { type: "torch", x: 550, y: 550, text: "Watch Post 4" },
+            { type: "homestead", x: 500, y: 600, text: "Resources" }
+          ],
+          polygons: [
+            {
+              vertices: [
+                { x: 400, y: 400 },
+                { x: 600, y: 400 },
+                { x: 600, y: 600 },
+                { x: 400, y: 600 }
+              ],
+              color: "#8ac6d1"
+            }
+          ],
+          texts: [
+            { text: "DEFENSIVE POSITION", x: 500, y: 350, fontSize: "24", color: "#dfc588" }
+          ]
+        },
+        "attack": {
+          markers: [
+            { type: "sword", x: 400, y: 400, text: "Squad Alpha" },
+            { type: "sword", x: 450, y: 400, text: "Squad Beta" },
+            { type: "bow", x: 500, y: 350, text: "Archers" },
+            { type: "catapult", x: 550, y: 300, text: "Siege" },
+            { type: "camp", x: 350, y: 500, text: "Command" }
+          ],
+          beziers: [
+            {
+              controlPoints: [
+                { x: 400, y: 400 },
+                { x: 450, y: 300 },
+                { x: 550, y: 250 }
+              ],
+              color: "#ff5733"
+            }
+          ],
+          texts: [
+            { text: "ATTACK FORMATION", x: 500, y: 200, fontSize: "24", color: "#ff5733" }
+          ]
+        },
+        "siege": {
+          markers: [
+            { type: "keep", x: 500, y: 500, text: "Enemy Fortress" },
+            { type: "catapult", x: 350, y: 350, text: "Catapult 1" },
+            { type: "catapult", x: 650, y: 350, text: "Catapult 2" },
+            { type: "ram", x: 500, y: 350, text: "Battering Ram" },
+            { type: "camp", x: 500, y: 250, text: "Siege Camp" }
+          ],
+          lines: [
+            {
+              x1: 350, y1: 350,
+              x2: 500, y2: 500,
+              color: "#ff5733"
+            },
+            {
+              x1: 650, y1: 350,
+              x2: 500, y2: 500,
+              color: "#ff5733"
+            }
+          ],
+          texts: [
+            { text: "SIEGE LAYOUT", x: 500, y: 200, fontSize: "24", color: "#ff5733" }
+          ]
+        },
+        "patrol": {
+          markers: [
+            { type: "homestead", x: 500, y: 500, text: "Base" },
+            { type: "torch", x: 400, y: 400, text: "Checkpoint 1" },
+            { type: "torch", x: 600, y: 400, text: "Checkpoint 2" },
+            { type: "torch", x: 600, y: 600, text: "Checkpoint 3" },
+            { type: "torch", x: 400, y: 600, text: "Checkpoint 4" }
+          ],
+          beziers: [
+            {
+              controlPoints: [
+                { x: 400, y: 400 },
+                { x: 600, y: 400 },
+                { x: 600, y: 600 },
+                { x: 400, y: 600 },
+                { x: 400, y: 400 }
+              ],
+              color: "#33ff57"
+            }
+          ],
+          texts: [
+            { text: "PATROL ROUTES", x: 500, y: 350, fontSize: "24", color: "#33ff57" }
+          ]
+        }
+      };
+      
+      // Apply the template
+      if (templates[templateId]) {
+        applyTemplate(templates[templateId]);
+      }
+    }
+    
+    function applyTemplate(template) {
+      // Add markers
+      if (template.markers) {
+        template.markers.forEach(marker => {
+          addMarkerToMap(marker.type, marker.x, marker.y, marker.text, marker.color || selectedColor);
+        });
+      }
+      
+      // Add polygons
+      if (template.polygons) {
+        template.polygons.forEach(polygon => {
+          addPolygonToMap(polygon.vertices, polygon.color || selectedColor);
+        });
+      }
+      
+      // Add bezier curves
+      if (template.beziers) {
+        template.beziers.forEach(bezier => {
+          addBezierToMap(bezier.controlPoints, bezier.color || selectedColor);
+        });
+      }
+      
+      // Add lines
+      if (template.lines) {
+        template.lines.forEach(line => {
+          addLineToMap(line.x1, line.y1, line.x2, line.y2, line.color || selectedColor);
+        });
+      }
+      
+      // Add text labels
+      if (template.texts) {
+        template.texts.forEach(text => {
+          addTextToMap(text.text, text.x, text.y, text.fontSize || "18", text.color || selectedColor);
+        });
+      }
+      
+      // Update statistics
+      updateStatistics();
+    }
+    
+    function addMarkerToMap(type, x, y, text, color) {
+      const marker = createMarkerElement(Date.now() + Math.random(), { type, x, y, text, color });
+      markerLayer.appendChild(marker);
+    }
+    
+    function addPolygonToMap(vertices, color) {
+      const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+      const pointsStr = vertices.map(p => `${p.x},${p.y}`).join(" ");
+      polygon.setAttribute("points", pointsStr);
+      polygon.setAttribute("stroke", color);
+      polygon.setAttribute("stroke-width", "2");
+      polygon.setAttribute("fill", color);
+      polygon.setAttribute("fill-opacity", "0.3");
+      polygon.dataset.id = Date.now() + Math.random();
+      polygon.setAttribute("data-polygon", "true");
+      
+      lineLayer.appendChild(polygon);
+    }
+    
+    function addBezierToMap(controlPoints, color) {
+      const bezierGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      bezierGroup.dataset.id = Date.now() + Math.random();
+      bezierGroup.setAttribute("data-bezier", "true");
+      
+      const pathElem = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      let d = "";
+      const samples = 100;
+      for (let i = 0; i <= samples; i++) {
+        let t = i / samples;
+        let pt = calculateBezier(controlPoints, t);
+        d += (i === 0 ? `M ${pt.x} ${pt.y}` : ` L ${pt.x} ${pt.y}`);
+      }
+      pathElem.setAttribute("d", d);
+      pathElem.setAttribute("stroke", color);
+      pathElem.setAttribute("stroke-width", "3");
+      pathElem.setAttribute("fill", "none");
+      bezierGroup.appendChild(pathElem);
+      
+      // Add end arrow
+      let pt1 = calculateBezier(controlPoints, 0.98);
+      let pt2 = calculateBezier(controlPoints, 1.0);
+      let angleEnd = Math.atan2(pt2.y - pt1.y, pt2.x - pt1.x) * (180/Math.PI);
+      const arrowEnd = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+      arrowEnd.setAttribute("points", "0,-8 16,0 0,8");
+      arrowEnd.setAttribute("fill", color);
+      arrowEnd.setAttribute("transform", `translate(${pt2.x},${pt2.y}) rotate(${angleEnd})`);
+      bezierGroup.appendChild(arrowEnd);
+      
+      // Add middle arrow
+      let midPt = getBezierArcMidpoint(controlPoints, 100);
+      let angleMid = Math.atan2(pt2.y - midPt.y, pt2.x - midPt.x) * (180/Math.PI);
+      const arrowMid = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+      arrowMid.setAttribute("points", "0,-8 16,0 0,8");
+      arrowMid.setAttribute("fill", color);
+      arrowMid.setAttribute("transform", `translate(${midPt.x},${midPt.y}) rotate(${angleMid})`);
+      bezierGroup.appendChild(arrowMid);
+      
+      lineLayer.appendChild(bezierGroup);
+    }
+    
+    function addLineToMap(x1, y1, x2, y2, color) {
+      const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      group.classList.add("line-group");
+      group.dataset.id = Date.now() + Math.random();
+      
+      const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      line.setAttribute("x1", x1);
+      line.setAttribute("y1", y1);
+      line.setAttribute("x2", x2);
+      line.setAttribute("y2", y2);
+      line.setAttribute("stroke", color);
+      line.setAttribute("stroke-width", "3.2");
+      
+      // Calculate angle and midpoint for arrow
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      const angle = Math.atan2(dy, dx) * (180/Math.PI);
+      const midX = (x1 + x2) / 2;
+      const midY = (y1 + y2) / 2;
+      
+      const arrow = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+      arrow.setAttribute("points", "0,-8 16,0 0,8");
+      arrow.setAttribute("fill", color);
+      arrow.setAttribute("transform", `translate(${midX},${midY}) rotate(${angle})`);
+      
+      group.appendChild(line);
+      group.appendChild(arrow);
+      
+      lineLayer.appendChild(group);
+    }
+    
+    function addTextToMap(content, x, y, fontSize, color) {
+      const textGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      textGroup.classList.add("text-label");
+      textGroup.dataset.id = Date.now() + Math.random();
+      
+      const textEl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      textEl.textContent = content;
+      textEl.setAttribute("x", x);
+      textEl.setAttribute("y", y);
+      textEl.setAttribute("font-size", fontSize);
+      textEl.setAttribute("fill", color);
+      textEl.setAttribute("text-anchor", "middle");
+      textEl.style.fontFamily = "'Bebas Neue', sans-serif";
+      
+      textGroup.appendChild(textEl);
+      textLayer.appendChild(textGroup);
+    }
+    
+    function saveCurrentAsTemplate() {
+      customPrompt("Enter template name:", "").then(name => {
+        if (!name || name.trim() === "") return;
+        
+        // Capture current state
+        const templateData = {
+          name: name.trim(),
+          markers: [],
+          polygons: [],
+          beziers: [],
+          lines: [],
+          texts: []
+        };
+        
+        // Capture markers
+        markerLayer.querySelectorAll("[data-marker='true']").forEach(marker => {
+          templateData.markers.push({
+            type: marker.dataset.type,
+            x: parseFloat(marker.querySelector("image").getAttribute("x")) + parseFloat(marker.querySelector("image").getAttribute("width")) / 2,
+            y: parseFloat(marker.querySelector("image").getAttribute("y")) + parseFloat(marker.querySelector("image").getAttribute("height")) / 2,
+            text: marker.querySelector("text")?.textContent || "",
+            color: marker.querySelector("text")?.getAttribute("fill") || "#dfc588"
+          });
+        });
+        
+// Capture polygons
+        lineLayer.querySelectorAll("polygon[data-polygon='true']").forEach(polygon => {
+          const pointsStr = polygon.getAttribute("points");
+          const vertices = pointsStr.trim().split(" ").map(pair => {
+            const [x, y] = pair.split(",").map(parseFloat);
+            return { x, y };
+          });
+          
+          templateData.polygons.push({
+            vertices: vertices,
+            color: polygon.getAttribute("stroke") || "#dfc588"
+          });
+        });
+        
+        // Capture bezier curves
+        lineLayer.querySelectorAll("g[data-bezier='true']").forEach(bezier => {
+          const path = bezier.querySelector("path");
+          if (!path) return;
+          
+          // Note: This is a simplification - accurately extracting bezier control points
+          // from a path would require more complex path parsing
+          const controlPoints = [
+            { x: 0, y: 0 },
+            { x: 0, y: 0 },
+            { x: 0, y: 0 }
+          ];
+          
+          templateData.beziers.push({
+            controlPoints: controlPoints,
+            color: path.getAttribute("stroke") || "#dfc588"
+          });
+        });
+        
+        // Capture lines
+        lineLayer.querySelectorAll(".line-group").forEach(group => {
+          const line = group.querySelector("line");
+          if (!line) return;
+          
+          templateData.lines.push({
+            x1: parseFloat(line.getAttribute("x1")),
+            y1: parseFloat(line.getAttribute("y1")),
+            x2: parseFloat(line.getAttribute("x2")),
+            y2: parseFloat(line.getAttribute("y2")),
+            color: line.getAttribute("stroke") || "#dfc588"
+          });
+        });
+        
+        // Capture text labels
+        textLayer.querySelectorAll(".text-label").forEach(textGroup => {
+          const text = textGroup.querySelector("text");
+          if (!text) return;
+          
+          templateData.texts.push({
+            text: text.textContent,
+            x: parseFloat(text.getAttribute("x")),
+            y: parseFloat(text.getAttribute("y")),
+            fontSize: text.getAttribute("font-size") || "18",
+            color: text.getAttribute("fill") || "#dfc588"
+          });
+        });
+        
+        // Save to Firestore
+        addDoc(collection(db, "templates"), {
+          ...templateData,
+          timestamp: serverTimestamp(),
+          owner: auth.currentUser.uid
+        }).then(docRef => {
+          alert(`Template "${name}" saved successfully!`);
+          document.getElementById("templates-panel").style.display = "none";
+        }).catch(error => {
+          console.error("Error saving template:", error);
+          alert("Error saving template. Please try again.");
+        });
+      });
+    }
 
     function setupColorPicker() {
       // Updated color palette based on the hexagonal grid in the image
@@ -862,18 +4010,88 @@
         cell.addEventListener("click", () => {
           selectedColor = color;
           document.getElementById("paint-fill").setAttribute("fill", selectedColor);
+          
+          // NEW: If we have selected elements and color picker was opened for them,
+          // apply the color to all selected elements
+          if (isColoringSelection) {
+            applyColorToSelection(color);
+          }
+          
           closeColorPicker();
         });
         colorGrid.appendChild(cell);
       });
     }
-
-    function openColorPicker() {
+    
+    // NEW: Variables and functions for coloring selections
+    let isColoringSelection = false;
+    
+    function openColorPicker(forSelection = false) {
+      isColoringSelection = forSelection;
       document.getElementById("color-picker-modal").style.display = "block";
+    }
+    
+    function applyColorToSelection(color) {
+      if (selectedElements.size === 0) return;
+      
+      // Create a history entry before making changes
+      createHistoryEntry();
+      
+      const promises = [];
+      
+      selectedElements.forEach(element => {
+        const id = element.dataset.id;
+        const type = element.dataset.type || element.tagName;
+        
+        // Find the element to update color
+        let targetElement;
+        let collectionName;
+        
+        if (element.dataset.marker === "true") {
+          targetElement = element.querySelector("text");
+          collectionName = "markers";
+        } else if (element.classList.contains("text-label")) {
+          targetElement = element.querySelector("text");
+          collectionName = "textLabels";
+        } else if (type === "polygon") {
+          targetElement = element;
+          collectionName = "polygons";
+        } else if (element.dataset.bezier === "true") {
+          targetElement = element.querySelector("path");
+          collectionName = "bezierCurves";
+        } else if (element.classList.contains("line-group")) {
+          targetElement = element.querySelector("line");
+          collectionName = "lines";
+        }
+        
+        if (targetElement && id) {
+          // Update the visual element
+          targetElement.setAttribute("fill", color);
+          
+          if (type === "polygon") {
+            targetElement.setAttribute("stroke", color);
+          } else if (element.dataset.bezier === "true" || element.classList.contains("line-group")) {
+            targetElement.setAttribute("stroke", color);
+            element.querySelectorAll("polygon").forEach(arrow => {
+              arrow.setAttribute("fill", color);
+            });
+          }
+          
+          // Update in Firestore
+          promises.push(updateDoc(doc(db, collectionName, id), { color: color }).catch(error => {
+            console.error(`Error updating ${collectionName} color:`, error);
+          }));
+        }
+      });
+      
+      Promise.all(promises).then(() => {
+        recordAuditLog("update_colors", { count: selectedElements.size });
+      });
     }
 
     function closeColorPicker() {
       document.getElementById("color-picker-modal").style.display = "none";
+      isColoringSelection = false;
     }
 
     function setupMenuToggles() {
@@ -925,7 +4143,7 @@
       });
 
       document.getElementById("delete-all-markers").addEventListener("click", async () => {
-        if (confirm("Delete all markers?")) {
+        if (confirm("Delete all markers? This cannot be undone.")) {
           try {
             const markersSnapshot = await getDocs(collection(db, "markers"));
             markersSnapshot.forEach(async (docSnap) => {
@@ -943,8 +4161,26 @@
             polygonsSnapshot.forEach(async (docSnap) => {
               await deleteDoc(doc(db, "polygons", docSnap.id));
             });
+            const textSnapshot = await getDocs(collection(db, "textLabels"));
+            textSnapshot.forEach(async (docSnap) => {
+              await deleteDoc(doc(db, "textLabels", docSnap.id));
+            });
+            const groupsSnapshot = await getDocs(collection(db, "groups"));
+            groupsSnapshot.forEach(async (docSnap) => {
+              await deleteDoc(doc(db, "groups", docSnap.id));
+            });
+            
+            // Clear history
+            historyStack = [];
+            historyIndex = -1;
+            updateUndoRedoButtons();
+            
+            // Update statistics
+            updateStatistics();
+            
+            recordAuditLog("delete_all", {});
           } catch (error) {
-            console.error("Error deleting markers:", error);
+            console.error("Error deleting all elements:", error);
           }
         }
       });
@@ -1031,8 +4267,13 @@
           listenForLines();
           listenForBezierCurves();
           listenForPolygons();
+          listenForTextLabels();
+          listenForGroups();
           isMapReady = true;
           hideLoading();
+          
+          // Create initial history entry
+          createHistoryEntry();
         })
         .catch(error => {
           console.error("Error loading SVG:", error);
@@ -1062,13 +4303,26 @@
       while (svgRoot.firstChild) { panLayer.appendChild(svgRoot.firstChild); }
       svgRoot.appendChild(panLayer);
 
+      // NEW: Create layers in specific order for proper stacking
+      gridLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      gridLayer.id = "grid-layer";
+      panLayer.appendChild(gridLayer);
+      
       lineLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
       lineLayer.id = "line-layer";
       panLayer.appendChild(lineLayer);
-
+      
+      groupLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      groupLayer.id = "group-layer";
+      panLayer.appendChild(groupLayer);
+      
       markerLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
       markerLayer.id = "marker-layer";
       panLayer.appendChild(markerLayer);
+      
+      textLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      textLayer.id = "text-layer";
+      panLayer.appendChild(textLayer);
 
       // Configure pan-zoom with responsive options
       panZoomInstance = svgPanZoom(svgRoot, {
@@ -1081,12 +4335,66 @@
         dblClickZoomEnabled: true, // Enable double-click to zoom
         preventMouseEventsDefault: true,
         beforeMouseDown: function(e) {
-          if (activeTool === "bezier" || activeTool === "polygon") return false;
+          // Allow click-through for specific tools
+          if (activeTool === "bezier" || activeTool === "polygon" || activeTool === "select" ||
+              activeTool === "measure-distance" || activeTool === "measure-area" || activeTool === "text") {
+            return false;
+          }
+          
+          // Allow click-through for markers and other interactive elements
           if (e.target.getAttribute("data-marker") === "true" ||
-              (e.target.parentNode && e.target.parentNode.getAttribute("data-marker") === "true")) { return false; }
+              (e.target.parentNode && e.target.parentNode.getAttribute("data-marker") === "true") ||
+              e.target.classList.contains("selectable") ||
+              (e.target.parentNode && e.target.parentNode.classList.contains("selectable"))) {
+            return false;
+          }
+          
           return true;
         }
       });
+      
+      // NEW: Add event listeners for click, mousedown, mousemove
+      svgRoot.addEventListener("click", handleMapClick);
+      svgRoot.addEventListener("mousedown", startSelection);
+      svgRoot.addEventListener("mousemove", updateSelection);
+      svgRoot.addEventListener("mouseup", endSelection);
+      svgRoot.addEventListener("contextmenu", handleContextMenu);
+    }
+    
+    function handleMapClick(e) {
+      // Skip if we're already handling another event
+      if (isSelecting || isUndoRedoAction) return;
+      
+      const pt = getSVGPoint(e);
+      
+      if (activeTool === "text") {
+        showTextEditor(pt.x, pt.y);
+      } else if (activeTool === "measure-distance" || activeTool === "measure-area") {
+        addMeasurementPoint(pt.x, pt.y);
+      } else if (activeTool === "select") {
+        // When clicking on empty space with selection tool, clear selection
+        if (e.target === svgRoot || e.target === panLayer) {
+          clearSelection();
+        }
+      } else if (activeTool === "bezier") {
+        bezierControlPoints.push({ x: pt.x, y: pt.y });
+        updateBezierPreview();
+      } else if (activeTool === "polygon") {
+        polygonVertices.push({ x: pt.x, y: pt.y });
+        updatePolygonPreview();
+      }
+    }
+    
+    function handleContextMenu(e) {
+      e.preventDefault();
+      
+      if (activeTool === "bezier") {
+        commitBezier();
+      } else if (activeTool === "polygon") {
+        commitPolygon();
+      } else if (activeTool === "measure-area") {
+        finishAreaMeasurement();
+      }
     }
 
     function setupZoomControls() {
@@ -1098,6 +4406,8 @@
     function setupToolbox() {
       document.querySelectorAll("#toolbox .tool").forEach((tool) => {
         const type = tool.dataset.type;
+        
+        // Handle color picker
         if (type === "color") {
           tool.addEventListener("click", () => {
             // Reset active tool if we're selecting the color tool
@@ -1105,7 +4415,25 @@
             document.querySelectorAll("#toolbox .tool").forEach(t => t.style.borderColor = "rgba(223,197,136,0.5)");
             openColorPicker();
           });
-        } else if (type === "bezier") {
+        } 
+        // Handle selection tool
+        else if (type === "select") {
+          tool.addEventListener("click", () => {
+            activeTool = "select";
+            document.querySelectorAll("#toolbox .tool").forEach(t => t.style.borderColor = "rgba(223,197,136,0.5)");
+            tool.style.borderColor = "red";
+          });
+        }
+        // Handle text tool
+        else if (type === "text") {
+          tool.addEventListener("click", () => {
+            activeTool = "text";
+            document.querySelectorAll("#toolbox .tool").forEach(t => t.style.borderColor = "rgba(223,197,136,0.5)");
+            tool.style.borderColor = "red";
+          });
+        }
+        // Handle bezier tool
+        else if (type === "bezier") {
           tool.addEventListener("click", () => {
             activeTool = "bezier";
             bezierControlPoints = [];
@@ -1114,7 +4442,9 @@
             document.querySelectorAll("#toolbox .tool").forEach(t => t.style.borderColor = "rgba(223,197,136,0.5)");
             tool.style.borderColor = "red";
           });
-        } else if (type === "polygon") {
+        } 
+        // Handle polygon tool
+        else if (type === "polygon") {
           tool.addEventListener("click", () => {
             activeTool = "polygon";
             polygonVertices = [];
@@ -1123,7 +4453,19 @@
             document.querySelectorAll("#toolbox .tool").forEach(t => t.style.borderColor = "rgba(223,197,136,0.5)");
             tool.style.borderColor = "red";
           });
-        } else {
+        }
+        // Handle group tool
+        else if (type === "group") {
+          tool.addEventListener("click", () => {
+            if (selectedElements.size >= 2) {
+              groupSelectedElements();
+            } else {
+              alert("Select at least 2 elements to group them.");
+            }
+          });
+        }
+        // Handle draggable marker tools
+        else {
           tool.addEventListener("dragstart", (e) => {
             e.dataTransfer.setData("text/plain", type);
             const emptyImg = new Image();
@@ -1176,35 +4518,17 @@
         e.preventDefault();
         const type = e.dataTransfer.getData("text/plain");
         const cursorPos = getSVGPoint(e);
+        
+        // Create a history entry before adding a new marker
+        createHistoryEntry();
+        
         await addMarkerToFirestore(type, cursorPos.x, cursorPos.y);
       });
     }
 
     // Combined drawing tool event listener for bezier and polygon
     function setupDrawingTools() {
-      svgRoot.removeEventListener("click", drawingToolHandler);
-      svgRoot.addEventListener("click", drawingToolHandler);
-      svgRoot.addEventListener("contextmenu", (e) => {
-        if (activeTool === "bezier") {
-          e.preventDefault();
-          commitBezier();
-        } else if (activeTool === "polygon") {
-          e.preventDefault();
-          commitPolygon();
-        }
-      });
-    }
-
-    async function drawingToolHandler(e) {
-      const pt = getSVGPoint(e);
-      if (activeTool === "bezier") {
-        bezierControlPoints.push({ x: pt.x, y: pt.y });
-        updateBezierPreview();
-      }
-      else if (activeTool === "polygon") {
-        polygonVertices.push({ x: pt.x, y: pt.y });
-        updatePolygonPreview();
-      }
+      // These are now handled by the click and contextmenu handlers
     }
 
     // Bezier helper: de Casteljau algorithm
@@ -1282,6 +4606,10 @@
     async function commitBezier() {
       if (bezierControlPoints.length < 2) return;
       if (currentBezierPath) { currentBezierPath.remove(); currentBezierPath = null; }
+      
+      // Create a history entry before adding a new bezier
+      createHistoryEntry();
+      
       // Use the globally selectedColor
       const bezierColor = selectedColor;
       
@@ -1303,7 +4631,7 @@
       pathElem.setAttribute("fill", "none");
       bezierGroup.appendChild(pathElem);
 
-      // Arrow at the end (using t=0.98 to t=1.0)
+// Arrow at the end (using t=0.98 to t=1.0)
       let pt1 = calculateBezier(bezierControlPoints, 0.98);
       let pt2 = calculateBezier(bezierControlPoints, 1.0);
       let angleEnd = Math.atan2(pt2.y - pt1.y, pt2.x - pt1.x) * (180/Math.PI);
@@ -1323,48 +4651,87 @@
       bezierGroup.appendChild(arrowMid);
 
       lineLayer.appendChild(bezierGroup);
+      
+      // Make the bezier selectable
+      bezierGroup.classList.add("selectable");
+      bezierGroup.setAttribute("data-bezier", "true");
 
       try {
         const docRef = await addDoc(collection(db, "bezierCurves"), {
           controlPoints: bezierControlPoints,
           color: bezierColor,
+          layerId: activeLayerId,
           timestamp: serverTimestamp(),
           owner: auth.currentUser.uid
         });
         recordAuditLog("add_bezier", { bezierId: docRef.id });
         bezierGroup.dataset.id = docRef.id;
+        bezierGroup.dataset.layer = activeLayerId;
       } catch (error) {
         console.error("Error adding bezier curve:", error);
       }
-      // Attach deletion event to the entire bezier group
-      bezierGroup.addEventListener("click", async (e) => {
+      
+      // Add click handler for selection
+      bezierGroup.addEventListener("click", (e) => {
         e.stopPropagation();
         
-        // Prevent double deletion prompts
-        if (isDeleteInProgress) return;
-        isDeleteInProgress = true;
-        
-        if (await customConfirm("Delete this bezier curve?")) {
-          try {
-            await deleteDoc(doc(db, "bezierCurves", bezierGroup.dataset.id));
-            recordAuditLog("delete_bezier", { bezierId: bezierGroup.dataset.id });
-            bezierGroup.remove();
-          } catch (error) {
-            console.error("Error deleting bezier curve:", error);
-            isDeleteInProgress = false; // Reset flag on error
+        if (activeTool === "select") {
+          // If shift is not pressed, clear previous selection
+          if (!e.shiftKey) {
+            clearSelection();
           }
+          
+          // Toggle selection
+          if (selectedElements.has(bezierGroup)) {
+            removeFromSelection(bezierGroup);
+          } else {
+            addToSelection(bezierGroup);
+          }
+        } else if (!activeTool) {
+          // Prevent double deletion prompts
+          if (isDeleteInProgress) return;
+          isDeleteInProgress = true;
+          
+          customConfirm("Delete this bezier curve?").then(confirmed => {
+            if (confirmed) {
+              // Create a history entry before deleting
+              createHistoryEntry();
+              
+              deleteDoc(doc(db, "bezierCurves", bezierGroup.dataset.id))
+                .then(() => {
+                  recordAuditLog("delete_bezier", { bezierId: bezierGroup.dataset.id });
+                  bezierGroup.remove();
+                  updateStatistics();
+                })
+                .catch(error => {
+                  console.error("Error deleting bezier curve:", error);
+                })
+                .finally(() => {
+                  isDeleteInProgress = false;
+                });
+            } else {
+              isDeleteInProgress = false;
+            }
+          });
         }
-        
       });
+      
       activeTool = null;
       bezierControlPoints = [];
       markerLayer.style.pointerEvents = "auto";
       document.querySelectorAll("#toolbox .tool").forEach(t => t.style.borderColor = "rgba(223,197,136,0.5)");
+      
+      // Update statistics
+      updateStatistics();
     }
 
     async function commitPolygon() {
       if (polygonVertices.length < 3) return;
       if (currentPolygonElement) { currentPolygonElement.remove(); currentPolygonElement = null; }
+      
+      // Create a history entry before adding a new polygon
+      createHistoryEntry();
+      
       const polygonElem = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
       const pointsStr = polygonVertices.map(p => `${p.x},${p.y}`).join(" ");
       polygonElem.setAttribute("points", pointsStr);
@@ -1372,55 +4739,101 @@
       polygonElem.setAttribute("stroke-width", "2");
       polygonElem.setAttribute("fill", selectedColor);
       polygonElem.setAttribute("fill-opacity", "0.3");
+      polygonElem.setAttribute("data-polygon", "true");
+      polygonElem.classList.add("selectable");
       lineLayer.appendChild(polygonElem);
+      
       try {
         const docRef = await addDoc(collection(db, "polygons"), {
           vertices: polygonVertices,
           color: selectedColor,
+          layerId: activeLayerId,
           timestamp: serverTimestamp(),
           owner: auth.currentUser.uid
         });
         recordAuditLog("add_polygon", { polygonId: docRef.id });
         polygonElem.dataset.id = docRef.id;
+        polygonElem.dataset.layer = activeLayerId;
       } catch (error) {
         console.error("Error adding polygon:", error);
       }
-      polygonElem.addEventListener("click", async (e) => {
+      
+      // Add click handler for selection
+      polygonElem.addEventListener("click", (e) => {
         e.stopPropagation();
         
-        // Prevent double deletion prompts
-        if (isDeleteInProgress) return;
-        isDeleteInProgress = true;
-        
-        if (await customConfirm("Delete this polygon?")) {
-          try {
-            await deleteDoc(doc(db, "polygons", polygonElem.dataset.id));
-            recordAuditLog("delete_polygon", { polygonId: polygonElem.dataset.id });
-            polygonElem.remove();
-          } catch (error) {
-            console.error("Error deleting polygon:", error);
-            isDeleteInProgress = false; // Reset flag on error
+        if (activeTool === "select") {
+          // If shift is not pressed, clear previous selection
+          if (!e.shiftKey) {
+            clearSelection();
           }
+          
+          // Toggle selection
+          if (selectedElements.has(polygonElem)) {
+            removeFromSelection(polygonElem);
+          } else {
+            addToSelection(polygonElem);
+          }
+        } else if (!activeTool) {
+          // Prevent double deletion prompts
+          if (isDeleteInProgress) return;
+          isDeleteInProgress = true;
+          
+          customConfirm("Delete this polygon?").then(confirmed => {
+            if (confirmed) {
+              // Create a history entry before deleting
+              createHistoryEntry();
+              
+              deleteDoc(doc(db, "polygons", polygonElem.dataset.id))
+                .then(() => {
+                  recordAuditLog("delete_polygon", { polygonId: polygonElem.dataset.id });
+                  polygonElem.remove();
+                  updateStatistics();
+                })
+                .catch(error => {
+                  console.error("Error deleting polygon:", error);
+                })
+                .finally(() => {
+                  isDeleteInProgress = false;
+                });
+            } else {
+              isDeleteInProgress = false;
+            }
+          });
         }
-        
       });
+      
       activeTool = null;
       polygonVertices = [];
       markerLayer.style.pointerEvents = "auto";
       document.querySelectorAll("#toolbox .tool").forEach(t => t.style.borderColor = "rgba(223,197,136,0.5)");
+      
+      // Update statistics
+      updateStatistics();
     }
 
     async function addMarkerToFirestore(type, x, y) {
       const user = auth.currentUser;
       if (!user) { console.error("User not authenticated"); return; }
-      let markerData = { type, x, y, timestamp: serverTimestamp(), owner: user.uid };
+      
+      let markerData = { 
+        type, x, y, 
+        layerId: activeLayerId,
+        timestamp: serverTimestamp(), 
+        owner: user.uid 
+      };
+      
       if (["homestead", "keep", "torch", "cave", "sword", "spear", "bow", "beacon", "camp", "catapult", "ram"].includes(type)) {
         markerData.text = await customPrompt("Enter marker text:", "") || "";
         markerData.color = selectedColor;
       }
+      
       try {
         const docRef = await addDoc(collection(db, "markers"), markerData);
         recordAuditLog("add", { markerId: docRef.id, markerType: type });
+        
+        // Update statistics after adding marker
+        updateStatistics();
       } catch (error) {
         console.error("Error adding marker:", error);
       }
@@ -1450,6 +4863,9 @@
             createBezierElement(id, docSnap.data());
           }
         });
+        
+        // Update statistics when curves change
+        updateStatistics();
       });
     }
 
@@ -1457,6 +4873,8 @@
       const bezierGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
       bezierGroup.dataset.id = id;
       bezierGroup.setAttribute("data-bezier", "true");
+      bezierGroup.dataset.layer = data.layerId || 'base-layer';
+      bezierGroup.classList.add("selectable");
       
       const pathElem = document.createElementNS("http://www.w3.org/2000/svg", "path");
       let d = "";
@@ -1488,29 +4906,52 @@
       arrowMid.setAttribute("fill", data.color);
       arrowMid.setAttribute("transform", `translate(${midPt.x},${midPt.y}) rotate(${angleMid})`);
       bezierGroup.appendChild(arrowMid);
-
-      bezierGroup.addEventListener("click", async (e) => {
+      
+      // Add click handler for selection
+      bezierGroup.addEventListener("click", (e) => {
         e.stopPropagation();
         
-        // Prevent double deletion prompts
-        if (isDeleteInProgress) return;
-        isDeleteInProgress = true;
-        
-        if (await customConfirm("Delete this bezier curve?")) {
-          try {
-            await deleteDoc(doc(db, "bezierCurves", id));
-            recordAuditLog("delete_bezier", { bezierId: id });
-            bezierGroup.remove();
-          } catch (error) {
-            console.error("Error deleting bezier curve:", error);
+        if (activeTool === "select") {
+          // If shift is not pressed, clear previous selection
+          if (!e.shiftKey) {
+            clearSelection();
           }
+          
+          // Toggle selection
+          if (selectedElements.has(bezierGroup)) {
+            removeFromSelection(bezierGroup);
+          } else {
+            addToSelection(bezierGroup);
+          }
+        } else if (!activeTool) {
+          // Prevent double deletion prompts
+          if (isDeleteInProgress) return;
+          isDeleteInProgress = true;
+          
+          customConfirm("Delete this bezier curve?").then(confirmed => {
+            if (confirmed) {
+              // Create a history entry before deleting
+              createHistoryEntry();
+              
+              deleteDoc(doc(db, "bezierCurves", id))
+                .then(() => {
+                  recordAuditLog("delete_bezier", { bezierId: id });
+                  bezierGroup.remove();
+                  updateStatistics();
+                })
+                .catch(error => {
+                  console.error("Error deleting bezier curve:", error);
+                })
+                .finally(() => {
+                  isDeleteInProgress = false;
+                });
+            } else {
+              isDeleteInProgress = false;
+            }
+          });
         }
-        
-        // Reset after a short delay
-        setTimeout(() => {
-          isDeleteInProgress = false;
-        }, 100);
       });
+
       lineLayer.appendChild(bezierGroup);
     }
 
@@ -1538,6 +4979,9 @@
             createPolygonElement(id, docSnap.data());
           }
         });
+        
+        // Update statistics when polygons change
+        updateStatistics();
       });
     }
 
@@ -1550,30 +4994,237 @@
       polygonElem.setAttribute("fill", data.color);
       polygonElem.setAttribute("fill-opacity", "0.3");
       polygonElem.dataset.id = id;
+      polygonElem.dataset.layer = data.layerId || 'base-layer';
       polygonElem.setAttribute("data-polygon", "true");
-      polygonElem.addEventListener("click", async (e) => {
+      polygonElem.classList.add("selectable");
+      
+      // Add click handler for selection
+      polygonElem.addEventListener("click", (e) => {
         e.stopPropagation();
         
-        // Prevent double deletion prompts
-        if (isDeleteInProgress) return;
-        isDeleteInProgress = true;
-        
-        if (await customConfirm("Delete this polygon?")) {
-          try {
-            await deleteDoc(doc(db, "polygons", id));
-            recordAuditLog("delete_polygon", { polygonId: id });
-            polygonElem.remove();
-          } catch (error) {
-            console.error("Error deleting polygon:", error);
+        if (activeTool === "select") {
+          // If shift is not pressed, clear previous selection
+          if (!e.shiftKey) {
+            clearSelection();
           }
+          
+          // Toggle selection
+          if (selectedElements.has(polygonElem)) {
+            removeFromSelection(polygonElem);
+          } else {
+            addToSelection(polygonElem);
+          }
+        } else if (!activeTool) {
+          // Prevent double deletion prompts
+          if (isDeleteInProgress) return;
+          isDeleteInProgress = true;
+          
+          customConfirm("Delete this polygon?").then(confirmed => {
+            if (confirmed) {
+              // Create a history entry before deleting
+              createHistoryEntry();
+              
+              deleteDoc(doc(db, "polygons", id))
+                .then(() => {
+                  recordAuditLog("delete_polygon", { polygonId: id });
+                  polygonElem.remove();
+                  updateStatistics();
+                })
+                .catch(error => {
+                  console.error("Error deleting polygon:", error);
+                })
+                .finally(() => {
+                  isDeleteInProgress = false;
+                });
+            } else {
+              isDeleteInProgress = false;
+            }
+          });
         }
-        
-        // Reset after a short delay
-        setTimeout(() => {
-          isDeleteInProgress = false;
-        }, 100);
       });
+      
       lineLayer.appendChild(polygonElem);
+    }
+    
+    // NEW: Listen for text labels
+    function listenForTextLabels() {
+      const textQuery = query(collection(db, "textLabels"), orderBy("timestamp"));
+      onSnapshot(textQuery, (snapshot) => {
+        // Clear all text label elements without an ID
+        textLayer.querySelectorAll(".text-label:not([data-id])").forEach(elem => elem.remove());
+        
+        // Clear all text label elements with an ID that's not in the current snapshot
+        const currentIds = new Set();
+        snapshot.forEach(docSnap => { currentIds.add(docSnap.id); });
+        
+        textLayer.querySelectorAll(".text-label[data-id]").forEach(elem => {
+          if (!currentIds.has(elem.dataset.id)) {
+            elem.remove();
+          }
+        });
+        
+        // Create or update text label elements from snapshot
+        snapshot.forEach(docSnap => {
+          const id = docSnap.id;
+          const existingElem = textLayer.querySelector(`.text-label[data-id="${id}"]`);
+          if (!existingElem) {
+            createTextLabelElement(id, docSnap.data());
+          }
+        });
+        
+        // Update visibility based on current state
+        updateLabelVisibility();
+      });
+    }
+    
+    function createTextLabelElement(id, data) {
+      const textGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      textGroup.classList.add("text-label");
+      textGroup.classList.add("selectable");
+      textGroup.dataset.id = id;
+      textGroup.dataset.layer = data.layerId || 'base-layer';
+      
+      const textEl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      textEl.textContent = data.text;
+      textEl.setAttribute("x", data.x);
+      textEl.setAttribute("y", data.y);
+      textEl.setAttribute("font-size", data.fontSize);
+      textEl.setAttribute("fill", data.color);
+      textEl.setAttribute("text-anchor", "middle");
+      textEl.style.fontFamily = "'Bebas Neue', sans-serif";
+      
+      textGroup.appendChild(textEl);
+      textLayer.appendChild(textGroup);
+      
+      // Add click handler for selection
+      textGroup.addEventListener("click", (e) => {
+        e.stopPropagation();
+        
+        if (activeTool === "select") {
+          // If shift is not pressed, clear previous selection
+          if (!e.shiftKey) {
+            clearSelection();
+          }
+          
+          // Toggle selection
+          if (selectedElements.has(textGroup)) {
+            removeFromSelection(textGroup);
+          } else {
+            addToSelection(textGroup);
+          }
+        } else if (!activeTool) {
+          // Prevent double deletion prompts
+          if (isDeleteInProgress) return;
+          isDeleteInProgress = true;
+          
+          customConfirm("Delete this text?").then(confirmed => {
+            if (confirmed) {
+              // Create a history entry before deleting
+              createHistoryEntry();
+              
+              deleteDoc(doc(db, "textLabels", id))
+                .then(() => {
+                  recordAuditLog("delete_text", { textId: id });
+                  textGroup.remove();
+                })
+                .catch(error => {
+                  console.error("Error deleting text:", error);
+                })
+                .finally(() => {
+                  isDeleteInProgress = false;
+                });
+            } else {
+              isDeleteInProgress = false;
+            }
+          });
+        }
+      });
+    }
+    
+    // NEW: Listen for Groups
+    function listenForGroups() {
+      const groupsQuery = query(collection(db, "groups"), orderBy("timestamp"));
+      onSnapshot(groupsQuery, (snapshot) => {
+        // Clear internal groups array
+        groups = [];
+        
+        // Clear all group elements
+        groupLayer.querySelectorAll(".group-container").forEach(elem => elem.remove());
+        
+        // Create or update group elements from snapshot
+        snapshot.forEach(docSnap => {
+          const id = docSnap.id;
+          const data = docSnap.data();
+          
+          // Add to internal groups array
+          groups.push({
+            id: id,
+            members: data.members
+          });
+          
+          // Create group visual
+          const groupContainer = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+          groupContainer.setAttribute("x", data.x);
+          groupContainer.setAttribute("y", data.y);
+          groupContainer.setAttribute("width", data.width);
+          groupContainer.setAttribute("height", data.height);
+          groupContainer.setAttribute("class", "group-container selectable");
+          groupContainer.dataset.id = id;
+          
+          // Add click handler for selection
+          groupContainer.addEventListener("click", (e) => {
+            e.stopPropagation();
+            
+            if (activeTool === "select") {
+              // If shift is not pressed, clear previous selection
+              if (!e.shiftKey) {
+                clearSelection();
+              }
+              
+              // Toggle selection
+              if (selectedElements.has(groupContainer)) {
+                removeFromSelection(groupContainer);
+              } else {
+                addToSelection(groupContainer);
+              }
+            } else if (!activeTool) {
+              // Prevent double deletion prompts
+              if (isDeleteInProgress) return;
+              isDeleteInProgress = true;
+              
+              customConfirm("Delete this group?").then(confirmed => {
+                if (confirmed) {
+                  // Create a history entry before deleting
+                  createHistoryEntry();
+                  
+                  deleteDoc(doc(db, "groups", id))
+                    .then(() => {
+                      recordAuditLog("delete_group", { groupId: id });
+                      groupContainer.remove();
+                      
+                      // Remove from groups array
+                      groups = groups.filter(g => g.id !== id);
+                      updateGroupPanel();
+                    })
+                    .catch(error => {
+                      console.error("Error deleting group:", error);
+                    })
+                    .finally(() => {
+                      isDeleteInProgress = false;
+                    });
+                } else {
+                  isDeleteInProgress = false;
+                }
+              });
+            }
+          });
+          
+          groupLayer.appendChild(groupContainer);
+        });
+        
+        // Update the group panel
+        updateGroupPanel();
+      });
     }
 
     function listenForMarkers() {
@@ -1584,6 +5235,9 @@
         while (markerLayer.firstChild) { markerLayer.removeChild(markerLayer.firstChild); }
         snapshot.forEach((docSnap) => { createMarkerElement(docSnap.id, docSnap.data()); });
         updateMarkerVisibility();
+        
+        // Update statistics when markers change
+        updateStatistics();
       }, (error) => {
         console.error("Firestore connection error:", error);
         displayErrorOverlay("Firestore connection failed.");
@@ -1599,6 +5253,9 @@
         lineLayer.querySelectorAll(".line-group").forEach(elem => elem.remove());
         snapshot.forEach((docSnap) => { createLineElement(docSnap.id, docSnap.data()); });
         updateLineVisibility();
+        
+        // Update statistics when lines change
+        updateStatistics();
       });
     }
 
@@ -1606,6 +5263,10 @@
       let markerEl = document.createElementNS("http://www.w3.org/2000/svg", "g");
       markerEl.setAttribute("data-marker", "true");
       markerEl.dataset.type = data.type;
+      markerEl.dataset.id = id;
+      markerEl.dataset.layer = data.layerId || 'base-layer';
+      markerEl.classList.add("selectable");
+      
       let imgSrc, imgWidth, imgHeight, imgXOffset, imgYOffset, fontSize;
       if (data.type === "homestead") {
         imgSrc = "https://regnumsolis.com/planner/images/marker.svg";
@@ -1662,11 +5323,11 @@
       markerEl.appendChild(imgEl);
       const textEl = document.createElementNS("http://www.w3.org/2000/svg", "text");
       textEl.textContent = data.text;
-      textEl.setAttribute("fill", data.color);
+      textEl.setAttribute("fill", data.color || "#dfc588");
       textEl.setAttribute("font-size", fontSize);
       textEl.setAttribute("x", data.x + textXOffset);
       textEl.setAttribute("y", data.y);
-      textEl.setAttribute("text-anchor", "start");
+textEl.setAttribute("text-anchor", "start");
       textEl.setAttribute("dominant-baseline", "middle");
       textEl.style.fontFamily = "'Bebas Neue', sans-serif";
       markerEl.appendChild(textEl);
@@ -1683,37 +5344,59 @@
         markerEl.insertBefore(rectEl, textEl);
       });
       markerEl.classList.add("marker");
-      markerEl.dataset.id = id;
+      
+      // Add click handler for selection or deletion
       markerEl.addEventListener("click", async (e) => {
         e.stopPropagation();
         if (activeTool === "bezier" || activeTool === "polygon") return;
         
-        // Prevent double deletion prompts
-        if (isDeleteInProgress) return;
-        isDeleteInProgress = true;
-        
-        if (await customConfirm("Delete this marker?")) {
+        if (activeTool === "select") {
+          // If shift is not pressed, clear previous selection
+          if (!e.shiftKey) {
+            clearSelection();
+          }
+          
+          // Toggle selection
+          if (selectedElements.has(markerEl)) {
+            removeFromSelection(markerEl);
+          } else {
+            addToSelection(markerEl);
+          }
+        } else if (!activeTool) {
+          // Prevent double deletion prompts
+          if (isDeleteInProgress) return;
+          isDeleteInProgress = true;
+          
           try {
-            await deleteDoc(doc(db, "markers", id));
-            recordAuditLog("delete", { markerId: id, markerType: data.type });
-            markerEl.remove();
+            if (await customConfirm("Delete this marker?")) {
+              // Create a history entry before deleting
+              createHistoryEntry();
+              
+              await deleteDoc(doc(db, "markers", id));
+              recordAuditLog("delete", { markerId: id, markerType: data.type });
+              markerEl.remove();
+              
+              // Update statistics
+              updateStatistics();
+            }
           } catch (error) {
             console.error("Error deleting marker:", error);
+          } finally {
+            isDeleteInProgress = false;
           }
         }
-        
-        // Reset after a short delay
-        setTimeout(() => {
-          isDeleteInProgress = false;
-        }, 100);
       });
+      
       markerLayer.appendChild(markerEl);
     }
 
     function createLineElement(id, data) {
       const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
       group.classList.add("line-group");
+      group.classList.add("selectable");
       group.dataset.id = id;
+      group.dataset.layer = data.layerId || 'base-layer';
+      
       const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
       line.setAttribute("x1", data.x1);
       line.setAttribute("y1", data.y1);
@@ -1721,34 +5404,56 @@
       line.setAttribute("y2", data.y2);
       line.setAttribute("stroke", data.color);
       line.setAttribute("stroke-width", "3.2");
+      
       const arrow = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
       arrow.setAttribute("points", "0,-8 16,0 0,8");
       arrow.setAttribute("fill", data.color);
       arrow.setAttribute("transform", `translate(${data.midX},${data.midY}) rotate(${data.angle})`);
+      
       group.appendChild(line);
       group.appendChild(arrow);
+      
+      // Add click handler for selection or deletion
       group.addEventListener("click", async (e) => {
         e.stopPropagation();
         
-        // Prevent double deletion prompts
-        if (isDeleteInProgress) return;
-        isDeleteInProgress = true;
-        
-        if (await customConfirm("Delete this line?")) {
+        if (activeTool === "select") {
+          // If shift is not pressed, clear previous selection
+          if (!e.shiftKey) {
+            clearSelection();
+          }
+          
+          // Toggle selection
+          if (selectedElements.has(group)) {
+            removeFromSelection(group);
+          } else {
+            addToSelection(group);
+          }
+        } else if (!activeTool) {
+          // Prevent double deletion prompts
+          if (isDeleteInProgress) return;
+          isDeleteInProgress = true;
+          
           try {
-            await deleteDoc(doc(db, "lines", id));
-            recordAuditLog("delete_line", { lineId: id });
-            group.remove();
+            if (await customConfirm("Delete this line?")) {
+              // Create a history entry before deleting
+              createHistoryEntry();
+              
+              await deleteDoc(doc(db, "lines", id));
+              recordAuditLog("delete_line", { lineId: id });
+              group.remove();
+              
+              // Update statistics
+              updateStatistics();
+            }
           } catch (error) {
             console.error("Error deleting line:", error);
+          } finally {
+            isDeleteInProgress = false;
           }
         }
-        
-        // Reset after a short delay
-        setTimeout(() => {
-          isDeleteInProgress = false;
-        }, 100);
       });
+      
       lineLayer.appendChild(group);
     }
 
@@ -1813,6 +5518,23 @@
       overlay.textContent = message;
       overlay.style.display = "flex";
       console.warn("Error overlay activated:", message);
+    }
+    
+    // NEW: Create a history entry of the current state
+    function createHistoryEntry() {
+      // Skip if we're in the middle of an undo/redo action
+      if (isUndoRedoAction) {
+        isUndoRedoAction = false;
+        return;
+      }
+      
+      console.log("Creating history entry");
+      
+      // Create a snapshot of the current state
+      const state = captureState();
+      
+      // Add to history stack and update the index
+      addToHistory(state);
     }
   </script>
   <script>
@@ -1911,7 +5633,7 @@
         h += wave(st, 0.0, 30.1, 0.0020, 0.81);
         h += wave(st, 0.7, 40.3, 0.0017, 0.63);
         h += wave(st, 1.4, 55.7, 0.0010, 1.04);
-h += wave(st, 2.1, 65.2, 0.0012, 0.91);
+        h += wave(st, 2.1, 65.2, 0.0012, 0.91);
         h += wave(st, 2.8, 50.5, 0.0015, 1.12);
         h += wave(st, 3.3, 60.9, 0.0013, 0.87);
         h += wave(st, 4.0, 45.6, 0.0014, 1.05);
